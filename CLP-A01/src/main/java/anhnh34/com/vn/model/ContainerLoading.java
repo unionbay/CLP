@@ -1,22 +1,20 @@
 package anhnh34.com.vn.model;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
-import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Properties;
+
 import org.apache.log4j.Logger;
 
 public class ContainerLoading {
 	private Batch placedBox;
 	private Batch notPlacedBox;
 	private Container container;
-	private SolutionMethod greedySolution;
 	private Solution solution;
 	private Problem problem;
 
@@ -77,19 +75,21 @@ public class ContainerLoading {
 		return problem;
 	}
 
-	// Prepard container loading model.
-	private void prepardMode() {
-
-	}
-
 	// Find available space.
 	public Space getAvaiableSpace() {
 		return this.container.getAvaiableSpaces() == null ? null : this.container.getAvaiableSpaces().get(0);
 	}
 
 	public void loadingData() throws IOException {
-		Path filePath = FileSystems.getDefault()
-				.getPath("/home/anh-nguyen/Downloads/Container Loading Problems/3L_CVRP", "3l_cvrp03.txt");
+
+		Properties prop = new Properties();
+
+		prop.load(this.getClass().getClassLoader().getResourceAsStream("config.properties"));
+
+		String dataPath = prop.getProperty("data_path");
+
+		// load properties file
+		Path filePath = FileSystems.getDefault().getPath(dataPath);
 
 		if (filePath == null) {
 			System.out.println("Couldn't find the specific path");
@@ -97,8 +97,11 @@ public class ContainerLoading {
 		}
 
 		List<String> fileArray = Files.readAllLines(filePath);
-		int index = 0;
 
+		// read node list information
+		this.readNodeInfo(fileArray);
+
+		int index = 0;
 		for (String line : fileArray) {
 			if (line == null || line.isEmpty()) {
 				index++;
@@ -131,7 +134,8 @@ public class ContainerLoading {
 
 			// get number of items
 			if (index == 4) {
-				problem.setNumOfItem(Integer.parseInt(line.substring(0, line.indexOf('-')).trim()));
+				// problem.setNumOfItem(Integer.parseInt(line.substring(0,
+				// line.indexOf('-')).trim()));
 			}
 
 			// get container info
@@ -142,26 +146,55 @@ public class ContainerLoading {
 
 			if (line.contains("Node - number of items")) {
 				problem.setItemsList(this.loadItems(index, fileArray));
+
+				// sort all boxes base on their volume
 				this.getNotPlacedBox().getBoxes().sort(new Comparator<Box>() {
 
 					@Override
 					public int compare(Box arg0, Box arg1) {
 						double arg0Volume = arg0.getLength() * arg0.getWidth() * arg0.getHeight();
 						double arg1Volume = arg1.getLength() * arg1.getWidth() * arg1.getHeight();
+						
+						//order by sequence number.
+//						if (arg0.getSequenceNumber() > arg1.getSequenceNumber()) {
+//							return -1;
+//						}
+//
+//						if (arg0.getSequenceNumber() < arg1.getSequenceNumber()) {
+//							return 1;
+//						}
+						
+					
+						
+						//order by  largest surface.
+//						if(arg1.getLargestSurface() >= arg0.getLargestSurface()) {
+//							return 1;							
+//						}
+//						
+//						if(arg1.getLargestSurface() < arg0.getLargestSurface()) {
+//							return -1;
+//						}
+													
 						if (arg1Volume > arg0Volume) {
 							return 1;
 						} else if (arg1Volume < arg0Volume) {
 							return -1;
-						} else {
-							return 0;
+						} 
+						
+						//order by largest dimension.
+						if(arg1.getBiggestDimension() > arg0.getBiggestDimension()) {
+							return 1;							
 						}
-
+					
+						if(arg1.getBiggestDimension() < arg0.getBiggestDimension()) {
+							return -1;
+						}
+						
+						return 0;
 					}
 				});
-
 				this.loadBoxType();
 			}
-
 			index++;
 		}
 	}
@@ -172,7 +205,13 @@ public class ContainerLoading {
 		List<String> subItemList = itemList.subList(index + 1, itemList.size());
 		for (String item : subItemList) {
 			item = item.trim();
-			String[] itemArray = item.split("\\s+");
+		
+			//check if item not  actived, skip read current line.
+			if( ! item.contains("x")) {
+				continue;
+			}
+			
+			String[] itemArray = item.split("\\s+");			
 			this.createItem(itemArray);
 		}
 
@@ -184,7 +223,11 @@ public class ContainerLoading {
 		if (numbItem == 0)
 			return;
 
+		problem.setNumOfItem(problem.getNumOfItem() + numbItem);
+
 		int index = 1;
+		String nodeId = itemArray[0];
+		int sequenceNumber = getSequenceNumber(nodeId);
 		for (int i = 0; i < numbItem; i++) {
 			double heigh = Long.parseLong(itemArray[++index]);
 			double width = Integer.parseInt(itemArray[++index]);
@@ -194,8 +237,8 @@ public class ContainerLoading {
 
 			// Create new box and then add to not placed box
 			Box box = new Box(length, width, heigh);
-			// Box box = new Box();
 			box.setFragile(isFragility);
+			box.setSequenceNumber(sequenceNumber);
 			notPlacedBox.getBoxes().add(box);
 		}
 	}
@@ -216,8 +259,8 @@ public class ContainerLoading {
 		container.setCapacity(Integer.parseInt(conInfoString[index]));
 		container.setHeight(Double.parseDouble(conInfoString[++index]));
 		container.setWidth(Double.parseDouble(conInfoString[++index]));
-		container.setLength(Double.parseDouble(conInfoString[++index]));
-
+		container.setLength(Double.parseDouble(conInfoString[++index]));		
+		
 		// setup default space;
 		container.loadingSpace();
 	}
@@ -230,8 +273,8 @@ public class ContainerLoading {
 		String selectedRotation = feasObj.getSelectedRotation();
 
 		Dimension maximumDimension = getMaximumDimension(selectedRotation, selectedSpace.getMinimum(), selectedBox);
-		selectedBox.setMinimum(selectedSpace.getMinimum());
-		selectedBox.setMaximum(maximumDimension);
+		// selectedBox.setMinimum(selectedSpace.getMinimum());
+		// selectedBox.setMaximum(maximumDimension);
 
 		feasObj.getBox().setMaximum(maximumDimension);
 
@@ -242,12 +285,17 @@ public class ContainerLoading {
 		placedBox.getBoxes().add(selectedBox);
 	}
 
+	public void updateBoxPosition(Box selectedBox, Space space, String rotation) {
+		Dimension maximumDimension = getMaximumDimension(rotation, space.getMinimum(), selectedBox);
+		selectedBox.setMinimum(space.getMinimum());
+		selectedBox.setMaximum(maximumDimension);
+	}
+
 	public void updateSpaces(FeasibleObject obj) {
 		logger.info("---Start method update Spaces---");
 
 		Box selectedBox = obj.getBox();
 		Space selectedSpace = obj.getSpace();
-		//logger.info("Number of avaiable space before update: " + this.getAllSpaces().size());
 
 		Dimension boxMinimum = selectedBox.getMinimum();
 		Dimension boxMaximum = selectedBox.getMaximum();
@@ -261,13 +309,6 @@ public class ContainerLoading {
 
 		Dimension frontSpaceMaximum = selectedSpace.getMaximum();
 		Space frontSpace = new Space(frontSpaceMinimum, frontSpaceMaximum);
-
-		// logger.info(String.format("fs-minimum( %s %s %s)",
-		// new Object[] { frontSpaceMinimum.getX(), frontSpaceMinimum.getY(),
-		// frontSpaceMinimum.getZ() }));
-		// logger.info(String.format("fs-maximum( %s %s %s)",
-		// new Object[] { frontSpaceMaximum.getX(), frontSpaceMaximum.getY(),
-		// frontSpaceMaximum.getZ() }));
 
 		// create new right space
 		Dimension rightSpaceMinimum = new Dimension(boxMinimum.getX(), boxMaximum.getY(), boxMinimum.getZ());
@@ -286,19 +327,11 @@ public class ContainerLoading {
 		this.addEmptySpace(frontSpace);
 		this.addEmptySpace(rightSpace);
 		this.addEmptySpace(aboveSpace);
-		
-		
-		//this.showSpaceInfo();
+
+		// this.showSpaceInfo();
 
 		// remove box overlapping.
 		this.removeBoxWithOverlap(selectedBox);
-
-		// logger.info("===Remove box overlapping===");
-		// this.showSpaceInfo();
-		// logger.info("=========================");
-
-		// remove subsets.
-		// this.removeSubsets();
 
 		// Amalgamation
 		this.amalgamation();
@@ -380,23 +413,27 @@ public class ContainerLoading {
 	private void removeBoxWithOverlap(Box box) {
 		logger.info("Start remove box with overlap");
 		List<Space> helperList = new ArrayList<>();
+		List<Space> removeableList = new ArrayList<Space>();
 
-		for (Space s : this.getAllSpaces()) {
-			if (checkOverlapping(box, s)) {
+		for (int i = 0; i < this.getAllSpaces().size(); i++) {
+			Space selectedSpace = this.getAllSpaces().get(i);
+			if (checkOverlapping(box, selectedSpace)) {
+				this.showCuboidInfo(selectedSpace);
+				removeableList.add(selectedSpace);
+				helperList.addAll(this.updateOverlapSpaces(box, selectedSpace));
 
-				this.showCuboidInfo(s);
-				this.showCuboidInfo(box);
-
-				helperList.addAll(this.updateOverlapSpaces(box, s));
 			}
+		}
+
+		// remove invaid space.
+		for (Space space : removeableList) {
+			this.getAllSpaces().remove(space);
 		}
 
 		// add new spaces to current space.
 		if (helperList != null && !helperList.isEmpty()) {
 			this.getAllSpaces().addAll(helperList);
 			this.removeSubsets();
-
-			// this.showSpaceInfo(helperList);
 		}
 
 		logger.info("Stop remove box with overlap");
@@ -420,39 +457,43 @@ public class ContainerLoading {
 		// create front space.
 		Dimension frontMinimumDimension = new Dimension(maxBoxDimension.getX(), minSpaceDimension.getY(),
 				minSpaceDimension.getZ());
+
 		Dimension frontMaximumDimension = maxSpaceDimension;
 		Space frontSpace = new Space(frontMinimumDimension, frontMaximumDimension);
 
-		// create right space.
-		Dimension rightMinimumDimension = minSpaceDimension;
-		Dimension rightMaximumDimension = new Dimension(maxSpaceDimension.getX(), maxBoxDimension.getY(),
-				maxSpaceDimension.getZ());
-		Space rightSpace = new Space(rightMinimumDimension, rightMaximumDimension);
-
 		// create left space.
-		Dimension leftMinimumDimension = new Dimension(minSpaceDimension.getX(), maxBoxDimension.getY(),
+		Dimension leftMinimumDimension = minSpaceDimension;
+		Dimension leftMaximumDimension = new Dimension(maxSpaceDimension.getX(), minBoxDimension.getY(),
+				maxSpaceDimension.getZ());
+		Space rightSpace = new Space(leftMinimumDimension, leftMaximumDimension);
+
+		// create right space.
+		Dimension rightMinimumDimension = new Dimension(minSpaceDimension.getX(), maxBoxDimension.getY(),
 				minSpaceDimension.getZ());
-		Dimension leftMaximumDimension = maxSpaceDimension;
-		Space leftSpace = new Space(leftMinimumDimension, leftMaximumDimension);
+		Dimension rightMaximumDimension = maxSpaceDimension;
+		Space leftSpace = new Space(rightMinimumDimension, rightMaximumDimension);
 
 		if (behindSpace.isValid()) {
 			result.add(behindSpace);
+			logger.info("behind space");
+			showCuboidInfo(behindSpace);
 		}
 
 		if (frontSpace.isValid()) {
 			result.add(frontSpace);
+			logger.info("front space");
+			showCuboidInfo(frontSpace);
 		}
 
 		if (leftSpace.isValid()) {
+			logger.info("left space");
+			showCuboidInfo(leftSpace);
 			result.add(leftSpace);
 		}
 
 		if (rightSpace.isValid()) {
+			logger.info("right space");
 			result.add(rightSpace);
-		}
-
-		for (Space s : result) {
-			showCuboidInfo(s);
 		}
 
 		logger.info("===End Update Overlap Space===");
@@ -475,23 +516,21 @@ public class ContainerLoading {
 		for (int i = 0; i < helperList.size() - 1; i++) {
 			Space s = helperList.get(i);
 			for (int j = i + 1; j < helperList.size(); j++) {
-				
-				//check if space s is a subset of space t 
+
+				// check if space s is a subset of space t
 				Space t = helperList.get(j);
 				if (checkSubsetSpace(s, t)) {
-					this.showCuboidInfo("Space S info",s);
+					this.showCuboidInfo("Space S info", s);
 					this.showCuboidInfo("Space T info", t);
-					// remove space s
-					// this.getAllSpaces().remove(i);
-
 					helperList.remove(i);
 					break;
 				}
-				
-				//check if space t is a subset of space s
-				if(checkSubsetSpace(t, s)){
+
+				// check if space t is a subset of space s
+				if (checkSubsetSpace(t, s)) {
 					this.showCuboidInfo("Space T info ", t);
 					this.showCuboidInfo("Space S info", s);
+					helperList.remove(j);
 				}
 			}
 		}
@@ -501,16 +540,15 @@ public class ContainerLoading {
 
 	private boolean checkSubsetSpace(Space s, Space t) {
 		if ((s.getMinimum().compare(t.getMinimum()) == 1 || s.getMinimum().compare(t.getMinimum()) == 0)
-				&& (s.getMaximum().compare(t.getMaximum()) == -1 || s.getMaximum().compare(t.getMaximum()) == 0)) {
+				&& (t.getMaximum().compare(s.getMaximum()) == 1 || t.getMaximum().compare(s.getMaximum()) == 0)) {
 			return true;
 		}
 		return false;
 	}
 
 	private Space amalgamate(Space s, Space t) {
-		// if two space s and t don't have same floor-height.
-		if ((s.getMinimum().getZ() != t.getMinimum().getZ()) || (s.getMinimum().getX() == 0)
-				|| (t.getMinimum().getX() == 0)) {
+
+		if ((s.getMinimum().getZ() != t.getMinimum().getZ())) {
 			return null;
 		}
 
@@ -525,17 +563,23 @@ public class ContainerLoading {
 			// Caculate min dimension
 			double minAmalgamateX = s.getMinimum().getX() < t.getMinimum().getX() ? s.getMinimum().getX()
 					: t.getMinimum().getX();
+
 			double minAmalgamateY = s.getMinimum().getY() > t.getMinimum().getY() ? s.getMinimum().getY()
 					: t.getMinimum().getY();
+
 			double minAmalgamateZ = s.getMinimum().getZ();
+
 			Dimension minUDimension = new Dimension(minAmalgamateX, minAmalgamateY, minAmalgamateZ);
 
 			// Caculate max dimension
 			double maxAmalgamateX = s.getMaximum().getX() > t.getMaximum().getX() ? s.getMaximum().getX()
 					: t.getMaximum().getX();
+
 			double maxAmalgamateY = s.getMaximum().getY() < t.getMaximum().getY() ? s.getMaximum().getY()
 					: t.getMaximum().getY();
+
 			double maxAmalgamateZ = s.getMaximum().getZ();
+
 			Dimension maxUDimension = new Dimension(maxAmalgamateX, maxAmalgamateY, maxAmalgamateZ);
 
 			result = new Space(minUDimension, maxUDimension);
@@ -548,7 +592,7 @@ public class ContainerLoading {
 		}
 
 		// Amalgamate in y direction
-		if (s.getMinimum().getY() < t.getMaximum().getY() && t.getMinimum().getY() < s.getMaximum().getY()
+		if (s.getMinimum().getX() < t.getMaximum().getX() && t.getMinimum().getX() < s.getMaximum().getX()
 				&& (s.getMinimum().getY() == t.getMaximum().getY() || s.getMaximum().getY() == t.getMinimum().getY())) {
 
 			// Create Y's amalgamate space.
@@ -556,24 +600,30 @@ public class ContainerLoading {
 			// Caculate min dimension
 			double minYuX = s.getMinimum().getX() > t.getMinimum().getX() ? s.getMinimum().getX()
 					: t.getMinimum().getX();
+
 			double minYuY = s.getMinimum().getY() < t.getMinimum().getY() ? s.getMinimum().getY()
 					: t.getMinimum().getY();
+
 			double minYuZ = s.getMinimum().getZ();
+
 			Dimension minYuDimension = new Dimension(minYuX, minYuY, minYuZ);
 
 			double maxYuX = s.getMaximum().getX() < t.getMaximum().getX() ? s.getMaximum().getX()
 					: t.getMaximum().getX();
+
 			double maxYuY = s.getMaximum().getY() > t.getMaximum().getY() ? s.getMaximum().getY()
 					: t.getMaximum().getY();
+
 			double maxYuZ = s.getMaximum().getZ();
+
 			Dimension maxYuDimension = new Dimension(maxYuX, maxYuY, maxYuZ);
 
 			result = new Space(minYuDimension, maxYuDimension);
 			this.getAllSpaces().add(result);
 			logger.info("Amalgamate folow y direction");
-			this.showCuboidInfo(result);
 			this.showCuboidInfo(s);
 			this.showCuboidInfo(t);
+			this.showCuboidInfo(result);
 			logger.info("\n");
 
 		}
@@ -594,10 +644,12 @@ public class ContainerLoading {
 				continue;
 			}
 
-			if (s.getWidth() < smallestDimension || s.getLenght() < smallestDimension) {
+			if (s.getWidth() < smallestDimension || s.getLength() < smallestDimension) {
 				// check if exist space t.
 				boolean fExist = false;
-				for (int j = i + 1; j < this.getAllSpaces().size() - 1; j++) {
+				for (int j = 0; j < this.getAllSpaces().size(); j++) {
+					if (i == j)
+						continue;
 					Space t = this.getAllSpaces().get(j);
 					if (s.getMinimum().getX() <= t.getMaximum().getX() && t.getMinimum().getX() <= t.getMaximum().getX()
 							&& s.getMinimum().getY() <= t.getMaximum().getY()
@@ -622,6 +674,11 @@ public class ContainerLoading {
 
 	private double getSmallestDimension() {
 		double smallestDimension = 0;
+
+		if (this.getNotPlacedBox().getBoxes().size() > 0) {
+			smallestDimension = this.getNotPlacedBox().getBoxes().get(0).getSmallestDimension();
+		}
+
 		for (Box box : this.getNotPlacedBox().getBoxes()) {
 			smallestDimension = smallestDimension > box.getSmallestDimension() ? box.getSmallestDimension()
 					: smallestDimension;
@@ -645,8 +702,6 @@ public class ContainerLoading {
 						if (boxJ.getBoxType() == null || boxJ.getBoxType().isEmpty()) {
 							boxJ.setBoxType(boxI.getBoxType());
 						}
-					} else if (boxJ.getBoxType() == null || boxJ.getBoxType().isEmpty()) {
-						boxJ.setBoxType(String.valueOf(j));
 					}
 				}
 			}
@@ -655,14 +710,14 @@ public class ContainerLoading {
 
 	public void showSpaceInfo() {
 		for (Space s : this.getAllSpaces()) {
-			this.showCuboidInfo("",s);
+			this.showCuboidInfo("", s);
 		}
 	}
 
 	private void showSpaceInfo(List<Space> spacesList) {
 		for (Space s : spacesList) {
 			logger.info(String.format("size: %f %f %f || coordinate: %f %f %f, %f %f %f",
-					new Object[] { s.getLenght(), s.getWidth(), s.getHeight(), s.getMinimum().getX(),
+					new Object[] { s.getLength(), s.getWidth(), s.getHeight(), s.getMinimum().getX(),
 							s.getMinimum().getY(), s.getMinimum().getZ(), s.getMaximum().getX(), s.getMaximum().getY(),
 							s.getMaximum().getZ() }));
 		}
@@ -680,26 +735,56 @@ public class ContainerLoading {
 					new Object[] { name, c.getLength(), c.getWidth(), c.getHeigth() }));
 			return;
 		}
-		
-		if(c.getMinimumPoint() == null){
+
+		if (c.getMinimumPoint() == null) {
 			logger.info(String.format("%s length: %.2f, width: %.2f, height: %.2f min: null max(%.2f, %.2f, %.2f)",
-					new Object[]{name, c.getLength(), c.getWidth(), c.getHeigth(), c.getMaximumPoint().getX(),
-							c.getMaximumPoint().getY(), c.getMaximumPoint().getZ()}));
+					new Object[] { name, c.getLength(), c.getWidth(), c.getHeigth(), c.getMaximumPoint().getX(),
+							c.getMaximumPoint().getY(), c.getMaximumPoint().getZ() }));
 			return;
 		}
 
 		if (c.getMaximumPoint() == null) {
 			logger.info(String.format("%s length: %.2f, width: %.2f, height: %.2f min(%.2f, %.2f, %.2f) max: null",
-					new Object[]{name, c.getLength(), c.getWidth(), c.getHeigth(), c.getMinimumPoint().getX(),
-							c.getMinimumPoint().getY(), c.getMinimumPoint().getZ()}));
+					new Object[] { name, c.getLength(), c.getWidth(), c.getHeigth(), c.getMinimumPoint().getX(),
+							c.getMinimumPoint().getY(), c.getMinimumPoint().getZ() }));
 			return;
 		}
 
 		logger.info(
 				String.format("%s length: %.2f, width: %.2f, height: %.2f min(%.2f, %.2f, %.2f) max(%.2f, %.2f, %.2f)",
-						new Object[] { name == null ? "": name, c.getLength(), c.getWidth(), c.getHeigth(), c.getMinimumPoint().getX(),
-								c.getMinimumPoint().getY(), c.getMinimumPoint().getZ(), c.getMaximumPoint().getX(),
-								c.getMaximumPoint().getY(), c.getMaximumPoint().getZ() }));
+						new Object[] { name == null ? "" : name, c.getLength(), c.getWidth(), c.getHeigth(),
+								c.getMinimumPoint().getX(), c.getMinimumPoint().getY(), c.getMinimumPoint().getZ(),
+								c.getMaximumPoint().getX(), c.getMaximumPoint().getY(), c.getMaximumPoint().getZ() }));
+	}
+
+	private void readNodeInfo(List<String> fileContent) {
+		int startIndex = 9;
+
+		while (startIndex < fileContent.size()) {
+			String lineData = fileContent.get(startIndex);
+			if (lineData.contains("Node - number of items")) {
+				break;
+			}
+			lineData = lineData.trim();
+			String[] lineItems = splitUpLine(lineData);
+			Node node = new Node(lineItems[0], lineItems[1], lineItems[2], lineItems[3]);
+			this.getContainer().addNode(node);
+			startIndex++;
+		}
+	}
+
+	private String[] splitUpLine(String data) {
+		String[] dataArrays = data.split("\\s+");
+		return dataArrays;
+	}
+
+	private int getSequenceNumber(String nodeId) {
+		for (Node node : this.getContainer().getNodeList()) {
+			if (node.getId().compareToIgnoreCase(nodeId.trim()) == 0) {
+				return node.getDemand();
+			}
+		}
+		return 0;
 	}
 
 }

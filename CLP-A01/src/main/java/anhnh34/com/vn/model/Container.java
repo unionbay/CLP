@@ -10,8 +10,8 @@ public class Container {
 	private double width;
 	private double height;
 	private int capacity;
-	private Dimension dimension;
 	private List<Space> avaiableSpaces;
+	private List<Node> nodeList;
 
 	public List<Space> getAvaiableSpaces() {
 		return avaiableSpaces;
@@ -23,6 +23,18 @@ public class Container {
 
 	public double getLength() {
 		return length;
+	}
+
+	public void setNodeList(List<Node> nodeList) {
+		this.nodeList = nodeList;
+	}
+
+	public List<Node> getNodeList() {
+		return nodeList;
+	}
+
+	public void addNode(Node node) {
+		getNodeList().add(node);
 	}
 
 	public int getCapacity() {
@@ -52,7 +64,6 @@ public class Container {
 	public double getWidth() {
 		return width;
 	}
-		
 
 	public Container(double d, double w, double h) {
 		this.length = d;
@@ -73,7 +84,8 @@ public class Container {
 	}
 
 	public Container() {
-		this.avaiableSpaces = new ArrayList<Space>();	
+		this.avaiableSpaces = new ArrayList<Space>();
+		this.nodeList = new ArrayList<Node>();
 
 	}
 
@@ -83,37 +95,46 @@ public class Container {
 		// init maximum dimension with corresponde coordinate X, Y, Z
 		Dimension maxDimension = new Dimension(length, width, height);
 		Space containerSpace = new Space(minDimension, maxDimension);
-			
-		if (this.getAvaiableSpaces().isEmpty()) {			
+		containerSpace.setMaximumSupportX(maxDimension.getX());
+		containerSpace.setMaximumSupportY(maxDimension.getY());
+
+		if (this.getAvaiableSpaces().isEmpty()) {
 			this.getAvaiableSpaces().add(containerSpace);
 		}
 	}
 
 	public void sortSpaces() {
-		//check spaces's size.
-		if (avaiableSpaces.isEmpty() || avaiableSpaces.size() == 1) return;
-		 
-		this.mergeSort((Space[])this.avaiableSpaces.toArray(new Space[0]), 0, this.avaiableSpaces.size());	
+		// check spaces's size.
+		if (avaiableSpaces.isEmpty() || avaiableSpaces.size() == 1)
+			return;
+		Space[] avaiableSpaceList = (Space[]) (Space[]) this.avaiableSpaces.toArray(new Space[0]);
+		this.mergeSort(avaiableSpaceList, 0, this.avaiableSpaces.size() - 1);
+		this.avaiableSpaces.clear();
+		for (int i = 0; i < avaiableSpaceList.length; i++) {
+			this.avaiableSpaces.add(avaiableSpaceList[i]);
+		}
+
 	}
 
-	public Space[] mergeSort(Space[] spaceList, int start, int end) {
+	public void mergeSort(Space[] spaceList, int start, int end) {
 		Space[] returnSpace = new Space[spaceList.length];
-		if (end - start > 1) {
-			int mid = (end + start) / 2;
+		if (end - start > 0) {
+			int mid = start + (end - start) / 2;
 			mergeSort(spaceList, start, mid);
 			mergeSort(spaceList, mid + 1, end);
 
-			returnSpace = this.merge(spaceList, start, end, mid);
+			// returnSpace = this.merge(spaceList, start, end, mid);
+			this.merge(spaceList, start, end, mid);
 		}
 
-		return returnSpace;
+		// return returnSpace;
 	}
 
 	private Space[] merge(Space[] spaceList, int start, int end, int mid) {
 		Space[] temp = new Space[spaceList.length];
 
-		//copy both parts into the temp array
-		for (int i = start; i < end; i++) {
+		// copy both parts into the temp array
+		for (int i = start; i <= end; i++) {
 			temp[i] = spaceList[i];
 		}
 
@@ -121,9 +142,9 @@ public class Container {
 		int k = start;
 		int j = mid + 1;
 
-		//copy smallest values from either left or right side back 
-		//to orginal array.
-		while (i < mid && j < end) {
+		// copy smallest values from either left or right side back
+		// to orginal array.
+		while (i <= mid && j <= end) {
 			if (spaceList[i].compare(spaceList[j]) <= 0) {
 				spaceList[k] = temp[i];
 				i++;
@@ -135,7 +156,7 @@ public class Container {
 			k++;
 		}
 
-		while (i < mid) {
+		while (i <= mid) {
 			spaceList[k] = temp[i];
 			k++;
 			i++;
@@ -144,7 +165,6 @@ public class Container {
 		// side
 		// are already at the right position.
 		return spaceList;
-	}	
-	
-	
+	}
+
 }

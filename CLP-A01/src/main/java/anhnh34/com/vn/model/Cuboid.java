@@ -1,12 +1,6 @@
 package anhnh34.com.vn.model;
 
 public class Cuboid {
-	private Dimension minimumPoint;
-	private Dimension maximumPoint;
-
-	private double length;
-	private double width;
-	private double height;
 
 	public double getLength() {
 		return length;
@@ -33,7 +27,6 @@ public class Cuboid {
 	}
 
 	public Cuboid() {
-		// TODO Auto-generated constructor stub
 	}
 
 	public Dimension getMaximumPoint() {
@@ -56,4 +49,24 @@ public class Cuboid {
 		this.minimumPoint = min;
 		this.maximumPoint = max;
 	}
+	
+	public double getVolume() {
+		return volume;
+	}
+	
+	private void setVolume(double volume) {
+		this.volume = volume;
+	}
+	
+	public void init() {
+		double volume = this.getLength() * this.getWidth() * this.getHeigth();
+		this.setVolume(volume);
+	}
+	
+	private double width;
+	private double length;
+	private double height;
+	private double volume;
+	private Dimension minimumPoint;
+	private Dimension maximumPoint;
 }

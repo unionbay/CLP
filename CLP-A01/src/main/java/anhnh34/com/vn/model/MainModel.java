@@ -3,17 +3,13 @@ package anhnh34.com.vn.model;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.Reader;
-import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainModel {
-	private BigInteger N;
+public class MainModel {	
 	private List<Batch> placedBatch;
 	private List<Batch> nPlaceBatch;
 	private Container container;
@@ -40,7 +36,7 @@ public class MainModel {
 		String line = "";
 		while ((line = reader.readLine()) != null) {
 			if (index == 0) {
-				// Read contaier info.
+				//Read container info
 				this.readContainerInfo(line.split(" "));
 				continue;
 			}

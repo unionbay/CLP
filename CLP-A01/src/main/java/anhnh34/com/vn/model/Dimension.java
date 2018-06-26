@@ -5,12 +5,12 @@ public class Dimension {
 	private double y;
 	private double z;
 
-	public double getX() {	
+	public double getX() {
 		return x;
 	}
 
 	public double getY() {
-		return y; 
+		return y;
 	}
 
 	public double getZ() {
@@ -51,22 +51,11 @@ public class Dimension {
 		return null;
 	}
 
-	public int compare(Dimension d) {
-		
-	    if(this.x < d.x || this.y < d.y || this.z < d.z){
-	    	return -1;
-	    }
-	    
-		double length = Math.sqrt(Math.pow(this.getX(), 2) + Math.pow(this.getY(), 2) + Math.pow(this.getZ(), 2));
-		double dLength = Math.sqrt(Math.pow(d.getX(), 2) + Math.pow(this.getY(), 2) + Math.pow(this.getZ(), 2));
-
-		if (length < dLength) {
-			return -1;
-		} else if (length == dLength) {
-			return 0;
-		} else {
+	public int compare(Dimension d) {		
+		if(this.x >= d.x && this.y >= d.y && this.z >= d.z) {
 			return 1;
-		}
+		}					
+		return -1;	
 	}
 
 }
