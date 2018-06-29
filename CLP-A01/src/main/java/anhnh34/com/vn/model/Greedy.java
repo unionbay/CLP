@@ -6,20 +6,8 @@ import java.util.List;
 import org.apache.log4j.Logger;
 
 public class Greedy {
-	final static Logger logger = Logger.getLogger(Greedy.class);
-	private List<BoxCandidate> candidates;
-	private Batch placedBoxes;
-	private Batch notPlacedBoxes;
-	private ContainerLoading containerLoading;
-	private String selectedAlgorithm;
-	private List<Space> avaiableSpaces;
-	private double defaultRatioSupport;
-	private Container container;
 
-	public static final String ST_ALGORITHM = "ST";
-	public static final String VL_ALGORITHM = "AL";
-	public static final String EL_ALGORITHM = "EL";
-	public static final double NOT_SUPPORT_RATIO= 0.25;
+	final static Logger logger = Logger.getLogger(Greedy.class);
 
 	public void setContainer(Container container) {
 		this.container = container;
@@ -41,16 +29,12 @@ public class Greedy {
 		this.notPlacedBoxes = notPlacedBoxes;
 	}
 
-	public void setDefaultRatioSupport(double defaultRatioSupport) {
-		this.defaultRatioSupport = defaultRatioSupport;
-	}
-
 	public void setNSupportRatio(double nSupportRatio) {
-		this.defaultRatioSupport = nSupportRatio;
+		this.notSupportRatio = nSupportRatio;
 	}
 
 	public double getNSupportRatio() {
-		return defaultRatioSupport;
+		return notSupportRatio;
 	}
 
 	public Batch getPlacedBoxes() {
@@ -63,14 +47,6 @@ public class Greedy {
 
 	public void setAvaiableSpaces(List<Space> avaiableSpaces) {
 		this.avaiableSpaces = avaiableSpaces;
-	}
-
-	public double getSupportRate() {
-		return defaultRatioSupport;
-	}
-
-	public void setSupportRate(double sr) {
-		this.defaultRatioSupport = sr;
 	}
 
 	public String getSelectedAlgorithm() {
@@ -96,11 +72,22 @@ public class Greedy {
 		this.candidates = new ArrayList<BoxCandidate>();
 		this.placedBoxes = new Batch();
 		this.notPlacedBoxes = new Batch();
+		this.loadParameters();
 	}
 
-	// private void packing() {
-	//
-	// }
+	public void loadParameters() {
+		String nSupportParam = Utility.getInstance().getConfigValue("none_support_constraint");
+		String fragilityParam = Utility.getInstance().getConfigValue("fragility_constraint");
+		String lifoParam = Utility.getInstance().getConfigValue("lifo_constraint");
+
+		this.isOverhang = "0".equals(nSupportParam) ? false : true;
+		this.isFragility = "0".equals(fragilityParam) ? false : true;
+		this.isLifo = "0".equals(lifoParam) ? false : true;
+
+		if (isOverhang) {
+			this.setNSupportRatio(Double.valueOf(nSupportParam));
+		}
+	}
 
 	private void createCandiates(Space space, Box box) {
 		int k = 1;
@@ -112,20 +99,6 @@ public class Greedy {
 		BoxCandidate candidate = new BoxCandidate(box, space, k);
 		candidate.initialize(this.selectedAlgorithm);
 		candidates.add(candidate);
-	}
-
-	private void createCandiateBoxList(Space space, List<Box> feasibleBoxes) {
-		for (Box box : feasibleBoxes) {
-			int k = 1; // count number of b of selected box type left yet to be placed.
-			for (Box boxJ : this.getNotPlacedBoxes().getBoxes()) {
-				if (box.getBoxType() == boxJ.getBoxType()) {
-					k = k + 1;
-				}
-			}
-			BoxCandidate candidate = new BoxCandidate(box, space, k);
-			candidate.initialize(this.selectedAlgorithm);
-			candidates.add(candidate);
-		}
 	}
 
 	public BoxCandidate stAlgorithm() {
@@ -159,10 +132,6 @@ public class Greedy {
 		candidates = this.secondTieBreaker();
 		return candidates.get(0);
 	}
-
-	// private Box elAlgorithm() {
-	// return null;
-	// }
 
 	private List<BoxCandidate> mainCriterion() {
 		List<BoxCandidate> helperList = new ArrayList<BoxCandidate>();
@@ -219,43 +188,60 @@ public class Greedy {
 
 	public void updateSpaces(FeasibleObject obj) {
 		logger.info("---Start method update Spaces---");
-		Box selectedBox = obj.getBox();
+		Box box = obj.getBox();
+		Space space = obj.getSpace();
 
-		if (this.getNSupportRatio() == 0) {
-			this.createSpaceWithNoneOverhang(obj);
-			this.removeBoxWithOverlap(selectedBox); // remove overlap with other empty spaces.
-		} else {
-			this.createSpaceWithOverhang(obj);
-			this.removeBoxOverlappingWithOverhang(selectedBox); // remove overlap with other empty spaces.
+		Space frontSpace = generateFrontSpace(box, space);
+		Space rightSpace = generateRightSpace(box, space);
+		Space aboveSpace = generateAboveSpace(box, space);
 
-		}
-
+		// remove old space
+		this.getAvaiableSpaces().remove(space);		
+		
+		// add all new generate spaces.
+		this.addEmptySpace(frontSpace);
+		this.addEmptySpace(rightSpace);
+		this.addEmptySpace(aboveSpace);
+		
+		this.showSpaceInfo("front space:", frontSpace);
+		this.showSpaceInfo("right space", rightSpace);
+		this.showSpaceInfo("above space", aboveSpace);
+				
+		this.removeBoxOverlap(box); //check overlapping space.
+	
 		this.amalgamation(); // Amalgamation
+		
 		this.removeSmallSpaces(); // removal too small spaces
 
 		logger.info("=====Finish update spaces======");
 		logger.info("\n");
 		this.showSpaceInfo();
 	}
+	
+	
 
 	private void addEmptySpace(Space s) {
 		if (s.isValid()) {
 			this.getAvaiableSpaces().add(s);
 		}
 	}
-
-	private void removeBoxWithOverlap(Box box) {
+	
+	
+	
+	private void removeBoxOverlap(Box box) {
 		logger.info("Start remove box with overlap");
 		List<Space> helperList = new ArrayList<>();
 		List<Space> removeableList = new ArrayList<Space>();
 
 		for (int i = 0; i < this.getAvaiableSpaces().size(); i++) {
 			Space selectedSpace = this.getAvaiableSpaces().get(i);
-			if (checkOverlapping(box, selectedSpace)) {
-				// this.showCuboidInfo(selectedSpace);
+			if (checkOverlapping(box, selectedSpace)) {				
 				removeableList.add(selectedSpace);
-				helperList.addAll(this.updateOverlapSpaces(box, selectedSpace));
-
+				if(isOverhang) {
+					helperList.addAll(this.overhangUpdateOverlapSpaces(box, selectedSpace));	
+				}else {
+					helperList.addAll(this.updateOverlapSpaces(box, selectedSpace));
+				}			
 			}
 		}
 
@@ -292,14 +278,14 @@ public class Greedy {
 			for (int j = i + 1; j < this.getAvaiableSpaces().size(); j++) {
 				Space t = this.getAvaiableSpaces().get(j);
 				Space amalgateSpace = null;
-				if (this.getNSupportRatio() == 0) {
-					amalgateSpace = this.amalgamate(s, t);
+				if (this.isOverhang) {
+					amalgateSpace = this.overlapAmalgamate(s, t);					
 				} else {
-					// incase overhang is allow.
-					amalgateSpace = this.overlapAmalgate(s, t);
+					amalgateSpace = this.amalgamate(s, t);					
 				}
 
 				if (amalgateSpace != null) {
+					this.amalgamateCount++;
 					helperList.add(amalgateSpace);
 				}
 			}
@@ -310,7 +296,7 @@ public class Greedy {
 				this.addEmptySpace(amalagateSpace);
 			}
 		}
-
+		
 		this.removeSubsets();
 	}
 
@@ -430,15 +416,18 @@ public class Greedy {
 
 	private boolean checkSubsetSpace(Space s, Space t) {
 		if ((s.getMinimum().compare(t.getMinimum()) == 1 || s.getMinimum().compare(t.getMinimum()) == 0)
-				&& (t.getMaximum().compare(s.getMaximum()) == 1 || t.getMaximum().compare(s.getMaximum()) == 0) && 
-				s.getMaximumSupportX() >= t.getMaximumSupportX() && s.getMaximumSupportY() >= t.getMaximumSupportY()) {
+				&& (t.getMaximum().compare(s.getMaximum()) == 1 || t.getMaximum().compare(s.getMaximum()) == 0)
+				&& s.getMaximumSupportX() >= t.getMaximumSupportX()
+				&& s.getMaximumSupportY() >= t.getMaximumSupportY()) {
 			return true;
-//			if (this.defaultRatioSupport == 0 || s.getMinimum().getZ() == 0) {
-//				return true;
-//			}			
-//			if (s.getMaximumSupportX() <= t.getMaximumSupportX() && s.getMaximumSupportY() <= t.getMaximumSupportY() && s.getMinimum().getZ() > 0) {
-//				return true;
-//			}
+			// if (this.defaultRatioSupport == 0 || s.getMinimum().getZ() == 0) {
+			// return true;
+			// }
+			// if (s.getMaximumSupportX() <= t.getMaximumSupportX() &&
+			// s.getMaximumSupportY() <= t.getMaximumSupportY() && s.getMinimum().getZ() >
+			// 0) {
+			// return true;
+			// }
 		}
 		return false;
 	}
@@ -456,7 +445,7 @@ public class Greedy {
 		Dimension behindMinimumDimension = minSpaceDimension;
 		Dimension behindMaximumDimension = new Dimension(minBoxDimension.getX(), maxSpaceDimension.getY(),
 				maxSpaceDimension.getZ());
-		
+
 		Space behindSpace = new Space(behindMinimumDimension, behindMaximumDimension);
 
 		// create front space.
@@ -479,17 +468,17 @@ public class Greedy {
 		Space leftSpace = new Space(rightMinimumDimension, rightMaximumDimension);
 
 		if (behindSpace.isValid()) {
-			result.add(behindSpace);		
-		showCuboidInfo("behind space: ", behindSpace);
+			result.add(behindSpace);
+			showCuboidInfo("behind space: ", behindSpace);
 		}
 
 		if (frontSpace.isValid()) {
-			result.add(frontSpace);			
+			result.add(frontSpace);
 			showCuboidInfo("frontSpace: ", frontSpace);
 			// showCuboidInfo(frontSpace);
 		}
 
-		if (leftSpace.isValid()) {			
+		if (leftSpace.isValid()) {
 			showCuboidInfo("leftSpace: ", leftSpace);
 			// showCuboidInfo(leftSpace);
 			result.add(leftSpace);
@@ -565,22 +554,30 @@ public class Greedy {
 	}
 
 	public FeasibleObject findObjectBs() {
-		
+
 		this.sortSpaces();
 		List<BoxCandidate> feasibleCandidates = new ArrayList<BoxCandidate>();
-		Box temp =  null;
-		for (Box box : this.getNotPlacedBoxes().getBoxes()) {			
-			for (Space space : this.getAvaiableSpaces()) {
-				String rotation = this.checkBoxIsFeasible(box, space);
-				if (rotation.isEmpty()) {
+		Box tBox = null;
+		for (Box box : this.getNotPlacedBoxes().getBoxes()) {
+			for (Space space : this.getAvaiableSpaces()) {			
+				if(roundNumber == 4) {
+					System.out.println("Round number: " + roundNumber);
+				}
+				List<String> rotations = this.findRotations(box, space);
+				if (rotations.isEmpty()) {
 					continue;
 				}
-				temp = new Box(box);
-				temp.setSelectedRotation(rotation);
-				temp.setSize(rotation);
+				
+				if(isLifo && !isMultiDropFeasiblePacking(box)) {
+					continue;
+				}
+							
+				tBox = new Box(box);			
+				tBox.setPossibleRotations(rotations);				
+				tBox.setSelectedRotation(tBox.getPossibleRotations().get(0));			
 
-				this.updateBoxPosition(temp, space, rotation);
-				BoxCandidate candidate = new BoxCandidate(temp, space, 0);		
+				this.updateBoxPosition(tBox, space, tBox.getSelectedRotation().getRotationCode());
+				BoxCandidate candidate = new BoxCandidate(tBox, space, 0);
 				feasibleCandidates.add(candidate);
 			}
 
@@ -588,12 +585,11 @@ public class Greedy {
 				continue;
 			}
 
+			BoxCandidate bestCandidate = this.findBestSpaceBs(feasibleCandidates);
+			box.setSelectedRotation(bestCandidate.getBox().getSelectedRotation());			
+			updateBoxPosition(box, bestCandidate.getSpace(), box.getSelectedRotation().getRotationCode());
 			
-			BoxCandidate bestCan = this.findBestSpaceBs(feasibleCandidates);
-			box.setSelectedRotation(bestCan.getBox().getSelectedRotation());
-			box.setSize(bestCan.getBox().getSelectedRotation());
-			updateBoxPosition(box, bestCan.getSpace(), box.getSelectedRotation());
-			return new FeasibleObject(box, bestCan.getBox().getSelectedRotation(), bestCan.getSpace());
+			return new FeasibleObject(box, bestCandidate.getBox().getSelectedRotation(), bestCandidate.getSpace());
 		}
 		return null;
 	}
@@ -604,54 +600,6 @@ public class Greedy {
 			this.createCandiates(candidate.getSpace(), candidate.getBox());
 		}
 		return this.findBestFittedBox();
-	}
-
-	public FeasibleObject findFeasibleObject() {
-		logger.info("---Start FindFeasibleObject---");
-
-		// re-sort all current avaiable spaces acending...
-		this.sortSpaces();
-		logger.info("\n");
-		logger.info("List of spaces ");
-		this.showSpaceInfo();
-
-		for (Space space : this.getAvaiableSpaces()) {
-			// init feasible box list
-			List<Box> feasibleListBox = new ArrayList<Box>();
-
-			for (Box box : this.getNotPlacedBoxes().getBoxes()) {
-				String selectedRotation = this.checkBoxIsFeasible(box, space);
-				if (selectedRotation.isEmpty()) { // if box is not fit in space
-					continue;
-				}
-
-				// put box into feasible list and then choose the best one.setSize
-				box.setSelectedRotation(selectedRotation);
-				box.setSize(selectedRotation);
-				this.updateBoxPosition(box, space, selectedRotation);
-				// if (isMultiDropFeasiblePacking(box)) {
-				// feasibleListBox.add(box);
-				// }
-				feasibleListBox.add(box);
-			}
-
-			if (feasibleListBox.isEmpty()) {
-				continue;
-			}
-
-			logger.info("Avaiable boxes");
-			for (Box b : feasibleListBox) {
-				this.showCuboidInfo("", b);
-			}
-			// find the best one box.
-			BoxCandidate candidate = this.findBestFittedBox();
-			// Box fittedBox = feasibleListBox.get(0);
-			logger.info("The best fit box");
-			this.showCuboidInfo("", candidate.getBox());
-			return new FeasibleObject(candidate.getBox(), candidate.getBox().getSelectedRotation(), space);
-		}
-
-		return null;
 	}
 
 	private BoxCandidate findBestFittedBox() {
@@ -671,84 +619,10 @@ public class Greedy {
 		}
 	}
 
-//	private Box findBestFittedBox(Space space, List<Box> feasibleBoxList) {
-//		if (feasibleBoxList.size() == 1) {
-//			return feasibleBoxList.get(0);
-//		}
-//		candidates.clear();
-//		switch (this.getSelectedAlgorithm()) {
-//		case Greedy.ST_ALGORITHM:
-//			return this.stAlgorithm(space, feasibleBoxList);
-//		case Greedy.VL_ALGORITHM:
-//			return this.vlAlgorithm(space, feasibleBoxList);
-//		case Greedy.EL_ALGORITHM:
-//			return this.vlAlgorithm(space, feasibleBoxList);
-//		default:
-//			return null;
-//		}
-//	}
-
-	private String checkBoxIsFeasible(Box selectedBox, Space selectedSpace) {
-		// loop all possible rotations.
-		int[] rotations = selectedBox.getfRotation();
-
-		// can be rotation by X.
-		if (rotations[0] == 1) {
-			// XZY
-			if (selectedSpace.getLength() >= selectedBox.getBiggestDimension()
-					&& selectedSpace.getWidth() >= selectedBox.getSmallestDimension()
-					&& selectedSpace.getHeight() >= selectedBox.getMiddleDimension()) {
-				return Rotation.XZY;
-			}
-
-			// XYZ
-			if (selectedSpace.getLength() >= selectedBox.getBiggestDimension()
-					&& selectedSpace.getWidth() >= selectedBox.getMiddleDimension()
-					&& selectedSpace.getHeight() >= selectedBox.getSmallestDimension()) {
-				return Rotation.XYZ;
-			}
-		}
-
-		// can be rotation by Y.
-		if (rotations[1] == 1) {
-			// YXZ
-			if (selectedSpace.getWidth() >= selectedBox.getBiggestDimension()
-					&& selectedSpace.getLength() >= selectedBox.getMiddleDimension()
-					&& selectedSpace.getHeight() >= selectedBox.getSmallestDimension()) {
-				return Rotation.YXZ;
-			}
-
-			// YZX
-			if (selectedSpace.getWidth() >= selectedBox.getBiggestDimension()
-					&& selectedSpace.getLength() >= selectedBox.getSmallestDimension()
-					&& selectedSpace.getHeight() >= selectedBox.getMiddleDimension()) {
-				return Rotation.YZX;
-			}
-		}
-
-		// can be rotation by Z.
-		if (rotations[2] == 1) {
-			// ZXY
-			if (selectedSpace.getHeight() >= selectedBox.getBiggestDimension()
-					&& selectedSpace.getLength() >= selectedBox.getMiddleDimension()
-					&& selectedSpace.getWidth() >= selectedBox.getSmallestDimension()) {
-				return Rotation.ZXY;
-			}
-			// ZYX
-			if (selectedSpace.getHeight() >= selectedBox.getBiggestDimension()
-					&& selectedSpace.getWidth() >= selectedBox.getMiddleDimension()
-					&& selectedSpace.getLength() >= selectedBox.getSmallestDimension()) {
-				return Rotation.ZYX;
-			}
-		}
-		return "";
-	}
-
 	private List<String> findRotations(Box box, Space space) {
 		// loop all possible rotations.
 		int[] rotations = box.getfRotation();
-		List<String> fesRotations = new ArrayList<String>();
-
+		List<String> fesRotations = new ArrayList<String>();		
 		// can be rotation by X.
 		if (rotations[0] == 1) {
 			// XZY
@@ -799,16 +673,16 @@ public class Greedy {
 	}
 
 	public void update(FeasibleObject feasObj) {
-
 		// get Feasible Object
 		Box selectedBox = feasObj.getBox();
 		Space selectedSpace = feasObj.getSpace();
-		String selectedRotation = feasObj.getSelectedRotation();
-
+		// String selectedRotation = feasObj.getSelectedRotation().getRotationCode();
+		String selectedRotation = feasObj.getBox().getSelectedRotation().getRotationCode();
+		
+		logger.info("selected rotation: " + feasObj.getBox().getSelectedRotation().getRotationCode());
 		Dimension maximumDimension = getMaximumDimension(selectedRotation, selectedSpace.getMinimum(), selectedBox);
 		// selectedBox.setMinimum(selectedSpace.getMinimum());
 		// selectedBox.setMaximum(maximumDimension);
-
 		feasObj.getBox().setMaximum(maximumDimension);
 
 		logger.info("founded feasible Object Info: ");
@@ -877,14 +751,6 @@ public class Greedy {
 		Utility.getInstance().writeResultToFile(this.placedBoxes.getBoxes()); // write result to file.
 	}
 
-	// private void showCuboidInfo(Cuboid c) {
-	// logger.info(String.format("%f %f %f, %f %f %f",
-	// new Object[] { c.getMinimumPoint().getX(), c.getMinimumPoint().getY(),
-	// c.getMinimumPoint().getZ(),
-	// c.getMaximumPoint().getX(), c.getMaximumPoint().getY(),
-	// c.getMaximumPoint().getZ() }));
-	// }
-
 	public void showCuboidInfo(String name, Cuboid c) {
 		if (c.getMinimumPoint() == null && c.getMaximumPoint() == null) {
 			logger.info(String.format("%s length: %.2f, width: %.2f, height: %.2f%, volume: %.2f, min: null  max: null",
@@ -893,56 +759,66 @@ public class Greedy {
 		}
 
 		if (c.getMinimumPoint() == null) {
-			logger.info(String.format("%s length: %.2f, width: %.2f, height: %.2f, volume: %.2f min: null max(%.2f, %.2f, %.2f)",
-					new Object[] { name, c.getLength(), c.getWidth(), c.getHeigth(), c.getVolume(), c.getMaximumPoint().getX(),
-							c.getMaximumPoint().getY(), c.getMaximumPoint().getZ() }));
+			logger.info(String
+					.format("%s length: %.2f, width: %.2f, height: %.2f, volume: %.2f min: null max(%.2f, %.2f, %.2f)",
+							new Object[] { name, c.getLength(), c.getWidth(), c.getHeigth(), c.getVolume(),
+									c.getMaximumPoint().getX(), c.getMaximumPoint().getY(),
+									c.getMaximumPoint().getZ() }));
 			return;
 		}
 
 		if (c.getMaximumPoint() == null) {
-			logger.info(String.format("%s length: %.2f, width: %.2f, height: %.2f, volume: %2.f min(%.2f, %.2f, %.2f) max: null",
-					new Object[] { name, c.getLength(), c.getWidth(), c.getHeigth(), c.getVolume(),  c.getMinimumPoint().getX(),
-							c.getMinimumPoint().getY(), c.getMinimumPoint().getZ() }));
+			logger.info(String
+					.format("%s length: %.2f, width: %.2f, height: %.2f, volume: %2.f min(%.2f, %.2f, %.2f) max: null",
+							new Object[] { name, c.getLength(), c.getWidth(), c.getHeigth(), c.getVolume(),
+									c.getMinimumPoint().getX(), c.getMinimumPoint().getY(),
+									c.getMinimumPoint().getZ() }));
 			return;
 		}
 
-		logger.info(
-				String.format("%s length: %.2f, width: %.2f, height: %.2f, volume: %.2f  min(%.2f, %.2f, %.2f) max(%.2f, %.2f, %.2f)",
-						new Object[] { name == null ? "" : name, c.getLength(), c.getWidth(), c.getHeigth(),c.getVolume(),
-								c.getMinimumPoint().getX(), c.getMinimumPoint().getY(), c.getMinimumPoint().getZ(),
-								c.getMaximumPoint().getX(), c.getMaximumPoint().getY(), c.getMaximumPoint().getZ() }));
+		logger.info(String.format(
+				"%s length: %.2f, width: %.2f, height: %.2f, volume: %.2f  min(%.2f, %.2f, %.2f) max(%.2f, %.2f, %.2f)",
+				new Object[] { name == null ? "" : name, c.getLength(), c.getWidth(), c.getHeigth(), c.getVolume(),
+						c.getMinimumPoint().getX(), c.getMinimumPoint().getY(), c.getMinimumPoint().getZ(),
+						c.getMaximumPoint().getX(), c.getMaximumPoint().getY(), c.getMaximumPoint().getZ() }));
 	}
-	
+
 	public void showSpaceInfo(String name, Space s) {
 
 		if (s.getMinimumPoint() == null && s.getMaximumPoint() == null) {
 			logger.info(String.format("%s length: %.2f, width: %.2f, height: %.2f%, volume: %.2f a:%2f  b:%2f",
-					new Object[] { name, s.getLength(), s.getWidth(), s.getHeigth(), s.getVolume(), s.getMaximumSupportX(), s.getMaximumSupportY() }));
+					new Object[] { name, s.getLength(), s.getWidth(), s.getHeigth(), s.getVolume(),
+							s.getMaximumSupportX(), s.getMaximumSupportY() }));
 			return;
 		}
 
 		if (s.getMinimumPoint() == null) {
-			logger.info(String.format("%s length: %.2f, width: %.2f, height: %.2f, volume: %.2f a:%2f  b:%2f min: null max(%.2f, %.2f, %.2f)",
-					new Object[] { name, s.getLength(), s.getWidth(), s.getHeigth(), s.getVolume(), s.getMaximumSupportX(), s.getMaximumSupportY(), s.getMaximumPoint().getX(),
+			logger.info(String.format(
+					"%s length: %.2f, width: %.2f, height: %.2f, volume: %.2f a:%2f  b:%2f min: null max(%.2f, %.2f, %.2f)",
+					new Object[] { name, s.getLength(), s.getWidth(), s.getHeigth(), s.getVolume(),
+							s.getMaximumSupportX(), s.getMaximumSupportY(), s.getMaximumPoint().getX(),
 							s.getMaximumPoint().getY(), s.getMaximumPoint().getZ() }));
 			return;
 		}
 
 		if (s.getMaximumPoint() == null) {
-			logger.info(String.format("%s length: %.2f, width: %.2f, height: %.2f, volume: %2.f a:%2f  b:%2f min(%.2f, %.2f, %.2f) max: null",
-					new Object[] { name, s.getLength(), s.getWidth(), s.getHeigth(), s.getVolume(), s.getMaximumSupportX(), s.getMaximumSupportY(), s.getMinimumPoint().getX(),
+			logger.info(String.format(
+					"%s length: %.2f, width: %.2f, height: %.2f, volume: %2.f a:%2f  b:%2f min(%.2f, %.2f, %.2f) max: null",
+					new Object[] { name, s.getLength(), s.getWidth(), s.getHeigth(), s.getVolume(),
+							s.getMaximumSupportX(), s.getMaximumSupportY(), s.getMinimumPoint().getX(),
 							s.getMinimumPoint().getY(), s.getMinimumPoint().getZ() }));
 			return;
 		}
 
-		logger.info(
-				String.format("%s length: %.2f, width: %.2f, height: %.2f, volume: %.2f a:%2f  b:%2f   min(%.2f, %.2f, %.2f) max(%.2f, %.2f, %.2f)",
-						new Object[] { name == null ? "" : name, s.getLength(), s.getWidth(), s.getHeigth(),s.getVolume(), s.getMaximumSupportX(), s.getMaximumSupportY(),
-								s.getMinimumPoint().getX(), s.getMinimumPoint().getY(), s.getMinimumPoint().getZ(),
-								s.getMaximumPoint().getX(), s.getMaximumPoint().getY(), s.getMaximumPoint().getZ() }));
-	
+		logger.info(String.format(
+				"%s length: %.2f, width: %.2f, height: %.2f, volume: %.2f a:%2f  b:%2f   min(%.2f, %.2f, %.2f) max(%.2f, %.2f, %.2f)",
+				new Object[] { name == null ? "" : name, s.getLength(), s.getWidth(), s.getHeigth(), s.getVolume(),
+						s.getMaximumSupportX(), s.getMaximumSupportY(), s.getMinimumPoint().getX(),
+						s.getMinimumPoint().getY(), s.getMinimumPoint().getZ(), s.getMaximumPoint().getX(),
+						s.getMaximumPoint().getY(), s.getMaximumPoint().getZ() }));
+
 	}
-	
+
 	public void showBoxInfo(String name, Box box) {
 		if (box.getMinimumPoint() == null && box.getMaximumPoint() == null) {
 			logger.info(String.format("%s length: %.2f, width: %.2f, height: %.2f, volume: %.2f, min: null  max: null",
@@ -964,18 +840,18 @@ public class Greedy {
 			return;
 		}
 
-		logger.info(
-				String.format("%s length: %.2f, width: %.2f, height: %.2f min(%.2f, %.2f, %.2f) max(%.2f, %.2f, %.2f)",
-						new Object[] { name == null ? "" : name, box.getLength(), box.getWidth(), box.getHeigth(),
-								box.getMinimumPoint().getX(), box.getMinimumPoint().getY(), box.getMinimumPoint().getZ(),
-								box.getMaximumPoint().getX(), box.getMaximumPoint().getY(), box.getMaximumPoint().getZ() }));
+		logger.info(String.format(
+				"%s length: %.2f, width: %.2f, height: %.2f min(%.2f, %.2f, %.2f) max(%.2f, %.2f, %.2f)",
+				new Object[] { name == null ? "" : name, box.getLength(), box.getWidth(), box.getHeigth(),
+						box.getMinimumPoint().getX(), box.getMinimumPoint().getY(), box.getMinimumPoint().getZ(),
+						box.getMaximumPoint().getX(), box.getMaximumPoint().getY(), box.getMaximumPoint().getZ() }));
 	}
 
 	public void sortSpaces() {
 		// check spaces's size.
 		if (avaiableSpaces.isEmpty() || avaiableSpaces.size() == 1)
 			return;
-		Space[] avaiableSpaceList = (Space[]) (Space[]) this.avaiableSpaces.toArray(new Space[0]);
+		Space[] avaiableSpaceList = this.avaiableSpaces.toArray(new Space[0]);
 		this.mergeSort(avaiableSpaceList, 0, this.avaiableSpaces.size() - 1);
 		this.avaiableSpaces.clear();
 		for (int i = 0; i < avaiableSpaceList.length; i++) {
@@ -1045,65 +921,13 @@ public class Greedy {
 		selectedBox.setMaximum(maximumDimension);
 	}
 
-	private void createSpaceWithNoneOverhang(FeasibleObject obj) {
-
-		Box selectedBox = obj.getBox();
-		Space selectedSpace = obj.getSpace();
-
-		Dimension boxMinimum = selectedBox.getMinimum();
-		Dimension boxMaximum = selectedBox.getMaximum();
-
-		Dimension spaceMinimum = selectedSpace.getMinimum();
-		Dimension spaceMaximum = selectedSpace.getMaximum();
-
-		// create new front space
-		Dimension frontSpaceMinimum = new Dimension(selectedBox.getMaximum().getX(), selectedSpace.getMinimum().getY(),
-				selectedSpace.getMinimum().getZ());
-
-		Dimension frontSpaceMaximum = selectedSpace.getMaximum();
-		Space frontSpace = new Space(frontSpaceMinimum, frontSpaceMaximum);
-
-		// create new right space
-		Dimension rightSpaceMinimum = new Dimension(boxMinimum.getX(), boxMaximum.getY(), boxMinimum.getZ());
-		Dimension rightSpaceMaximum = selectedSpace.getMaximum();
-		Space rightSpace = new Space(rightSpaceMinimum, rightSpaceMaximum);
-
-		// create above space.
-		Dimension aboveSpaceMinimum = new Dimension(spaceMinimum.getX(), spaceMinimum.getY(), boxMaximum.getZ());
-		Dimension aboveSpaceMaximum = new Dimension(boxMaximum.getX(), boxMaximum.getY(), spaceMaximum.getZ());
-		Space aboveSpace = new Space(aboveSpaceMinimum, aboveSpaceMaximum);
-
-		// remove old space
-		this.getAvaiableSpaces().remove(selectedSpace);
-
-		// add all new generate spaces.
-		this.addEmptySpace(frontSpace);
-		this.addEmptySpace(rightSpace);
-		this.addEmptySpace(aboveSpace);
-	}
-
-	private void createSpaceWithOverhang(FeasibleObject feasibleObj) {
-		Box selectedBox = feasibleObj.getBox();
-		Space selectedSpace = feasibleObj.getSpace();
-
-		Space frontSpace = generateFrontSpace(selectedBox, selectedSpace);
-		Space rightSpace = generateRightSpace(selectedBox, selectedSpace);
-		Space aboveSpace = generateAboveSpace(selectedBox, selectedSpace);
-
-		// remove old space
-		this.getAvaiableSpaces().remove(selectedSpace);
-		this.showSpaceInfo("front space:", frontSpace);
-		this.showCuboidInfo("right space", rightSpace);
-		this.showSpaceInfo("above space", aboveSpace);
-		// add all new generate spaces.
-		this.addEmptySpace(frontSpace);
-		this.addEmptySpace(rightSpace);
-		this.addEmptySpace(aboveSpace);
-	}
-
 	// Generate above space
 	private Space generateAboveSpace(Box box, Space space) {
-		// Dimension minBox = box.getMinimum();
+
+		if (isFragility == true && box.isFragile() == true) {
+			return null;
+		}
+
 		Dimension maxBox = box.getMaximum();
 		Dimension minSpace = space.getMinimum();
 		Dimension maxSpace = space.getMaximum();
@@ -1118,11 +942,13 @@ public class Greedy {
 		Space result = new Space(minimum, maximum);
 		result.setMaximumSupportX(
 				box.getLength() < space.getMaximumSupportX() ? box.getLength() : space.getMaximumSupportX());
+		
 		result.setMaximumSupportY(
 				box.getWidth() < space.getMaximumSupportY() ? box.getWidth() : space.getMaximumSupportY());
+		
 		result.setRatioSupport(this.getNSupportRatio());
+		
 		return result;
-
 	}
 
 	private Space generateFrontSpace(Box box, Space space) {
@@ -1130,22 +956,23 @@ public class Greedy {
 		Dimension minSpace = space.getMinimum();
 		Dimension maxSpace = space.getMaximum();
 
-		if (minSpace.getZ() == 0) { // Incase space is full support from below and no overhang is allow.
+		if (minSpace.getZ() == 0 || isOverhang == false) { // Incase space is full support from below and no overhang is allow.
 			// create new front space
 			Dimension minimum = new Dimension(maxBox.getX(), minSpace.getY(), minSpace.getZ());
 			Dimension maximum = maxSpace;
-			Space result = new Space(minimum, maximum, 0, maxSpace.getX(), maxSpace.getY());
-			return result;
-		} else {
-			double xFrontMaximum = (1 + getNSupportRatio()) * space.getMaximumSupportX()
-					- maxBox.getX() * getNSupportRatio();
-
-			Dimension minimum = new Dimension(maxBox.getX(), minSpace.getY(), minSpace.getZ());
-			Dimension maximum = new Dimension(xFrontMaximum, maxSpace.getY(), maxSpace.getZ());
-			Space result = new Space(minimum, maximum, this.getNSupportRatio(), space.getMaximumSupportX(),
-					space.getMaximumSupportY());
-			return result;
+			return new Space(minimum, maximum, 0, maxSpace.getX(), maxSpace.getY());			
 		}
+			
+		double xFrontMaximum = (1 + getNSupportRatio()) * space.getMaximumSupportX() - maxBox.getX() * getNSupportRatio();
+		Dimension minimum = new Dimension(maxBox.getX(), minSpace.getY(), minSpace.getZ());
+		Dimension maximum = new Dimension(xFrontMaximum, maxSpace.getY(), maxSpace.getZ());
+		return new Space(minimum, maximum, this.getNSupportRatio(), space.getMaximumSupportX(), space.getMaximumSupportY());			
+		
+		
+		// create new front space
+		//Dimension minimum = new Dimension(maxBox.getX(), minSpace.getY(), minSpace.getZ());
+		//Dimension maximum = maxSpace;
+		//return new Space(minimum, maximum);				
 	}
 
 	private Space generateRightSpace(Box box, Space space) {
@@ -1155,139 +982,23 @@ public class Greedy {
 		Dimension maxSpace = space.getMaximum();
 
 		if (minSpace.getZ() == 0) {
-			Dimension rightSpaceMinimum = new Dimension(minBox.getX(), maxBox.getY(), minBox.getZ());
-			Dimension rightSpaceMaximum = maxSpace;
-			Space rightSpace = new Space(rightSpaceMinimum, rightSpaceMaximum, 0, maxSpace.getX(), maxSpace.getY());			
-			rightSpace.setRatioSupport(0);
-			return rightSpace;
+			Dimension minimum = new Dimension(minBox.getX(), maxBox.getY(), minBox.getZ());
+			Dimension maximum = maxSpace;
+			return new Space(minimum, maximum, 0, maxSpace.getX(), maxSpace.getY());									
 		}
-
-		Dimension rightSpaceMinimum = new Dimension(minSpace.getX(), maxBox.getY(), minSpace.getZ());
-		double maximumY = (1 + this.getNSupportRatio()) * space.getMaximumSupportY()
-				- maxBox.getY() * this.getNSupportRatio();
-		Dimension rightSpaceMaximum = new Dimension(maxSpace.getX(), maximumY, maxSpace.getZ());
-
-		Space rSpace = new Space(rightSpaceMinimum, rightSpaceMaximum, getNSupportRatio(), space.getMaximumSupportX(),
-				space.getMaximumSupportY());
-		return rSpace;
-	}
-
-	private Space initOverhangSpace(Space s, Box box) {
-
-		Dimension min = s.getMinimum();
-		Dimension max = s.getMaximum();
-		double rs = this.defaultRatioSupport;
-		Space space = new Space();
-
-		/* Not calculate with space */
-		if (min.getZ() == 0) {
-			space.setRatioSupport(0);
-			space.setMinimum(min);
-			space.setMaximum(max);
-			space.setMaximumSupportX(max.getX());
-			space.setMaximumSupportY(max.getY());
-			return space;
+		
+		if(isOverhang) {
+			Dimension minimum = new Dimension(minSpace.getX(), maxBox.getY(), minSpace.getZ());
+			double yMaximum = (1 + this.getNSupportRatio()) * space.getMaximumSupportY() - maxBox.getY() * this.getNSupportRatio();
+			Dimension maximum = new Dimension(maxSpace.getX(), yMaximum, maxSpace.getZ());
+			return new Space(minimum, maximum, getNSupportRatio(), space.getMaximumSupportX(), space.getMaximumSupportY());						
 		}
+		
+		// create new right space
+		Dimension minimum = new Dimension(minBox.getX(), maxBox.getY(), minBox.getZ());
+		Dimension maximum = maxSpace;
+		return new Space(minimum, maximum);
 
-		// set max and min supported part incase minZ >0.
-		space.setMaximumSupportX(min.getX() + box.getLength());
-		space.setMaximumSupportY(min.getY() + box.getWidth());
-
-		// re-calculate supported rate.
-		double noneSupportX = box.getLength() * rs;
-		double noneSupportY = box.getWidth() * rs;
-
-		double maxX = (min.getX() + s.getLength() + noneSupportX) <= max.getX()
-				? min.getX() + s.getLength() + noneSupportX
-				: max.getX();
-		double maxY = (min.getY() + s.getWidth() + noneSupportY) <= max.getY()
-				? min.getY() + s.getWidth() + noneSupportY
-				: max.getY();
-
-		// recalculate none support x and y parts.
-		noneSupportX = maxX - s.getMaximumSupportX();
-		noneSupportY = maxY - s.getMaximumSupportY();
-
-		double newXRate = noneSupportX / s.getLength();
-		double newYRate = noneSupportY / s.getWidth();
-		rs = newXRate <= newYRate ? newXRate : newYRate;
-
-		// recalculate xMax in case choose newYRate
-		if (rs != newXRate) {
-			noneSupportX = box.getLength() * rs;
-			maxX = min.getX() + s.getLength() + noneSupportX;
-		} else {
-			noneSupportY = box.getLength() * rs;
-			maxY = min.getY() + s.getWidth() + noneSupportY;
-		}
-
-		Dimension newMax = new Dimension(maxX, maxY, max.getZ());
-		space.setMinimum(min);
-		space.setMaximum(newMax);
-		space.setRatioSupport(rs);
-		return space;
-	}
-
-	private Space generateOverhangSpace(Space s) {
-		s.setMaximumSupportX(s.getMaximum().getX());
-		s.setMaximumSupportY(s.getMaximum().getY());
-		double extensionX = s.getLength() * this.defaultRatioSupport;
-		double extensionY = s.getWidth() * this.defaultRatioSupport;
-
-		if ((s.getMaximum().getX() + extensionX <= getContainer().getLength())
-				&& (s.getMaximum().getY() + extensionY) <= getContainer().getWidth()) {
-			s.getMaximum().setX(s.getMaximum().getX() + extensionX);
-			s.getMaximum().setY(s.getMaximum().getY() + extensionY);
-			return s;
-		}
-
-		double tempMaximumX = s.getMaximum().getX() + extensionX > getContainer().getLength()
-				? getContainer().getLength()
-				: s.getMaximum().getX() + extensionX;
-		double tempMaximumY = s.getMaximum().getY() + extensionY > getContainer().getWidth() ? getContainer().getWidth()
-				: s.getMaximum().getY() + extensionY;
-		double ratioSupportX = extensionX / (tempMaximumX - s.getMinimum().getX());
-		double ratioSupportY = extensionY / (tempMaximumY - s.getMinimum().getY());
-
-		if (ratioSupportX <= ratioSupportY) {
-			s.setRatioSupport(ratioSupportX);
-			s.getMaximum().setX(s.getMaximum().getX() + s.getLength() * ratioSupportX);
-			s.getMaximum().setY(s.getMaximum().getY() + s.getWidth() * ratioSupportX);
-			return s;
-		}
-
-		s.setRatioSupport(ratioSupportY);
-		s.getMaximum().setX(s.getMaximum().getX() + s.getLength() * ratioSupportY);
-		s.getMaximum().setY(s.getMaximum().getY() + s.getWidth() * ratioSupportY);
-		return s;
-	}
-
-	private void removeBoxOverlappingWithOverhang(Box box) {
-
-		logger.info("Start remove box with overlap");
-		List<Space> helperList = new ArrayList<>();
-		List<Space> removeableList = new ArrayList<Space>();
-
-		for (int i = 0; i < this.getAvaiableSpaces().size(); i++) {
-			Space selectedSpace = this.getAvaiableSpaces().get(i);
-			if (checkOverlapping(box, selectedSpace)) {
-				// this.showCuboidInfo(selectedSpace);
-				removeableList.add(selectedSpace);
-				helperList.addAll(this.overhangUpdateOverlapSpaces(box, selectedSpace));
-			}
-		}
-
-		// remove invaid space.
-		for (Space space : removeableList) {
-			this.getAvaiableSpaces().remove(space);
-		}
-
-		// add new spaces to current space.
-		if (helperList != null && !helperList.isEmpty()) {
-			this.getAvaiableSpaces().addAll(helperList);
-			this.removeSubsets();
-		}
-		logger.info("Stop remove box with overlap");
 	}
 
 	private List<Space> overhangUpdateOverlapSpaces(Box box, Space space) {
@@ -1302,44 +1013,56 @@ public class Greedy {
 
 		// create behind space.
 		Dimension behindMinimumDimension = minSpaceDimension;
-		Dimension behindMaximumDimension = new Dimension(minBoxDimension.getX(), maxSpaceDimension.getY(), maxSpaceDimension.getZ());
-		Space behindSpace = new Space(behindMinimumDimension, behindMaximumDimension);		
+		Dimension behindMaximumDimension = new Dimension(minBoxDimension.getX(), maxSpaceDimension.getY(),
+				maxSpaceDimension.getZ());
+		Space behindSpace = new Space(behindMinimumDimension, behindMaximumDimension);
 		behindSpace.setRatioSupport(getNSupportRatio());
-		behindSpace.setMaximumSupportX(space.getMaximumSupportX() < minBoxDimension.getX() ? space.getMaximumSupportX() : minBoxDimension.getX());
+		behindSpace.setMaximumSupportX(space.getMaximumSupportX() < minBoxDimension.getX() ? space.getMaximumSupportX()
+				: minBoxDimension.getX());
 		behindSpace.setMaximumSupportY(space.getMaximumSupportY());
 
 		// create front space.
-		Dimension frontMinimumDimension = new Dimension(maxBoxDimension.getX(), minSpaceDimension.getY(), minSpaceDimension.getZ());
-		double tempFrontMaxX = space.getMaximumSupportX() * (1 + this.getNSupportRatio()) - maxBoxDimension.getX() * this.getNSupportRatio();
-		double frontMaximumX = tempFrontMaxX < maxSpaceDimension.getX() ? tempFrontMaxX : maxSpaceDimension.getX();		
-		Dimension frontMaximumDimension = new Dimension(frontMaximumX, maxSpaceDimension.getY(), maxSpaceDimension.getZ());
+		Dimension frontMinimumDimension = new Dimension(maxBoxDimension.getX(), minSpaceDimension.getY(),
+				minSpaceDimension.getZ());
+		double tempFrontMaxX = space.getMaximumSupportX() * (1 + this.getNSupportRatio())
+				- maxBoxDimension.getX() * this.getNSupportRatio();
+		double frontMaximumX = tempFrontMaxX < maxSpaceDimension.getX() ? tempFrontMaxX : maxSpaceDimension.getX();
+		Dimension frontMaximumDimension = new Dimension(frontMaximumX, maxSpaceDimension.getY(),
+				maxSpaceDimension.getZ());
 		Space frontSpace = new Space(frontMinimumDimension, frontMaximumDimension);
 		frontSpace.setMaximumSupportX(space.getMaximumSupportX());
 		frontSpace.setMaximumSupportY(space.getMaximumSupportY());
 
 		// create left space.
 		Dimension leftMinimumDimension = minSpaceDimension;
-		Dimension leftMaximumDimension = new Dimension(maxSpaceDimension.getX(), minBoxDimension.getY(), maxSpaceDimension.getZ());
+		Dimension leftMaximumDimension = new Dimension(maxSpaceDimension.getX(), minBoxDimension.getY(),
+				maxSpaceDimension.getZ());
 		Space leftSpace = new Space(leftMinimumDimension, leftMaximumDimension);
 		leftSpace.setMaximumSupportX(space.getMaximumSupportX());
-		leftSpace.setMaximumSupportY(space.getMaximumSupportY() < minBoxDimension.getY() ? space.getMaximumSupportY() : minBoxDimension.getY());
+		leftSpace.setMaximumSupportY(space.getMaximumSupportY() < minBoxDimension.getY() ? space.getMaximumSupportY()
+				: minBoxDimension.getY());
 
 		// create right space.
-		Dimension rightMinimumDimension = new Dimension(minSpaceDimension.getX(), maxBoxDimension.getY(), minSpaceDimension.getZ());
-		double tempMaxRightDimension = space.getMaximumSupportY() * (1 + this.getNSupportRatio()) - maxBoxDimension.getY() * this.getNSupportRatio();
-		double maxRightDimension = tempMaxRightDimension < maxSpaceDimension.getY() ? tempMaxRightDimension : maxSpaceDimension.getY();
-		Dimension rightMaximumDimension = new Dimension(maxSpaceDimension.getX(), maxRightDimension,maxSpaceDimension.getZ());
+		Dimension rightMinimumDimension = new Dimension(minSpaceDimension.getX(), maxBoxDimension.getY(),
+				minSpaceDimension.getZ());
+		double tempMaxRightDimension = space.getMaximumSupportY() * (1 + this.getNSupportRatio())
+				- maxBoxDimension.getY() * this.getNSupportRatio();
+		double maxRightDimension = tempMaxRightDimension < maxSpaceDimension.getY() ? tempMaxRightDimension
+				: maxSpaceDimension.getY();
+		Dimension rightMaximumDimension = new Dimension(maxSpaceDimension.getX(), maxRightDimension,
+				maxSpaceDimension.getZ());
 		Space rightSpace = new Space(rightMinimumDimension, rightMaximumDimension);
 		rightSpace.setMaximumSupportX(space.getMaximumSupportX());
 		rightSpace.setMaximumSupportY(space.getMaximumSupportY());
 
 		// create below space
 		Dimension belowMinimumDimension = minSpaceDimension;
-		Dimension belowMaximumDimension = new Dimension(maxSpaceDimension.getX(), maxSpaceDimension.getY(), minBoxDimension.getZ());
+		Dimension belowMaximumDimension = new Dimension(maxSpaceDimension.getX(), maxSpaceDimension.getY(),
+				minBoxDimension.getZ());
 		Space belowSpace = new Space(belowMinimumDimension, belowMaximumDimension);
 		belowSpace.setMaximumSupportX(space.getMaximumSupportX());
 		belowSpace.setMaximumSupportY(space.getMaximumSupportY());
-		
+
 		this.showCuboidInfo("selected box", box);
 		this.showCuboidInfo("selected space", space);
 		this.showCuboidInfo("", behindSpace);
@@ -1347,7 +1070,7 @@ public class Greedy {
 		this.showCuboidInfo("", rightSpace);
 		this.showCuboidInfo("", leftSpace);
 		this.showCuboidInfo("", belowSpace);
-		
+
 		if (behindSpace.isValid()) {
 			result.add(behindSpace);
 		}
@@ -1372,7 +1095,7 @@ public class Greedy {
 		return result;
 	}
 
-	private Space overlapAmalgate(Space s, Space t) {
+	private Space overlapAmalgamate(Space s, Space t) {
 		if ((s.getMinimum().getZ() != t.getMinimum().getZ())) {
 			return null;
 		}
@@ -1431,44 +1154,97 @@ public class Greedy {
 		}
 		return null;
 	}
+	
+	private boolean checkPassageExist(Box selectedBox) {
+		for (Box b : getConLoading().getPlacedBox().getBoxes()) {
 
-	private void overhangRemoveSubset() {
+			double boxDistance = Math.sqrt(Math.pow(selectedBox.getMaximumPoint().getX(), 2)
+					+ Math.pow(selectedBox.getMaximumPoint().getY(), 2));
 
-		logger.info("\n");
-		logger.info("===Method: removeSubsets (Start)===");
+			double distance = Math.sqrt(Math.pow(b.getMinimum().getX(), 2) + Math.pow(b.getMinimumPoint().getY(), 2));
 
-		List<Space> helperList = new ArrayList<>(this.getAvaiableSpaces());
-		for (int i = 0; i < helperList.size() - 1; i++) {
-			Space s = helperList.get(i);
-			for (int j = i + 1; j < helperList.size(); j++) {
-
-				// check if space s is a subset of space t
-				Space t = helperList.get(j);
-				if (checkSubsetSpace(s, t)) {
-					// this.showCuboidInfo("Space S info", s);
-					// this.showCuboidInfo("Space T info", t);
-					helperList.remove(i);
-					break;
+			if (boxDistance > distance) {
+				if (b.getMinimumPoint().getY() < selectedBox.getMaximumPoint().getY()
+						&& selectedBox.getMinimumPoint().getY() < b.getMaximumPoint().getY()) {
+					if (selectedBox.getSequenceNumber() > b.getSequenceNumber()) {
+						return false;
+					}
 				}
+			}
 
-				// check if space t is a subset of space s
-				if (checkSubsetSpace(t, s)) {
-					// this.showCuboidInfo("Space T info ", t);
-					// this.showCuboidInfo("Space S info", s);
-					helperList.remove(j);
+			if (boxDistance < distance) {
+				if (b.getMinimumPoint().getY() < selectedBox.getMaximumPoint().getY()
+						&& selectedBox.getMinimumPoint().getY() < b.getMaximumPoint().getY()) {
+					if (selectedBox.getSequenceNumber() < b.getSequenceNumber()) {
+						return false;
+					}
 				}
 			}
 		}
-		this.setAvaiableSpaces(helperList);
-		logger.info("===Method: removeSubsets (End) ===");
-
+		return true;
 	}
 	
-	/*Clear all previous candidates*/
-	private void clearCandidates() {	
+	
+	private boolean checkNoneOverlappingPlane(Box box) {
+		for (Box b : this.getConLoading().getPlacedBox().getBoxes()) {
+			if (box.getMinimum().getX() < b.getMaximum().getX()
+					&& b.getMinimum().getX() < box.getMinimum().getX()
+					&& box.getMaximum().getY() < b.getMaximum().getY()
+					&& b.getMinimum().getY() < box.getMaximum().getY()
+					&& box.getMaximum().getZ() <= b.getMinimum().getZ()) {
+
+				if (box.getSequenceNumber() < b.getSequenceNumber()) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+	
+	private boolean isMultiDropFeasiblePacking(Box selectedBox) {
+		if (checkPassageExist(selectedBox) == false) {
+			return false;
+		}
+
+		if (checkNoneOverlappingPlane(selectedBox) == false) {
+			return false;
+		}
+
+		return true;
+
+	}
+
+	/* Clear all previous candidates */
+	private void clearCandidates() {
 		this.candidates.clear();
+	}
+	
+	public int getRoundNumber() {
+		return roundNumber;
+	}
+	
+	public void setRoundNumber(int roundNumber) {
+		this.roundNumber = roundNumber;
 	}
 
 	private double totalBoxVolumes = 0;
 	private double containerVolumes;
+	private List<BoxCandidate> candidates;
+	private List<Space> avaiableSpaces;
+	private Batch placedBoxes;
+	private Batch notPlacedBoxes;
+	private ContainerLoading containerLoading;
+	private String selectedAlgorithm;
+	private Container container;
+	private double notSupportRatio;
+	private double amalgamateCount = 0;
+	private boolean isFragility;
+	private boolean isLifo;
+	private boolean isOverhang;
+	private int roundNumber = 0;
+
+	public static final String ST_ALGORITHM = "ST";
+	public static final String VL_ALGORITHM = "AL";
+	public static final String EL_ALGORITHM = "EL";
+	public static final double NOT_SUPPORT_RATIO = 0.25;
 }

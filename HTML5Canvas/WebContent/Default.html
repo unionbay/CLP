@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<script src="script/String.js" type="text/javascript"></script>
+</head>
+<body>
+	<form id="jsonFile" name="jsonFile" enctype="multipart/form-data"
+		method="post">
+
+		<fieldset>
+			<h2>Json File</h2>
+			<input type='file' id='fileinput'> <input type='button'
+				id='btnLoad' value='Load' onclick='loadFile();'> <input
+				type="button" value='Next' onclick='next();' /> <input
+				type="button" value='Back' onclick='back();' />
+		</fieldset>
+	</form>
+
+	<canvas id="myCanvas" width="1000" height="1000"
+		style="border: 1px solid #d3d3d3;">
+	Your browser does not support the HTML5 canvas tag.
+</canvas>
+
+
+	<script>		
+		var boxes;
+		var currentIndex;		
+		var container = {  
+		         "id":0,
+		         "box":{  
+		            "root":{  
+		               "x":0.0,
+		               "y":0.0,
+		               "z":0.0
+		            },
+		            "length":60.0,
+		            "width":25.0,
+		            "height":30.0
+		         },
+		         "color": "#000000"
+		      }
+		
+		var croot ={
+				x:"500",
+				y:"200"
+		};
+		
+		function loadFile(){
+			var input, file, fr;
+			if(typeof window.FileReader !== 'function'){
+				alert("The file API isn't support on this browser yet");
+				return;
+			}
+			
+			input = document.getElementById('fileinput');
+			
+			if(!input){
+				alert("Um, couldn't find the fileinput element.");
+			}else if(!input.files){
+				  alert("This browser doesn't seem to support the `files` property of file inputs.");
+			}else if (!input.files[0]) {
+			      alert("Please select a file before clicking 'Load'");
+		    }else{
+		    	 file = input.files[0];
+		         fr = new FileReader();
+		         fr.onload = receivedText;
+		         fr.readAsText(file);		         
+		    }
+		}
+		
+		function receivedText(e){
+			lines = e.target.result;
+			
+			var rootX = 500;
+			var rootY = 200;
+			var root ={
+					x:"500",
+					y:"200"
+			};
+			var container = {  
+			         "id":0,
+			         "box":{  
+			            "root":{  
+			               "x":0.0,
+			               "y":0.0,
+			               "z":0.0
+			            },
+			            "length":60.0,
+			            "width":25.0,
+			            "height":30.0
+			         }
+			      }
+			drawContainer(container, root);		
+
+			boxes = Object.values(JSON.parse(lines));			
+			
+			boxes[0].forEach((box, index) => {
+			  	var root = caculateRoot(box.box,500,200);
+			  	box.root = root;
+			  	drawBox(box,root,box.color);
+			});
+			
+			drawSequenceNumberColorTable();
+			
+			currentIndex = boxes[0].length - 1;				
+		}
+		
+		
+		
+		function drawContainer(container,root){
+			var zoomIn = 5;										
+			
+			var c = document.getElementById("myCanvas");
+			var ctx = c.getContext("2d");
+			if(container.color === null){
+				container.color = '#000000';
+			}
+			ctx.strokeStyle = container.color;
+			
+			ctx.beginPath();	
+			ctx.moveTo(root.x, root.y);
+			
+			//calculate left top X (cos (a) = adjacent / hypotenuse).
+			var adjacentLength = 0.86 * container.box.length * zoomIn;
+			var bdlX = parseInt(parseInt(root.x)) - adjacentLength;
+			
+			//calculate left top Y(sin(a) = Opposite/Hypotenuse).
+			var oppositeLength = 0.5 * container.box.length * zoomIn;
+			var bdlY = oppositeLength + parseInt(parseInt(root.y));			
+
+			ctx.lineTo(bdlX, bdlY);
+			ctx.stroke();
+			
+			//ctx.moveTo(rootX, rootY);
+			var buplY = bdlY - container.box.height * zoomIn;
+			ctx.lineTo(bdlX, buplY);
+			ctx.stroke();
+			
+			//caculate top up at behind.
+			var ozTopY = parseInt(parseInt(root.y)) - container.box.height * zoomIn;
+			ctx.moveTo(parseInt(root.x), parseInt(root.y));
+			ctx.lineTo(parseInt(root.x), ozTopY);
+			ctx.stroke();
+			getRandomColor
+			ctx.lineTo(bdlX, buplY);
+			ctx.stroke();
+
+			var botRightFrontX = bdlX + 0.86 * container.box.width * zoomIn;
+			var botRightFrontY = bdlY + 0.5 * container.box.width * zoomIn;
+			ctx.moveTo(bdlX, bdlY);
+			ctx.lineTo(botRightFrontX, botRightFrontY);
+			ctx.stroke();
+
+			var botRightBehindX = parseInt(root.x) + 0.86 * container.box.width * zoomIn;
+			var botRightBehindY = parseInt(root.y) + 0.5 * container.box.width * zoomIn;
+			ctx.lineTo(botRightBehindX, botRightBehindY);
+			ctx.stroke();
+			ctx.lineTo(parseInt(root.x), parseInt(root.y));
+			ctx.stroke();
+
+			var upRightFrontY = botRightFrontY - container.box.height * zoomIn;
+			ctx.moveTo(botRightFrontX, botRightFrontY);
+			ctx.lineTo(botRightFrontX, upRightFrontY);
+			ctx.stroke();
+			ctx.lineTo(bdlX, buplY);
+			ctx.stroke();
+
+			var upRightBehindY = botRightBehindY - container.box.height * zoomIn;
+			ctx.moveTo(botRightBehindX, botRightBehindY);
+			ctx.lineTo(botRightBehindX, upRightBehindY);
+			ctx.stroke();
+
+			ctx.lineTo(parseInt(root.x), ozTopY);
+			ctx.stroke();
+
+			ctx.moveTo(botRightFrontX, upRightFrontY);
+			ctx.lineTo(botRightBehindX, upRightBehindY);
+			ctx.stroke();									
+		}
+					
+		
+		function drawBox(container,root,color){
+			var zoomIn = 5;										
+			
+			var c = document.getElementById("myCanvas");
+			var ctx = c.getContext("2d");
+			if(color === null || color === undefined){
+				container.color = getRandomColor();
+			}
+			ctx.fillStyle = container.color;	
+			//ctx.beginPath();
+			ctx.moveTo(root.x, root.y);
+			
+			//calculate left top X (cos (a) = adjacent / hypotenuse).
+			var adjacentLength = 0.866 * container.box.length * zoomIn;
+			//var bdlX = parseInt(parseInt(root.x)) - adjacentLength;
+			var bdlX = root.x - adjacentLength;
+			
+			//calculate left top Y(sin(a) = Opposite/Hypotenuse).
+			var oppositeLength = 0.5 * container.box.length * zoomIn;
+			//var bdlY = oppositeLength + parseInt(parseInt(root.y));			
+			var bdlY = oppositeLength + root.y;
+			
+			//ctx.moveTo(rootX, rootY);
+			var buplY = bdlY - container.box.height * zoomIn;
+			//ctx.lineTo(bdlX, buplY);
+			//ctx.stroke();
+			
+			//caculate top up at behind.
+			//var ozTopY = parseInt(parseInt(root.y)) - container.box.height * zoomIn;
+			var ozTopY = root.y - container.box.height * zoomIn;
+	//		ctx.moveTo(parseInt(root.x), parseInt(root.y));
+///			ctx.lineTo(parseInt(root.x), ozTopY);
+		//	ctx.stroke();
+
+			//ctx.lineTo(bdlX, buplY);
+			//ctx.stroke();
+
+			var botRightFrontX = bdlX + 0.866 * container.box.width * zoomIn;
+			var botRightFrontY = bdlY + 0.5 * container.box.width * zoomIn;
+			
+			var botRightBehindX = root.x + 0.866 * container.box.width * zoomIn;
+			var botRightBehindY = root.y + 0.5 * container.box.width * zoomIn;
+			
+			
+			//ctx.lineTo(botRightBehindX, botRightBehindY);
+			//ctx.stroke();
+			//ctx.lineTo(parseInt(root.x), parseInt(root.y));
+			//ctx.stroke();
+
+			var upRightFrontY = botRightFrontY - container.box.height * zoomIn;
+			//ctx.moveTo(botRightFrontX, botRightFrontY);
+			//ctx.lineTo(botRightFrontX, upRightFrontY);
+			//ctx.stroke();
+			//ctx.lineTo(bdlX, buplY);
+			//ctx.stroke();
+
+			var upRightBehindY = botRightBehindY - container.box.height * zoomIn;
+			//ctx.moveTo(botRightBehindX, botRightBehindY);
+			//ctx.lineTo(botRightBehindX, upRightBehindY);
+			//ctx.stroke();
+
+			//ctx.lineTo(parseInt(root.x), ozTopY);
+			//ctx.stroke();
+
+			//ctx.moveTo(botRightFrontX, upRightFrontY);
+			//ctx.lineTo(botRightBehindX, upRightBehindY);
+			//ctx.stroke();			
+			
+			//ctx.fillRect(botRightBehindX, botRightBehindY,,);
+			ctx.beginPath();
+			ctx.moveTo(bdlX, bdlY);
+			ctx.lineTo(bdlX, buplY);
+			ctx.lineTo(botRightFrontX,upRightFrontY);
+			ctx.lineTo(botRightFrontX, botRightFrontY);
+			ctx.lineTo(bdlX,bdlY);
+			ctx.closePath();
+			ctx.fill();
+			
+			ctx.beginPath();
+			ctx.moveTo(bdlX, buplY);
+			ctx.lineTo(root.x, ozTopY);
+			ctx.lineTo(botRightBehindX, upRightBehindY);
+			ctx.lineTo(botRightFrontX,upRightFrontY);
+			ctx.lineTo(bdlX, buplY);
+			ctx.closePath();
+			ctx.fill();
+			
+			ctx.beginPath();
+			ctx.moveTo(botRightFrontX, botRightFrontY);
+			ctx.lineTo(botRightFrontX,upRightFrontY);
+			ctx.lineTo(botRightBehindX, upRightBehindY);
+			ctx.lineTo(botRightBehindX, botRightBehindY);
+			ctx.lineTo(botRightFrontX, botRightFrontY);
+			ctx.closePath();
+			ctx.fill();			
+		}
+		
+		function removeBox(box, root){
+			var zoomIn = 5;													
+			var c = document.getElementById("myCanvas");
+			var ctx = c.getContext("2d");
+			ctx.fillStyle = "#FFFFFF";			
+			//ctx.beginPath();
+			ctx.moveTo(root.x, root.y);
+			
+			//calculate left top X (cos (a) = adjacent / hypotenuse).
+			var adjacentLength = 0.86 * box.length * zoomIn;
+			var bdlX = parseInt(parseInt(root.x)) - adjacentLength;
+			
+			//calculate left top Y(sin(a) = Opposite/Hypotenuse).
+			var oppositeLength = 0.5 * box.length * zoomIn;
+			var bdlY = oppositeLength + parseInt(parseInt(root.y));			
+
+			//ctx.moveTo(bdlX, bdlY);
+			//ctx.stroke();			
+			
+			//ctx.moveTo(rootX, rootY);
+			var buplY = bdlY - box.height * zoomIn;
+			//ctx.lineTo(bdlX, buplY);
+			//ctx.stroke();
+			
+			//caculate top up at behind.
+			var ozTopY = parseInt(parseInt(root.y)) - box.height * zoomIn;
+	//		ctx.moveTo(parseInt(root.x), parseInt(root.y));
+///			ctx.lineTo(parseInt(root.x), ozTopY);
+		//	ctx.stroke();
+
+			//ctx.lineTo(bdlX, buplY);
+			//ctx.stroke();
+
+			var botRightFrontX = bdlX + 0.86 * box.width * zoomIn;
+			var botRightFrontY = bdlY + 0.5 * box.width * zoomIn;
+			//ctx.moveTo(bdlX, bdlY);
+			//ctx.lineTo(botRightFrontX, botRightFrontY);
+			//ctx.stroke();
+
+			var botRightBehindX = parseInt(root.x) + 0.86 * box.width * zoomIn;
+			var botRightBehindY = parseInt(root.y) + 0.5 * box.width * zoomIn;
+			//ctx.lineTo(botRightBehindX, botRightBehindY);
+			//ctx.stroke();
+			//ctx.lineTo(parseInt(root.x), parseInt(root.y));
+			//ctx.stroke();
+
+			var upRightFrontY = botRightFrontY - box.height * zoomIn;
+			//ctx.moveTo(botRightFrontX, botRightFrontY);
+			//ctx.lineTo(botRightFrontX, upRightFrontY);
+			//ctx.stroke();
+			//ctx.lineTo(bdlX, buplY);
+			//ctx.stroke();
+
+			var upRightBehindY = botRightBehindY - box.height * zoomIn;
+			//ctx.moveTo(botRightBehindX, botRightBehindY);
+			//ctx.lineTo(botRightBehindX, upRightBehindY);
+			//ctx.stroke();
+
+			//ctx.lineTo(parseInt(root.x), ozTopY);
+			//ctx.stroke();
+
+			//ctx.moveTo(botRightFrontX, upRightFrontY);
+			//ctx.lineTo(botRightBehindX, upRightBehindY);
+			//ctx.stroke();			
+			
+			//ctx.fillRect(botRightBehindX, botRightBehindY,,);
+			ctx.beginPath();
+			ctx.moveTo(bdlX, bdlY);
+			ctx.lineTo(bdlX, buplY);
+			ctx.lineTo(botRightFrontX,upRightFrontY);
+			ctx.lineTo(botRightFrontX, botRightFrontY);
+			ctx.lineTo(bdlX,bdlY);
+			ctx.closePath();
+			ctx.fill();
+			
+			ctx.beginPath();
+			ctx.moveTo(bdlX, buplY);
+			ctx.lineTo(root.x, ozTopY);
+			ctx.lineTo(botRightBehindX, upRightBehindY);
+			ctx.lineTo(botRightFrontX,upRightFrontY);
+			ctx.lineTo(bdlX, buplY);
+			ctx.closePath();
+			ctx.fill();
+			
+			ctx.beginPath();
+			ctx.moveTo(botRightFrontX, botRightFrontY);
+			ctx.lineTo(botRightFrontX,upRightFrontY);
+			ctx.lineTo(botRightBehindX, upRightBehindY);
+			ctx.lineTo(botRightBehindX, botRightBehindY);
+			ctx.lineTo(botRightFrontX, botRightFrontY);
+			ctx.closePath();
+			ctx.fill();			
+		}
+			
+		function getRndColor() {
+		    var r = 255*Math.random()|0,
+		        g = 255*Math.random()|0,
+		        b = 255*Math.random()|0;
+		    return 'rgb(' + r + ',' + g + ',' + b + ')';
+		}
+		
+		function getRandomColor() {
+		    var color = '#';
+		    for (var i = 0; i < 6; i++) {
+		        color += (Math.random() * 16 | 0).toString(16);
+		    }
+		    return color;
+		}
+		
+		function caculateRoot(box,rootX, rootY){			
+			var zoomIn = 5;
+			var resultX =0;
+			var resultY=0;													
+			
+			//calculate left top X (cos (a) = adjacent / hypotenuse).
+			var adjacentLength = 0.866 * box.root.x * zoomIn;		
+			var botLeftFrontX = rootX - adjacentLength;
+			
+			//calculate left top Y(sin(a) = Opposite/Hypotenuse).
+			var oppositeLength = 0.5 * box.root.x * zoomIn;
+			//var bdlY = oppositeLength + parseInt(parseInt(root.y));			
+			var botLeftFrontY = oppositeLength + rootY;
+											
+
+			var botRightFrontX = botLeftFrontX + 0.866 * box.root.y * zoomIn;
+			var botRightFrontY = botLeftFrontY + 0.5 * box.root.y * zoomIn;
+						
+			var adjacentLength = 0.866 * box.root.y * zoomIn;
+			var botRightBehindX = rootX + adjacentLength;				
+			var oppositeLength = 0.5 * box.root.y * zoomIn;
+			var botRightBehindY = rootY + oppositeLength;					
+			
+			if(box.root.x == 0 && box.root.y == 0){
+				resultX = rootX;
+				resultY = rootY;
+			}else if(box.root.x != 0 && box.root.y === 0){
+				resultX = botLeftFrontX;
+				resultY = botLeftFrontY;
+			}else if(box.root.x === 0 && box.root.y != 0){
+				resultX = botRightBehindX;
+				resultY = botRightBehindY;
+			}else{
+				resultX = botRightFrontX;
+				resultY = botRightFrontY;
+			}
+			
+			if(box.root.z > 0){
+				resultY = resultY - box.root.z*zoomIn;
+			}
+			
+			var root = {
+				x: "",
+				y: ""
+			}
+			
+			root.x = resultX;
+			root.y = resultY;			
+			return root;										
+		}
+		
+		function next(){	
+			if(currentIndex < boxes[0].length - 1){
+				this.resetCanvas();
+				drawContainer(container, croot);
+				currentIndex++;
+				for(var index =  0; index < boxes[0].length; index++){
+					if(index > currentIndex){
+						break;
+					}
+					
+					var box = boxes[0][index];
+					var color = boxes[0][index].color;
+					var root = caculateRoot(box.box,500,200);
+					drawBox(box, root, color);
+				}			
+				drawSequenceNumberColorTable();
+			}
+		}
+		
+		function back(){
+			if(currentIndex >= 0){
+				this.resetCanvas();
+				drawContainer(container, croot);				
+				currentIndex--;
+				for(var index =  0; index < boxes[0].length; index++){
+					if(index > currentIndex){
+						break;
+					}
+					
+					var box = boxes[0][index];
+					var color = boxes[0][index].color;
+					var root = caculateRoot(box.box,500,200);
+					drawBox(box, root, color);
+				}						
+				drawSequenceNumberColorTable();
+			}
+		}
+		
+		
+		function resetCanvas(){
+			var c = document.getElementById("myCanvas");
+			var ctx = c.getContext("2d");
+			ctx.clearRect(0,0, c.width, c.height);			
+		}
+		
+		function getAngleDeg(r){				
+			if(r.x > r.y){
+				var angleRad = Math.atan(r.y/r.x);	
+			}else{
+				var angleRad = Math.atan(r.x/r.y);
+			}			
+			var angleDeg = angleRad * 180 / Math.PI;
+			return (angleDeg);
+		}				
+				
+		function drawSequenceNumberColorTable(){
+			var rx = 20;
+			var ry = 20;
+			boxes[0].forEach((box, index) => {			
+				if(currentIndex < index) return false;
+				var c = document.getElementById('myCanvas');
+				var ctx2d = c.getContext("2d");
+				ctx2d.strokeStyle=box.color;
+				ctx2d.strokeRect(rx,ry,50,25);				
+				
+				ctx2d.textBaseline = "middle";
+				ctx2d.font = "11px Arial";
+				ctx2d.fillStyle = box.color;
+				textX = rx + 25 - ctx2d.measureText(box.sequenceNumber).width/2;
+		        textY = ry + 25/2;
+		        var textValue  = String.format("{0} seNum: {1} root: {2} {3} {4}", index, box.box.sequenceNumber, box.box.root.x, box.box.root.y, box.box.root.z);
+		        ctx2d.fillText(textValue, textX + 55, textY);									
+				ry = ry + 35;												
+			});					
+		}		
+			
+	</script>
+
+</body>
+</html>

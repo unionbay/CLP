@@ -4,14 +4,14 @@ public class FeasibleObject {
 	private Box box;
 	private Rotation rotation;
 	private Space space;
-	private String selectedRotation;
+	private Rotation selectedRotation;
 	
 	
-	public String getSelectedRotation() {
+	public Rotation getSelectedRotation() {
 		return selectedRotation;
 	}
 	
-	public void setSelectedRotation(String selectedRotation) {
+	public void setSelectedRotation(Rotation selectedRotation) {
 		this.selectedRotation = selectedRotation;
 	}
 	
@@ -44,7 +44,7 @@ public class FeasibleObject {
 	 * @param rotation
 	 * @param space
 	 */
-	public FeasibleObject(Box box,String  selectedRotation, Space space) {
+	public FeasibleObject(Box box,Rotation  selectedRotation, Space space) {
 		super();
 		this.box = box;
 		this.selectedRotation = selectedRotation;

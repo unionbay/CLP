@@ -268,21 +268,21 @@ public class ContainerLoading {
 	public void update(FeasibleObject feasObj) {
 
 		// get Feasible Object
-		Box selectedBox = feasObj.getBox();
-		Space selectedSpace = feasObj.getSpace();
-		String selectedRotation = feasObj.getSelectedRotation();
+		Box box = feasObj.getBox();
+		Space space = feasObj.getSpace();
+		Rotation rotation = feasObj.getSelectedRotation();
 
-		Dimension maximumDimension = getMaximumDimension(selectedRotation, selectedSpace.getMinimum(), selectedBox);
+		Dimension maximumDimension = getMaximumDimension(rotation.getRotationCode(), space.getMinimum(), box);
 		// selectedBox.setMinimum(selectedSpace.getMinimum());
 		// selectedBox.setMaximum(maximumDimension);
 
 		feasObj.getBox().setMaximum(maximumDimension);
 
 		logger.info("founded feasible Object Info: ");
-		this.showCuboidInfo("Founded space", selectedSpace);
-		this.showCuboidInfo("Founded box", selectedBox);
-		notPlacedBox.getBoxes().remove(selectedBox);
-		placedBox.getBoxes().add(selectedBox);
+		this.showCuboidInfo("Founded space", space);
+		this.showCuboidInfo("Founded box", box);
+		notPlacedBox.getBoxes().remove(box);
+		placedBox.getBoxes().add(box);
 	}
 
 	public void updateBoxPosition(Box selectedBox, Space space, String rotation) {
@@ -366,32 +366,32 @@ public class ContainerLoading {
 		this.removeSubsets();
 	}
 
-	private Dimension getMaximumDimension(String selectedRotation, Dimension minimum, Box selectedBox) {
+	private Dimension getMaximumDimension(String selectedRotation, Dimension minimum, Box box) {
 		Dimension maximumDimension = null;
 		switch (selectedRotation) {
 		case Rotation.XYZ:
-			maximumDimension = minimum.addDimension(new Dimension(selectedBox.getBiggestDimension(),
-					selectedBox.getMiddleDimension(), selectedBox.getSmallestDimension()));
+			maximumDimension = minimum.addDimension(new Dimension(box.getBiggestDimension(),
+					box.getMiddleDimension(), box.getSmallestDimension()));
 			break;
 		case Rotation.XZY:
-			maximumDimension = minimum.addDimension(new Dimension(selectedBox.getBiggestDimension(),
-					selectedBox.getSmallestDimension(), selectedBox.getMiddleDimension()));
+			maximumDimension = minimum.addDimension(new Dimension(box.getBiggestDimension(),
+					box.getSmallestDimension(), box.getMiddleDimension()));
 			break;
 		case Rotation.YXZ:
-			maximumDimension = minimum.addDimension(new Dimension(selectedBox.getMiddleDimension(),
-					selectedBox.getBiggestDimension(), selectedBox.getSmallestDimension()));
+			maximumDimension = minimum.addDimension(new Dimension(box.getMiddleDimension(),
+					box.getBiggestDimension(), box.getSmallestDimension()));
 			break;
 		case Rotation.YZX:
-			maximumDimension = minimum.addDimension(new Dimension(selectedBox.getSmallestDimension(),
-					selectedBox.getBiggestDimension(), selectedBox.getMiddleDimension()));
+			maximumDimension = minimum.addDimension(new Dimension(box.getSmallestDimension(),
+					box.getBiggestDimension(), box.getMiddleDimension()));
 			break;
 		case Rotation.ZXY:
-			maximumDimension = minimum.addDimension(new Dimension(selectedBox.getMiddleDimension(),
-					selectedBox.getSmallestDimension(), selectedBox.getBiggestDimension()));
+			maximumDimension = minimum.addDimension(new Dimension(box.getMiddleDimension(),
+					box.getSmallestDimension(), box.getBiggestDimension()));
 			break;
 		case Rotation.ZYX:
-			maximumDimension = minimum.addDimension(new Dimension(selectedBox.getSmallestDimension(),
-					selectedBox.getMiddleDimension(), selectedBox.getBiggestDimension()));
+			maximumDimension = minimum.addDimension(new Dimension(box.getSmallestDimension(),
+					box.getMiddleDimension(), box.getBiggestDimension()));
 			break;
 
 		}

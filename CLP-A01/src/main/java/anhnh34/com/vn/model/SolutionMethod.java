@@ -38,91 +38,84 @@ public class SolutionMethod {
 		for (Box box : greedyInstance.getNotPlacedBoxes().getBoxes()) {
 				greedyInstance.showBoxInfo("", box);
 		}
-		while (greedyInstance.getNotPlacedBoxes().getBoxes().size() > 0) {
+		while (greedyInstance.getNotPlacedBoxes().getBoxes().size() > 0) {			
 			logger.info(String.format("-------Start round: %d %n", new Object[] { roundNumber }));
-			if(roundNumber == 5) {
-				System.out.println("Start debug here");
-			}
-
-			// for (Box box : greedyInstance.getNotPlacedBoxes().getBoxes()) {
-			// this.getConLoading().showCuboidInfo("", box);
-			// }
-
-			// FeasibleObject feaObject = greedyInstance.findFeasibleObject();
+			
+			greedyInstance.setRoundNumber(roundNumber);
 			FeasibleObject feaObject = greedyInstance.findObjectBs();
 			if (feaObject == null) {
 				break;
 			}
 			greedyInstance.update(feaObject);
-			greedyInstance.updateSpaces(feaObject);
+			greedyInstance.updateSpaces(feaObject);			
 			roundNumber++;
 		}
 		greedyInstance.showResult();
 	}
 
-	public void GREEDY() {
-		int roundNumber = 1;
-
-		while (conLoading.getNotPlacedBox().getNumberOfBox() != 0) {
-			logger.info(String.format("-------Start round: %d %n", new Object[] { roundNumber }));
-			FeasibleObject feaObject = this.findFeasibleObject();
-			if (feaObject != null) {
-				conLoading.update(feaObject); // update list of not placed box.
-				conLoading.updateSpaces(feaObject); // update list of not placed.
-			} else {
-				// no box in the current subset of Batch not placed box fit in
-				// the left empty space
-				break;
-			}
-			roundNumber++;
-		}
-		this.showResult();
-	}
+//	public void GREEDY() {
+//		int roundNumber = 1;
+//
+//		while (conLoading.getNotPlacedBox().getNumberOfBox() != 0) {
+//			logger.info(String.format("-------Start round: %d %n", new Object[] { roundNumber }));
+//			FeasibleObject feaObject = this.findFeasibleObject();
+//			if (feaObject != null) {
+//				conLoading.update(feaObject); // update list of not placed box.
+//				conLoading.updateSpaces(feaObject); // update list of not placed.
+//			} else {
+//				// no box in the current subset of Batch not placed box fit in
+//				// the left empty space
+//				break;
+//			}
+//			roundNumber++;
+//		}
+//		this.showResult();
+//	}
 
 	private FeasibleObject bSAlgorithm() {
 		return null;
 	}
 
 	// find the box to the choose space.
-	private FeasibleObject findFeasibleObject() {
-		logger.info("---Start FindFeasibleObject---");
-
-		// re-sort all current avaiable spaces acending...
-		this.getConLoading().getContainer().sortSpaces();
-		logger.info("\n");
-		logger.info("List of spaces ");
-		this.getConLoading().showSpaceInfo();
-
-		for (Space space : conLoading.getAllSpaces()) {
-			// init feasible box list
-			List<Box> feasibleListBox = new ArrayList<Box>();
-
-			for (Box box : conLoading.getNotPlacedBox().getBoxes()) {
-				String selectedRotation = this.checkBoxIsFeasible(box, space);
-				if (selectedRotation.isEmpty()) { // if box is not fit in space
-					continue;
-				}
-				// put box into feasible list and then choose the best one.
-				box.setSelectedRotation(selectedRotation);
-				box.setSize(selectedRotation);
-				this.getConLoading().updateBoxPosition(box, space, selectedRotation);
-				// if (isMultiDropFeasiblePacking(box)) {
-				// feasibleListBox.add(box);
-				// }
-				feasibleListBox.add(box);
-			}
-
-			if (feasibleListBox.isEmpty()) {
-				continue;
-			}
-
-			// find the best one box.
-			BoxCandidate candidate = this.findBestFittedBox(space, feasibleListBox);
-			return new FeasibleObject(candidate.getBox(), candidate.getBox().getSelectedRotation(), space);
-		}
-
-		return null;
-	}
+//	private FeasibleObject findFeasibleObject() {
+//		logger.info("---Start FindFeasibleObject---");
+//
+//		// re-sort all current avaiable spaces acending...
+//		this.getConLoading().getContainer().sortSpaces();
+//		logger.info("\n");
+//		logger.info("List of spaces ");
+//		this.getConLoading().showSpaceInfo();
+//
+//		for (Space space : conLoading.getAllSpaces()) {
+//			// init feasible box list
+//			List<Box> feasibleListBox = new ArrayList<Box>();
+//
+//			for (Box box : conLoading.getNotPlacedBox().getBoxes()) {
+//				String selectedRotation = this.checkBoxIsFeasible(box, space);
+//				if (selectedRotation.isEmpty()) { // if box is not fit in space
+//					continue;
+//				}
+//				// put box into feasible list and then choose the best one.
+//				box.setSelectedRotation(selectedRotation);
+//				box.setSize(selectedRotation);
+//				this.getConLoading().updateBoxPosition(box, space, selectedRotation);
+//				// if (isMultiDropFeasiblePacking(box)) {
+//				// feasibleListBox.add(box);
+//				// }
+//				feasibleListBox.add(box);
+//			}
+//
+//			if (feasibleListBox.isEmpty()) {
+//				continue;
+//			}
+//
+//			// find the best one box.
+//			BoxCandidate candidate = this.findBestFittedBox(space, feasibleListBox);
+//			return new FeasibleObject(candidate.getBox(), candidate.getBox().getSelectedRotation(), space);
+//		}
+//
+//		return null;
+//	}
 
 	private String checkBoxIsFeasible(Box selectedBox, Space selectedSpace) {
 		// loop all possible rotations.

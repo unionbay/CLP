@@ -17,13 +17,13 @@ public class Main {
 		
 		Greedy greedy = new Greedy();
 		greedy.setSelectedAlgorithm(Greedy.ST_ALGORITHM);				
-		greedy.setDefaultRatioSupport(Greedy.NOT_SUPPORT_RATIO);
+//		greedy.setNSupportRatio(Greedy.NOT_SUPPORT_RATIO);
 		solutionMethod.setConLoading(containerLoading);		
 		solutionMethod.setGreedyInstance(greedy);		
 		try {
 			solutionMethod.getConLoading().loadingData();
 			greedy.setConLoading(containerLoading);
-			//solutionMethod.GREEDY();
+			greedy.loadParameters();		
 			solutionMethod.run();
 		} catch (IOException e) {
 			e.printStackTrace();
