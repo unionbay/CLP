@@ -3,6 +3,7 @@ package anhnh34.com.vn.model;
 import java.io.File;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.io.IOException;
 import org.apache.log4j.Logger;
 import com.fasterxml.jackson.core.JsonGenerationException;
@@ -35,10 +36,13 @@ public class SolutionMethod {
 
 	public void run() {
 		int roundNumber = 1;
-		for (Box box : greedyInstance.getNotPlacedBoxes().getBoxes()) {
+		
+		while (greedyInstance.getNotPlacedBoxes().getBoxes().size() > 0) {	
+			
+			for (Box box : greedyInstance.getNotPlacedBoxes().getBoxes()) {
 				greedyInstance.showBoxInfo("", box);
-		}
-		while (greedyInstance.getNotPlacedBoxes().getBoxes().size() > 0) {			
+			}
+			
 			logger.info(String.format("-------Start round: %d %n", new Object[] { roundNumber }));
 			
 			greedyInstance.setRoundNumber(roundNumber);
@@ -47,7 +51,14 @@ public class SolutionMethod {
 				break;
 			}
 			greedyInstance.update(feaObject);
-			greedyInstance.updateSpaces(feaObject);			
+			greedyInstance.updateSpaces(feaObject);
+			Object[] objects = greedyInstance.getNotPlacedBoxes().getBoxes().toArray();
+			//Box[] boxList = (Box[]) greedyInstance.getNotPlacedBoxes().getBoxes().toArray();
+			
+			Box[] boxList = Arrays.copyOf(objects,objects.length,Box[].class);
+			Utility.getInstance().reOrderBox(boxList);
+			greedyInstance.getNotPlacedBoxes().getBoxes().clear();
+			greedyInstance.getNotPlacedBoxes().getBoxes().addAll(Arrays.asList(boxList));
 			roundNumber++;
 		}
 		greedyInstance.showResult();
@@ -173,7 +184,7 @@ public class SolutionMethod {
 	}
 
 	private BoxCandidate findBestFittedBox(Space space, List<Box> feasibleBoxList) {
-		switch (greedyInstance.getSelectedAlgorithm()) {
+		switch (greedyInstance.getOptimizeAlgorithm()) {
 		case Greedy.ST_ALGORITHM:
 			return greedyInstance.stAlgorithm();
 		case Greedy.VL_ALGORITHM:

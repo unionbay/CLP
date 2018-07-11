@@ -12,17 +12,19 @@ public class Main {
 	public static void main(String args[]) {
 		// Configs log4j
 		BasicConfigurator.configure();
-		ContainerLoading containerLoading = new ContainerLoading();
+		ContainerLoading container = new ContainerLoading();
 		SolutionMethod solutionMethod = new SolutionMethod();
 		
 		Greedy greedy = new Greedy();
-		greedy.setSelectedAlgorithm(Greedy.ST_ALGORITHM);				
-//		greedy.setNSupportRatio(Greedy.NOT_SUPPORT_RATIO);
-		solutionMethod.setConLoading(containerLoading);		
+		//greedy.setOptimizeAlgorithm(Greedy.ST_ALGORITHM);
+		//greedy.setAlgorithm(Greedy.BS_ALGORITHM);
+		
+//		greedy.setNSupportRatio(Greedy.NOT_SUPPORT_RATIO);		
 		solutionMethod.setGreedyInstance(greedy);		
+		solutionMethod.setConLoading(container);
 		try {
 			solutionMethod.getConLoading().loadingData();
-			greedy.setConLoading(containerLoading);
+			greedy.setConLoading(container);
 			greedy.loadParameters();		
 			solutionMethod.run();
 		} catch (IOException e) {

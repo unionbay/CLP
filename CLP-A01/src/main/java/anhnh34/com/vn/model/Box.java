@@ -6,6 +6,7 @@ import java.util.List;
 
 public class Box extends Cuboid {
 	private int id;
+	private String customerId;
 	private double biggestDimension;
 	private double middleDimension;
 	private double smallestDimension;
@@ -25,6 +26,14 @@ public class Box extends Cuboid {
 	
 	public List<Rotation> getPossibleRotations() {
 		return pRotations;
+	}
+	
+	public String getCustomerId() {
+		return customerId;
+	}
+	
+	public void setCustomerId(String id) {
+		this.customerId = id;
 	}
 	
 	public void setPossibleRotations(List<String> rotations) {
@@ -256,6 +265,7 @@ public class Box extends Cuboid {
 
 	public Box(Box obj) {
 		this. id = obj.getId();
+		this.customerId = obj.getCustomerId();
 		this.biggestDimension = obj.getBiggestDimension();
 		this.middleDimension = obj.getMiddleDimension();		
 		this.smallestDimension = obj.getSmallestDimension();

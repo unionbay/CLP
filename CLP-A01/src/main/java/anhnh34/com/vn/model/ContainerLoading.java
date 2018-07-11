@@ -226,8 +226,8 @@ public class ContainerLoading {
 		problem.setNumOfItem(problem.getNumOfItem() + numbItem);
 
 		int index = 1;
-		String nodeId = itemArray[0];
-		int sequenceNumber = getSequenceNumber(nodeId);
+		String customerId = itemArray[0];
+		
 		for (int i = 0; i < numbItem; i++) {
 			double heigh = Long.parseLong(itemArray[++index]);
 			double width = Integer.parseInt(itemArray[++index]);
@@ -238,7 +238,7 @@ public class ContainerLoading {
 			// Create new box and then add to not placed box
 			Box box = new Box(length, width, heigh);
 			box.setFragile(isFragility);
-			box.setSequenceNumber(sequenceNumber);
+			box.setCustomerId(customerId);					
 			notPlacedBox.getBoxes().add(box);
 		}
 	}
@@ -351,7 +351,7 @@ public class ContainerLoading {
 			for (int j = i + 1; j < this.getAllSpaces().size(); j++) {
 				Space t = this.getAllSpaces().get(j);
 				Space amalgateSpace = this.amalgamate(s, t);
-				if (amalgateSpace != null) {
+				if (amalgateSpace != null) {					
 					helperList.add(amalgateSpace);
 				}
 			}

@@ -12,6 +12,14 @@ public class Greedy {
 	public void setContainer(Container container) {
 		this.container = container;
 	}
+	
+	public String getAlgorithm() {
+		return algorithm;
+	}
+	
+	public void setAlgorithm(String algorithm) {
+		this.algorithm = algorithm;
+	}
 
 	public Container getContainer() {
 		return container;
@@ -49,13 +57,14 @@ public class Greedy {
 		this.avaiableSpaces = avaiableSpaces;
 	}
 
-	public String getSelectedAlgorithm() {
-		return selectedAlgorithm;
+	public void setOptimizeAlgorithm(String optimizeAlgorithm) {
+		this.optimizeAlgorithm = optimizeAlgorithm;
+	}
+	
+	public String getOptimizeAlgorithm() {
+		return optimizeAlgorithm;
 	}
 
-	public void setSelectedAlgorithm(String selectedAlgorithm) {
-		this.selectedAlgorithm = selectedAlgorithm;
-	}
 
 	public ContainerLoading getConLoading() {
 		return containerLoading;
@@ -79,7 +88,12 @@ public class Greedy {
 		String nSupportParam = Utility.getInstance().getConfigValue("none_support_constraint");
 		String fragilityParam = Utility.getInstance().getConfigValue("fragility_constraint");
 		String lifoParam = Utility.getInstance().getConfigValue("lifo_constraint");
-
+		String algorithmParam = Utility.getInstance().getConfigValue("algorithm");
+		String opAlgoParam = Utility.getInstance().getConfigValue("op_algorithm");
+		
+		
+		this.setAlgorithm(algorithmParam);
+		this.setOptimizeAlgorithm(opAlgoParam);
 		this.isOverhang = "0".equals(nSupportParam) ? false : true;
 		this.isFragility = "0".equals(fragilityParam) ? false : true;
 		this.isLifo = "0".equals(lifoParam) ? false : true;
@@ -97,7 +111,7 @@ public class Greedy {
 			}
 		}
 		BoxCandidate candidate = new BoxCandidate(box, space, k);
-		candidate.initialize(this.selectedAlgorithm);
+		candidate.initialize(this.optimizeAlgorithm);
 		candidates.add(candidate);
 	}
 
@@ -560,23 +574,27 @@ public class Greedy {
 		Box tBox = null;
 		for (Box box : this.getNotPlacedBoxes().getBoxes()) {
 			for (Space space : this.getAvaiableSpaces()) {			
-				if(roundNumber == 4) {
+				if(roundNumber == 6) {
 					System.out.println("Round number: " + roundNumber);
 				}
+				
+				
 				List<String> rotations = this.findRotations(box, space);
+				
 				if (rotations.isEmpty()) {
 					continue;
-				}
-				
-				if(isLifo && !isMultiDropFeasiblePacking(box)) {
-					continue;
-				}
+				}							
 							
 				tBox = new Box(box);			
 				tBox.setPossibleRotations(rotations);				
 				tBox.setSelectedRotation(tBox.getPossibleRotations().get(0));			
 
 				this.updateBoxPosition(tBox, space, tBox.getSelectedRotation().getRotationCode());
+				
+				if(isLifo && isMultiDropFeasiblePacking(tBox) == false) {
+					continue;
+				}
+				
 				BoxCandidate candidate = new BoxCandidate(tBox, space, 0);
 				feasibleCandidates.add(candidate);
 			}
@@ -607,7 +625,7 @@ public class Greedy {
 			return candidates.get(0);
 		}
 
-		switch (this.getSelectedAlgorithm()) {
+		switch (this.getOptimizeAlgorithm()) {
 		case Greedy.ST_ALGORITHM:
 			return this.stAlgorithm();
 		case Greedy.VL_ALGORITHM:
@@ -625,18 +643,19 @@ public class Greedy {
 		List<String> fesRotations = new ArrayList<String>();		
 		// can be rotation by X.
 		if (rotations[0] == 1) {
-			// XZY
-			if (space.getLength() >= box.getBiggestDimension() && space.getWidth() >= box.getSmallestDimension()
-					&& space.getHeight() >= box.getMiddleDimension()) {
-				fesRotations.add(Rotation.XZY);
-			}
-
+			
 			// XYZ
 			if (space.getLength() >= box.getBiggestDimension() && space.getWidth() >= box.getMiddleDimension()
 					&& space.getHeight() >= box.getSmallestDimension()) {
 				fesRotations.add(Rotation.XYZ);
 				// return Rotation.XYZ;
 			}
+			
+			// XZY
+			if (space.getLength() >= box.getBiggestDimension() && space.getWidth() >= box.getSmallestDimension()
+					&& space.getHeight() >= box.getMiddleDimension()) {
+				fesRotations.add(Rotation.XZY);
+			}		
 		}
 		// can be rotation by Y.
 		if (rotations[1] == 1) {
@@ -687,9 +706,10 @@ public class Greedy {
 
 		logger.info("founded feasible Object Info: ");
 		this.showSpaceInfo("Founded space", selectedSpace);
-		this.showCuboidInfo("Founded box", selectedBox);
+		this.showBoxInfo("Founded box", selectedBox);
 		this.getNotPlacedBoxes().getBoxes().remove(selectedBox);
-		this.getPlacedBoxes().getBoxes().add(selectedBox);
+		this.getPlacedBoxes().getBoxes().add(selectedBox);		
+		this.reloadSequenceNumber(selectedBox);		
 	}
 
 	private Dimension getMaximumDimension(String selectedRotation, Dimension minimum, Box selectedBox) {
@@ -732,7 +752,7 @@ public class Greedy {
 		List<Box> placedBoxes = this.getPlacedBoxes().getBoxes();
 
 		logger.info(String.format("Number of item: %d, number of placed box: %d",
-				new Object[] { numberOfItem, numberOfPlacedBoxes }));
+				new Object[] { numberOfItem, numberOfPlacedBoxes }));		
 
 		this.containerVolumes = this.getContainer().getLength() * this.getContainer().getWidth()
 				* this.getContainer().getHeight();
@@ -748,7 +768,10 @@ public class Greedy {
 		}
 		logger.info(String.format("Volume utilisation: %.2f",
 				new Object[] { this.totalBoxVolumes / this.containerVolumes * 100 }));
+		
+		logger.info(String.format(String.format("Number of amalgamation: %d", this.amalgamateCount)));
 		Utility.getInstance().writeResultToFile(this.placedBoxes.getBoxes()); // write result to file.
+		
 	}
 
 	public void showCuboidInfo(String name, Cuboid c) {
@@ -819,30 +842,30 @@ public class Greedy {
 
 	}
 
-	public void showBoxInfo(String name, Box box) {
+	public void showBoxInfo(String name, Box box) {		
 		if (box.getMinimumPoint() == null && box.getMaximumPoint() == null) {
-			logger.info(String.format("%s length: %.2f, width: %.2f, height: %.2f, volume: %.2f, min: null  max: null",
-					new Object[] { name, box.getLength(), box.getWidth(), box.getHeigth(), box.getVolume() }));
+			logger.info(String.format("%s : %s length: %.2f, width: %.2f, height: %.2f, volume: %.2f, sequence-number: %d, min: null  max: null",
+					new Object[] { box.getCustomerId(), name, box.getLength(), box.getWidth(), box.getHeigth(), box.getVolume(), box.getSequenceNumber() }));
 			return;
 		}
 
 		if (box.getMinimumPoint() == null) {
-			logger.info(String.format("%s length: %.2f, width: %.2f, height: %.2f min: null max(%.2f, %.2f, %.2f)",
-					new Object[] { name, box.getLength(), box.getWidth(), box.getHeigth(), box.getMaximumPoint().getX(),
+			logger.info(String.format("%s : %s length: %.2f, width: %.2f, height: %.2f, volume: %.2f, sequence-number: %d, min: null max(%.2f, %.2f, %.2f)",
+					new Object[] { box.getCustomerId(), name, box.getLength(), box.getWidth(), box.getHeigth(),box.getVolume(),box.getSequenceNumber(), box.getMaximumPoint().getX(),
 							box.getMaximumPoint().getY(), box.getMaximumPoint().getZ() }));
 			return;
 		}
 
 		if (box.getMaximumPoint() == null) {
-			logger.info(String.format("%s length: %.2f, width: %.2f, height: %.2f min(%.2f, %.2f, %.2f) max: null",
-					new Object[] { name, box.getLength(), box.getWidth(), box.getHeigth(), box.getMinimumPoint().getX(),
+			logger.info(String.format("%s : %s length: %.2f, width: %.2f, height: %.2f, volume: %.2f, sequence-number: %d, min(%.2f, %.2f, %.2f) max: null",
+					new Object[] { box.getCustomerId(),name, box.getLength(), box.getWidth(), box.getHeigth(),box.getVolume(), box.getSequenceNumber(), box.getMinimumPoint().getX(),
 							box.getMinimumPoint().getY(), box.getMinimumPoint().getZ() }));
 			return;
 		}
 
 		logger.info(String.format(
-				"%s length: %.2f, width: %.2f, height: %.2f min(%.2f, %.2f, %.2f) max(%.2f, %.2f, %.2f)",
-				new Object[] { name == null ? "" : name, box.getLength(), box.getWidth(), box.getHeigth(),
+				"%s : %s length: %.2f, width: %.2f, height: %.2f, volume: %.2f, sequence-number: %d, min(%.2f, %.2f, %.2f) max(%.2f, %.2f, %.2f)",
+				new Object[] { box.getCustomerId(), name == null ? "" : name, box.getLength(), box.getWidth(), box.getHeigth(), box.getVolume(), box.getSequenceNumber(),
 						box.getMinimumPoint().getX(), box.getMinimumPoint().getY(), box.getMinimumPoint().getZ(),
 						box.getMaximumPoint().getX(), box.getMaximumPoint().getY(), box.getMaximumPoint().getZ() }));
 	}
@@ -1155,30 +1178,33 @@ public class Greedy {
 		return null;
 	}
 	
-	private boolean checkPassageExist(Box selectedBox) {
-		for (Box b : getConLoading().getPlacedBox().getBoxes()) {
+	private boolean checkPassageExist(Box box) {
+		for (Box b : this.getPlacedBoxes().getBoxes()) {
 
-			double boxDistance = Math.sqrt(Math.pow(selectedBox.getMaximumPoint().getX(), 2)
-					+ Math.pow(selectedBox.getMaximumPoint().getY(), 2));
+//			double boxDistance = Math.sqrt(Math.pow(box.getMaximumPoint().getX(), 2) + Math.pow(box.getMaximumPoint().getY(), 2));
 
-			double distance = Math.sqrt(Math.pow(b.getMinimum().getX(), 2) + Math.pow(b.getMinimumPoint().getY(), 2));
+//			double distance = Math.sqrt(Math.pow(b.getMinimum().getX(), 2) + Math.pow(b.getMinimumPoint().getY(), 2));
 
-			if (boxDistance > distance) {
-				if (b.getMinimumPoint().getY() < selectedBox.getMaximumPoint().getY()
-						&& selectedBox.getMinimumPoint().getY() < b.getMaximumPoint().getY()) {
-					if (selectedBox.getSequenceNumber() > b.getSequenceNumber()) {
-						return false;
-					}
-				}
-			}
-
-			if (boxDistance < distance) {
-				if (b.getMinimumPoint().getY() < selectedBox.getMaximumPoint().getY()
-						&& selectedBox.getMinimumPoint().getY() < b.getMaximumPoint().getY()) {
-					if (selectedBox.getSequenceNumber() < b.getSequenceNumber()) {
-						return false;
-					}
-				}
+//			if (boxDistance > distance) {
+//				if (b.getMinimumPoint().getY() < selectedBox.getMaximumPoint().getY()
+//						&& selectedBox.getMinimumPoint().getY() < b.getMaximumPoint().getY()) {
+//					if (selectedBox.getSequenceNumber() > b.getSequenceNumber()) {
+//						return false;
+//					}
+//				}
+//			}
+//
+//			if (boxDistance < distance) {
+//				if (b.getMinimumPoint().getY() < selectedBox.getMaximumPoint().getY()
+//						&& selectedBox.getMinimumPoint().getY() < b.getMaximumPoint().getY()) {
+//					if (selectedBox.getSequenceNumber() < b.getSequenceNumber()) {
+//						return false;
+//					}
+//				}
+//			}
+			logger.info(String.format("sequence %d : %d", new Object[] {box.getSequenceNumber(), b.getSequenceNumber()}));
+			if((box.getMaximum().getX() <= b.getMinimum().getX()) && (box.getSequenceNumber() < b.getSequenceNumber())) {				
+					return false;				
 			}
 		}
 		return true;
@@ -1226,6 +1252,28 @@ public class Greedy {
 	public void setRoundNumber(int roundNumber) {
 		this.roundNumber = roundNumber;
 	}
+	
+	private void reloadSequenceNumber(Box box) {
+		if(!isLifo) {
+			return;
+		}
+		
+		if(box.getSequenceNumber() > 0) {
+			return;
+		}
+		
+		box.setSequenceNumber(1);		
+		for(Box b : this.getNotPlacedBoxes().getBoxes()) {
+			if(box.getCustomerId().compareTo(b.getCustomerId()) == 0) {
+				b.setSequenceNumber(1);
+			}
+		}							
+		
+		//update all sequence number
+		for(Box b : this.getPlacedBoxes().getBoxes()) {						
+			b.setSequenceNumber(b.getSequenceNumber() + 1);
+		}
+	}
 
 	private double totalBoxVolumes = 0;
 	private double containerVolumes;
@@ -1234,17 +1282,22 @@ public class Greedy {
 	private Batch placedBoxes;
 	private Batch notPlacedBoxes;
 	private ContainerLoading containerLoading;
-	private String selectedAlgorithm;
+	private String optimizeAlgorithm;
+	private String algorithm;
 	private Container container;
 	private double notSupportRatio;
-	private double amalgamateCount = 0;
+	private int amalgamateCount = 0;
 	private boolean isFragility;
 	private boolean isLifo;
 	private boolean isOverhang;
 	private int roundNumber = 0;
+	
 
+	public static final String SB_ALGORITHM = "SB";
+	public static final String BS_ALGORITHM = "BS";
+	public static final String ST_VL_ALGORITHM = "ST_VL";
 	public static final String ST_ALGORITHM = "ST";
 	public static final String VL_ALGORITHM = "AL";
-	public static final String EL_ALGORITHM = "EL";
+	public static final String EL_ALGORITHM = "EL";	
 	public static final double NOT_SUPPORT_RATIO = 0.25;
 }

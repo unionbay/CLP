@@ -27,6 +27,54 @@ public class Utility {
 	private Utility() {
 	};
 
+	public void reOrderBox(Box[] boxes) {
+		this.mergeSortBySequence(0, boxes.length - 1, boxes);
+	}
+
+	public void sortBoxBySequence(Boxes[] dPlacedBoxes) {
+		this.mergeSort(0, dPlacedBoxes.length - 1, dPlacedBoxes);
+	}
+
+	private void mergeSortBySequence(int startIndex, int endIndex, Box[] boxList) {
+		if (endIndex - startIndex > 0) {
+			int midIndex = startIndex + (endIndex - startIndex) / 2;
+			mergeSortBySequence(startIndex, midIndex, boxList);
+			mergeSortBySequence(midIndex + 1, endIndex, boxList);
+			this.mergeBySequence(startIndex, endIndex, midIndex, boxList);
+		}
+	}
+
+	private Box[] mergeBySequence(int start, int end, int mid, Box[] boxList) {
+		Box[] helperList = new Box[boxList.length];
+
+		for (int i = start; i <= end; i++) {
+			helperList[i] = boxList[i];
+		}
+
+		int i = start;
+		int k = start;
+		int j = mid + 1;
+
+		while (i <= mid && j <= end) {
+			if (compareBoxBySequence(helperList[i], helperList[j]) == 1) {
+				boxList[k] = helperList[i];
+				i++;
+			} else {
+				boxList[k] = helperList[j];			
+				j++;
+			}
+			k++;
+		}
+
+		while (i <= mid) {
+			boxList[k] = helperList[i];
+			i++;
+			k++;
+		}
+
+		return helperList;
+	}
+
 	public void sortBox(Boxes[] dPlacedBoxes) {
 		this.mergeSort(0, dPlacedBoxes.length - 1, dPlacedBoxes);
 	}
@@ -56,19 +104,9 @@ public class Utility {
 				boxList[k] = helperList[i];
 				i++;
 			} else {
-				boxList[k] = helperList[j];
-				if (boxList[i].getRoot().getX() == 0 && boxList[i].getRoot().getY() == 14
-						&& boxList[i].getRoot().getZ() == 0) {
-				}
+				boxList[k] = helperList[j];				
 				j++;
-
-//				for (Boxes b : boxList) {
-//					String boxStr = String.format("sequence number: %d, root: %f %f %f", new Object[] {
-//							b.getSequenceNumber(), b.getRoot().getX(), b.getRoot().getY(), b.getRoot().getZ() });
-//					logger.info(boxStr);
-//				}
 			}
-		//	logger.info("i: " + i + " j: " + j + " k: " + k);
 			k++;
 		}
 
@@ -82,16 +120,44 @@ public class Utility {
 	}
 
 	private int compareBoxPosition(Boxes a, Boxes b) {
-	//	logger.info("Start compareBoxPosition");
-		//logger.info(String.format("x: %s %s %s",
-		//		new Object[] { a.getRoot().getX(), a.getRoot().getY(), a.getRoot().getZ() }));
-		//logger.info(String.format("y: %s %s %s",
-			//	new Object[] { b.getRoot().getX(), b.getRoot().getY(), b.getRoot().getZ() }));
+		// logger.info("Start compareBoxPosition");
+		// logger.info(String.format("x: %s %s %s",
+		// new Object[] { a.getRoot().getX(), a.getRoot().getY(), a.getRoot().getZ()
+		// }));
+		// logger.info(String.format("y: %s %s %s",
+		// new Object[] { b.getRoot().getX(), b.getRoot().getY(), b.getRoot().getZ()
+		// }));
 
 		int result = this.compareDimension(a.getRoot(), b.getRoot());
-		//logger.info("Result: " + result);
-		//logger.info("End compareBoxPosition");
+		// logger.info("Result: " + result);
+		// logger.info("End compareBoxPosition");
 		return result;
+	}
+
+	private int compareBoxBySequence(Box a,Box b) {
+		int sequenceNumA = a.getSequenceNumber();
+		int sequenceNumB = b.getSequenceNumber();
+
+		if (sequenceNumA > sequenceNumB) {
+			return 1;
+		}
+
+		if (sequenceNumA < sequenceNumB) {
+			return -1;
+		}
+
+		double volumeA = a.getLength() * a.getWidth() * a.getHeight();
+		double volumeB = b.getLength() * b.getWidth() * b.getHeight();
+
+		if (volumeA > volumeB) {
+			return 1;
+		}
+
+		if (volumeA < volumeB) {
+			return -1;
+		}
+
+		return 0;
 	}
 
 	private int compareDimension(Dimension x, Dimension y) {
