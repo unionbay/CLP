@@ -37,7 +37,8 @@ public class LoadingData {
 	public static void main(String arg[]) {
 		BasicConfigurator.configure();		
 		LoadingData loadingData = new LoadingData();
-		loadingData.loadingData(30, 40);
+		loadingData.loadingData(8, 14);
+		System.out.println("Testing finish");
 	}
 
 	public void loadingData(int startIndex, int endIndex) {
@@ -87,7 +88,7 @@ public class LoadingData {
 		Boxes[] boxArr = new Boxes[boxes.size()];
 		for (int i = 0; i < boxes.size(); i++) {
 			Box b = boxes.get(i);
-			Boxes box = new Boxes(b.getMinimum(), b.getLength(), b.getWidth(), b.getHeight(), b.getSequenceNumber());
+			Boxes box = new Boxes(b.getMinimum(), b.getLength(), b.getWidth(), b.getHeight(), b.getSequenceNumber(),b.getCustomerId());
 			boxArr[i] = box;
 		}	
 

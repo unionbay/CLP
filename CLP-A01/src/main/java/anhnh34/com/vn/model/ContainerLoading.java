@@ -146,57 +146,42 @@ public class ContainerLoading {
 
 			if (line.contains("Node - number of items")) {
 				problem.setItemsList(this.loadItems(index, fileArray));
-
-				// sort all boxes base on their volume
-				this.getNotPlacedBox().getBoxes().sort(new Comparator<Box>() {
-
-					@Override
-					public int compare(Box arg0, Box arg1) {
-						double arg0Volume = arg0.getLength() * arg0.getWidth() * arg0.getHeight();
-						double arg1Volume = arg1.getLength() * arg1.getWidth() * arg1.getHeight();
-						
-						//order by sequence number.
-//						if (arg0.getSequenceNumber() > arg1.getSequenceNumber()) {
-//							return -1;
-//						}
-//
-//						if (arg0.getSequenceNumber() < arg1.getSequenceNumber()) {
-//							return 1;
-//						}
-						
-					
-						
-						//order by  largest surface.
-//						if(arg1.getLargestSurface() >= arg0.getLargestSurface()) {
-//							return 1;							
-//						}
-//						
-//						if(arg1.getLargestSurface() < arg0.getLargestSurface()) {
-//							return -1;
-//						}
-													
-						if (arg1Volume > arg0Volume) {
-							return 1;
-						} else if (arg1Volume < arg0Volume) {
-							return -1;
-						} 
-						
-						//order by largest dimension.
-						if(arg1.getBiggestDimension() > arg0.getBiggestDimension()) {
-							return 1;							
-						}
-					
-						if(arg1.getBiggestDimension() < arg0.getBiggestDimension()) {
-							return -1;
-						}
-						
-						return 0;
-					}
-				});
+				this.getNotPlacedBox().getBoxes().sort(new BoxComparator());				
+				
+				//setup box type.
 				this.loadBoxType();
+				
+				//calculate number of items of a customer.				
+				this.calculateNumberOfItem();
 			}
 			index++;
 		}
+	}
+
+	private void calculateNumberOfItem() {
+		
+		List<Box> boxList = new ArrayList<Box>();
+		for(int i=0; i < this.getNotPlacedBox().getBoxes().size()-1; i++) {
+			int numOfItem = 1;
+			Box box = this.getNotPlacedBox().getBoxes().get(i);
+			if(box.getNumberOfItem() > 1) {
+				continue;
+			}
+			
+			boxList.add(box);
+			
+			for(int j=i+1; j < this.getNotPlacedBox().getBoxes().size(); j++) {
+			  Box boxJ = this.getNotPlacedBox().getBoxes().get(j);
+			  if(box.getCustomerId() == boxJ.getCustomerId()) {
+				  numOfItem++;
+				  boxList.add(boxJ);
+			  }
+			}
+			
+			for(Box r : boxList) {
+				r.setNumberOfItem(numOfItem);
+			}
+		}		
 	}
 
 	private List<String> loadItems(int index, List<String> itemList) {
@@ -236,10 +221,10 @@ public class ContainerLoading {
 			boolean isFragility = fragility == 1 ? true : false;
 
 			// Create new box and then add to not placed box
-			Box box = new Box(length, width, heigh);
+			Box box = new Box(notPlacedBox.getBoxes().size() + 1, length, width, heigh);
 			box.setFragile(isFragility);
 			box.setCustomerId(customerId);					
-			notPlacedBox.getBoxes().add(box);
+			notPlacedBox.getBoxes().add(box);			
 		}
 	}
 
@@ -690,7 +675,7 @@ public class ContainerLoading {
 	private void loadBoxType() {
 		List<Box> boxList = this.getNotPlacedBox().getBoxes();
 
-		for (int i = 0; i < boxList.size() - 1; i++) {
+		for (int i = 0; i <= boxList.size() - 1; i++) {
 			Box boxI = boxList.get(i);
 
 			if (boxI.getBoxType() == null || boxI.getBoxType().isEmpty()) {
@@ -705,7 +690,7 @@ public class ContainerLoading {
 					}
 				}
 			}
-		}
+		}					
 	}
 
 	public void showSpaceInfo() {
@@ -714,14 +699,14 @@ public class ContainerLoading {
 		}
 	}
 
-	private void showSpaceInfo(List<Space> spacesList) {
-		for (Space s : spacesList) {
-			logger.info(String.format("size: %f %f %f || coordinate: %f %f %f, %f %f %f",
-					new Object[] { s.getLength(), s.getWidth(), s.getHeight(), s.getMinimum().getX(),
-							s.getMinimum().getY(), s.getMinimum().getZ(), s.getMaximum().getX(), s.getMaximum().getY(),
-							s.getMaximum().getZ() }));
-		}
-	}
+//	private void showSpaceInfo(List<Space> spacesList) {
+//		for (Space s : spacesList) {
+//			logger.info(String.format("size: %f %f %f || coordinate: %f %f %f, %f %f %f",
+//					new Object[] { s.getLength(), s.getWidth(), s.getHeight(), s.getMinimum().getX(),
+//							s.getMinimum().getY(), s.getMinimum().getZ(), s.getMaximum().getX(), s.getMaximum().getY(),
+//							s.getMaximum().getZ() }));
+//		}
+//	}
 
 	private void showCuboidInfo(Cuboid c) {
 		logger.info(String.format("%f %f %f, %f %f %f",

@@ -1,5 +1,6 @@
 package anhnh34.com.vn.model;
 
+import java.io.Console;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,11 +13,11 @@ public class Greedy {
 	public void setContainer(Container container) {
 		this.container = container;
 	}
-	
+
 	public String getAlgorithm() {
 		return algorithm;
 	}
-	
+
 	public void setAlgorithm(String algorithm) {
 		this.algorithm = algorithm;
 	}
@@ -60,11 +61,10 @@ public class Greedy {
 	public void setOptimizeAlgorithm(String optimizeAlgorithm) {
 		this.optimizeAlgorithm = optimizeAlgorithm;
 	}
-	
+
 	public String getOptimizeAlgorithm() {
 		return optimizeAlgorithm;
 	}
-
 
 	public ContainerLoading getConLoading() {
 		return containerLoading;
@@ -90,8 +90,7 @@ public class Greedy {
 		String lifoParam = Utility.getInstance().getConfigValue("lifo_constraint");
 		String algorithmParam = Utility.getInstance().getConfigValue("algorithm");
 		String opAlgoParam = Utility.getInstance().getConfigValue("op_algorithm");
-		
-		
+
 		this.setAlgorithm(algorithmParam);
 		this.setOptimizeAlgorithm(opAlgoParam);
 		this.isOverhang = "0".equals(nSupportParam) ? false : true;
@@ -210,38 +209,35 @@ public class Greedy {
 		Space aboveSpace = generateAboveSpace(box, space);
 
 		// remove old space
-		this.getAvaiableSpaces().remove(space);		
-		
+		this.getAvaiableSpaces().remove(space);
+
 		// add all new generate spaces.
 		this.addEmptySpace(frontSpace);
 		this.addEmptySpace(rightSpace);
 		this.addEmptySpace(aboveSpace);
-		
+
 		this.showSpaceInfo("front space:", frontSpace);
 		this.showSpaceInfo("right space", rightSpace);
 		this.showSpaceInfo("above space", aboveSpace);
-				
-		this.removeBoxOverlap(box); //check overlapping space.
-	
+
+		this.removeBoxOverlap(box); // check overlapping space.
+
 		this.amalgamation(); // Amalgamation
-		
+
 		this.removeSmallSpaces(); // removal too small spaces
 
 		logger.info("=====Finish update spaces======");
 		logger.info("\n");
+
 		this.showSpaceInfo();
 	}
-	
-	
 
 	private void addEmptySpace(Space s) {
-		if (s.isValid()) {
+		if (s != null && s.isValid()) {
 			this.getAvaiableSpaces().add(s);
 		}
 	}
-	
-	
-	
+
 	private void removeBoxOverlap(Box box) {
 		logger.info("Start remove box with overlap");
 		List<Space> helperList = new ArrayList<>();
@@ -249,13 +245,13 @@ public class Greedy {
 
 		for (int i = 0; i < this.getAvaiableSpaces().size(); i++) {
 			Space selectedSpace = this.getAvaiableSpaces().get(i);
-			if (checkOverlapping(box, selectedSpace)) {				
+			if (checkOverlapping(box, selectedSpace)) {
 				removeableList.add(selectedSpace);
-				if(isOverhang) {
-					helperList.addAll(this.overhangUpdateOverlapSpaces(box, selectedSpace));	
-				}else {
+				if (isOverhang) {
+					helperList.addAll(this.overhangUpdateOverlapSpaces(box, selectedSpace));
+				} else {
 					helperList.addAll(this.updateOverlapSpaces(box, selectedSpace));
-				}			
+				}
 			}
 		}
 
@@ -293,9 +289,9 @@ public class Greedy {
 				Space t = this.getAvaiableSpaces().get(j);
 				Space amalgateSpace = null;
 				if (this.isOverhang) {
-					amalgateSpace = this.overlapAmalgamate(s, t);					
+					amalgateSpace = this.overlapAmalgamate(s, t);
 				} else {
-					amalgateSpace = this.amalgamate(s, t);					
+					amalgateSpace = this.amalgamate(s, t);
 				}
 
 				if (amalgateSpace != null) {
@@ -310,7 +306,7 @@ public class Greedy {
 				this.addEmptySpace(amalagateSpace);
 			}
 		}
-		
+
 		this.removeSubsets();
 	}
 
@@ -353,9 +349,9 @@ public class Greedy {
 			result = new Space(minUDimension, maxUDimension);
 			// this.getAllSpaces().add(xAmalgamateSpace);
 			logger.info("Amalgamate folow x direction");
-			// showCuboidInfo(s);
-			// showCuboidInfo(t);
-			// this.showCuboidInfo(result);
+			this.showSpaceInfo("", s);
+			this.showSpaceInfo("",t);
+			this.showSpaceInfo("",result);
 			logger.info("\n");
 		}
 
@@ -389,9 +385,9 @@ public class Greedy {
 			result = new Space(minYuDimension, maxYuDimension);
 			this.getAvaiableSpaces().add(result);
 			logger.info("Amalgamate folow y direction");
-			// this.showCuboidInfo(s);
-			// this.showCuboidInfo(t);
-			// this.showCuboidInfo(result);
+			this.showSpaceInfo("", s);
+			this.showSpaceInfo("",t);
+			this.showSpaceInfo("",result);
 			logger.info("\n");
 
 		}
@@ -410,16 +406,12 @@ public class Greedy {
 				// check if space s is a subset of space t
 				Space t = helperList.get(j);
 				if (checkSubsetSpace(s, t)) {
-					// this.showCuboidInfo("Space S info", s);
-					// this.showCuboidInfo("Space T info", t);
 					helperList.remove(i);
 					break;
 				}
 
 				// check if space t is a subset of space s
 				if (checkSubsetSpace(t, s)) {
-					// this.showCuboidInfo("Space T info ", t);
-					// this.showCuboidInfo("Space S info", s);
 					helperList.remove(j);
 				}
 			}
@@ -434,14 +426,6 @@ public class Greedy {
 				&& s.getMaximumSupportX() >= t.getMaximumSupportX()
 				&& s.getMaximumSupportY() >= t.getMaximumSupportY()) {
 			return true;
-			// if (this.defaultRatioSupport == 0 || s.getMinimum().getZ() == 0) {
-			// return true;
-			// }
-			// if (s.getMaximumSupportX() <= t.getMaximumSupportX() &&
-			// s.getMaximumSupportY() <= t.getMaximumSupportY() && s.getMinimum().getZ() >
-			// 0) {
-			// return true;
-			// }
 		}
 		return false;
 	}
@@ -500,6 +484,7 @@ public class Greedy {
 
 		if (rightSpace.isValid()) {
 			logger.info("right space");
+			this.showSpaceInfo("rightspace", rightSpace);
 			result.add(rightSpace);
 		}
 
@@ -562,39 +547,154 @@ public class Greedy {
 		}
 		return smallestDimension;
 	}
+	
+	public FeasibleObject findBox_Test() {
+		List<BoxCandidate> feasibleCandidates = new ArrayList<BoxCandidate>();
+		
+		for (Box box : this.getNotPlacedBoxes().getBoxes()) {
+			for (Space space : this.getAvaiableSpaces()) {
+				if (roundNumber == 2) {
+					System.out.println("Round number: " + roundNumber);
+				}
+
+				List<String> rotations = this.findRotations(box, space);
+				
+				if (rotations.isEmpty()) {
+					continue;
+				}
+				
+				for(String rotation : rotations) {
+					Box tBox = new Box(box);
+					tBox.setPossibleRotations(rotations);
+					tBox.setSelectedRotation(rotation);
+					this.updateBoxPosition(tBox, space, rotation);					
+					
+					if(isLifo && isMultiDropFeasiblePacking(tBox) == false) {
+						continue;
+					}
+					
+					BoxCandidate candidate = new BoxCandidate(tBox, space, 0);
+					feasibleCandidates.add(candidate);
+				}					
+			}
+		}
+	
+		BoxCandidate bestCandidate = this.findBestSpaceBs(feasibleCandidates);	
+		if(bestCandidate == null) {
+			return null;
+		}
+		
+		return new FeasibleObject(bestCandidate.getBox(), bestCandidate.getBox().getSelectedRotation(), bestCandidate.getSpace());
+	}
+
+	public void findBox() {
+		boolean isBoxFound=true;
+		while(true) {
+			List<BoxCandidate> feasibleCandidates = new ArrayList<BoxCandidate>();
+			for (BoxType bt : this.getNotPlacedBoxes().getBoxTypes()) {
+				if (bt.getBoxes().size() == 0) {
+					continue;
+				}
+				
+				for (Space s : this.getAvaiableSpaces()) {
+					Box box = bt.getBoxes().get(0);
+					List<String> rotations = this.findRotations(box, s);
+					
+					if (rotations.isEmpty()) {
+						continue;
+					}
+					
+					for(String rotation : rotations) {
+						Box tBox = new Box(box);
+						tBox.setPossibleRotations(rotations);
+						tBox.setSelectedRotation(rotation);				
+						this.updateBoxPosition(tBox, s, tBox.getSelectedRotation().getRotationCode());
+						if (isLifo && isMultiDropFeasiblePacking(tBox) == false) {
+							continue;
+						}
+						
+						BoxCandidate candidate = new BoxCandidate(tBox, s, 0);
+						feasibleCandidates.add(candidate);									
+					}														
+				}	
+				
+				if (feasibleCandidates.isEmpty()) {
+					continue;
+				}
+			}			
+			
+			BoxCandidate bestCandidate = this.findBestSpaceBs(feasibleCandidates);					
+			
+			if(bestCandidate == null || this.avaiableSpaces.isEmpty() || this.getNotPlacedBoxes().getBoxNumber() == 0) {
+				isBoxFound = false;
+				break;
+			}
+			
+			if(isBoxFound == true) {
+
+				// get Feasible Object
+				Box selectedBox = bestCandidate.getBox();
+				Space selectedSpace = bestCandidate.getSpace();				
+				String selectedRotation = bestCandidate.getBox().getSelectedRotation().getRotationCode();
+				
+				Dimension maximumDimension = getMaximumDimension(selectedRotation, selectedSpace.getMinimum(), selectedBox);				
+				bestCandidate.getBox().setMaximum(maximumDimension);
+
+				logger.info("founded feasible Object Info: ");
+				this.showSpaceInfo("Founded space", selectedSpace);
+				this.showBoxInfo("Founded box", selectedBox);
+								
+				this.getNotPlacedBoxes().removeBox(selectedBox);
+				this.getPlacedBoxes().getBoxes().add(selectedBox);
+				this.reloadSequenceNumberTest(selectedBox);			
+			}						
+		}		
+	}
 
 	public FeasibleObject finBoxStVl() {
 		return null;
 	}
 
-	public FeasibleObject findObjectBs() {
+	public FeasibleObject findObjectBs(){
 
 		this.sortSpaces();
-		List<BoxCandidate> feasibleCandidates = new ArrayList<BoxCandidate>();
-		Box tBox = null;
+
+		List<BoxCandidate> feasibleCandidates = new ArrayList<BoxCandidate>();		
 		for (Box box : this.getNotPlacedBoxes().getBoxes()) {
-			for (Space space : this.getAvaiableSpaces()) {			
-				if(roundNumber == 6) {
+			for (Space space : this.getAvaiableSpaces()) {
+				if (roundNumber == 5) {
 					System.out.println("Round number: " + roundNumber);
 				}
-				
-				
+
 				List<String> rotations = this.findRotations(box, space);
+				String rotationString = "";
+				for(String rotation : rotations) {
+					rotationString  = rotationString.concat(", " + rotation);
+				}
+				
+				logger.info(String.format("Box %f %f %f %s", new Object[] {box.getBiggestDimension(), box.getMiddleDimension(), box.getSmallestDimension(), rotationString}));	
+				logger.info(String.format("Space: %f %f %f", new Object[] {space.getLength(), space.getWidth(), space.getHeight()}));
 				
 				if (rotations.isEmpty()) {
 					continue;
-				}							
-							
-				tBox = new Box(box);			
-				tBox.setPossibleRotations(rotations);				
-				tBox.setSelectedRotation(tBox.getPossibleRotations().get(0));			
-
-				this.updateBoxPosition(tBox, space, tBox.getSelectedRotation().getRotationCode());
-				
-				if(isLifo && isMultiDropFeasiblePacking(tBox) == false) {
-					continue;
 				}
 				
+				Box tBox = new Box(box);							
+				tBox.setPossibleRotations(rotations);
+				
+				if (tBox.getPossibleRotations().size() == 1) {					
+					tBox.setSelectedRotation(tBox.getPossibleRotations().get(0));
+				} else {
+					tBox.setSelectedRotation(tBox.getPossibleRotations().get(1));
+				}
+				
+				logger.info("selected rotation: " + tBox.getSelectedRotation().getRotationCode());
+				this.updateBoxPosition(tBox, space, tBox.getSelectedRotation().getRotationCode());
+
+				if (isLifo && isMultiDropFeasiblePacking(tBox) == false) {
+					continue;
+				}
+
 				BoxCandidate candidate = new BoxCandidate(tBox, space, 0);
 				feasibleCandidates.add(candidate);
 			}
@@ -604,9 +704,11 @@ public class Greedy {
 			}
 
 			BoxCandidate bestCandidate = this.findBestSpaceBs(feasibleCandidates);
-			box.setSelectedRotation(bestCandidate.getBox().getSelectedRotation());			
-			updateBoxPosition(box, bestCandidate.getSpace(), box.getSelectedRotation().getRotationCode());
+			box.setSelectedRotation(bestCandidate.getBox().getSelectedRotation());
 			
+			logger.info("Selected rotation: " + bestCandidate.getBox().getSelectedRotation().getRotationCode());
+			updateBoxPosition(box, bestCandidate.getSpace(), box.getSelectedRotation().getRotationCode());
+
 			return new FeasibleObject(box, bestCandidate.getBox().getSelectedRotation(), bestCandidate.getSpace());
 		}
 		return null;
@@ -617,13 +719,18 @@ public class Greedy {
 		for (BoxCandidate candidate : candidates) {
 			this.createCandiates(candidate.getSpace(), candidate.getBox());
 		}
+		
 		return this.findBestFittedBox();
 	}
 
-	private BoxCandidate findBestFittedBox() {
-		if (candidates.size() == 1) {
-			return candidates.get(0);
+	private BoxCandidate findBestFittedBox() {		
+		if(candidates.size() == 0) {
+			return null;
 		}
+		
+//		if (candidates.size() == 1) {
+//			return candidates.get(0);
+//		}
 
 		switch (this.getOptimizeAlgorithm()) {
 		case Greedy.ST_ALGORITHM:
@@ -639,37 +746,34 @@ public class Greedy {
 
 	private List<String> findRotations(Box box, Space space) {
 		// loop all possible rotations.
-		int[] rotations = box.getfRotation();
-		List<String> fesRotations = new ArrayList<String>();		
+		int[] rotations = box.getfRotation();		
+		List<String> fesRotations = new ArrayList<String>();
 		// can be rotation by X.
 		if (rotations[0] == 1) {
-			
+
 			// XYZ
 			if (space.getLength() >= box.getBiggestDimension() && space.getWidth() >= box.getMiddleDimension()
 					&& space.getHeight() >= box.getSmallestDimension()) {
-				fesRotations.add(Rotation.XYZ);
-				// return Rotation.XYZ;
+				fesRotations.add(Rotation.XYZ);			
 			}
-			
+
 			// XZY
 			if (space.getLength() >= box.getBiggestDimension() && space.getWidth() >= box.getSmallestDimension()
 					&& space.getHeight() >= box.getMiddleDimension()) {
 				fesRotations.add(Rotation.XZY);
-			}		
+			}
 		}
 		// can be rotation by Y.
 		if (rotations[1] == 1) {
 			// YXZ
 			if (space.getWidth() >= box.getBiggestDimension() && space.getLength() >= box.getMiddleDimension()
-					&& space.getHeight() >= box.getSmallestDimension()) {
-				// return Rotation.YXZ;
+					&& space.getHeight() >= box.getSmallestDimension()) {				
 				fesRotations.add(Rotation.YXZ);
 			}
 
 			// YZX
 			if (space.getWidth() >= box.getBiggestDimension() && space.getLength() >= box.getSmallestDimension()
-					&& space.getHeight() >= box.getMiddleDimension()) {
-				// return Rotation.YZX;
+					&& space.getHeight() >= box.getMiddleDimension()) {				
 				fesRotations.add(Rotation.YZX);
 			}
 		}
@@ -679,13 +783,11 @@ public class Greedy {
 			if (space.getHeight() >= box.getBiggestDimension() && space.getLength() >= box.getMiddleDimension()
 					&& space.getWidth() >= box.getSmallestDimension()) {
 				fesRotations.add(Rotation.ZXY);
-				// return Rotation.ZXY;
 			}
 			// ZYX
 			if (space.getHeight() >= box.getBiggestDimension() && space.getWidth() >= box.getMiddleDimension()
 					&& space.getLength() >= box.getSmallestDimension()) {
-				fesRotations.add(Rotation.ZYX);
-				// return Rotation.ZYX;
+				fesRotations.add(Rotation.ZYX);				
 			}
 		}
 		return fesRotations;
@@ -695,54 +797,80 @@ public class Greedy {
 		// get Feasible Object
 		Box selectedBox = feasObj.getBox();
 		Space selectedSpace = feasObj.getSpace();
-		// String selectedRotation = feasObj.getSelectedRotation().getRotationCode();
 		String selectedRotation = feasObj.getBox().getSelectedRotation().getRotationCode();
-		
+
 		logger.info("selected rotation: " + feasObj.getBox().getSelectedRotation().getRotationCode());
-		Dimension maximumDimension = getMaximumDimension(selectedRotation, selectedSpace.getMinimum(), selectedBox);
-		// selectedBox.setMinimum(selectedSpace.getMinimum());
-		// selectedBox.setMaximum(maximumDimension);
+		Dimension maximumDimension = getMaximumDimension(selectedRotation, selectedSpace.getMinimum(), selectedBox);		
 		feasObj.getBox().setMaximum(maximumDimension);
 
 		logger.info("founded feasible Object Info: ");
 		this.showSpaceInfo("Founded space", selectedSpace);
 		this.showBoxInfo("Founded box", selectedBox);
-		this.getNotPlacedBoxes().getBoxes().remove(selectedBox);
-		this.getPlacedBoxes().getBoxes().add(selectedBox);		
-		this.reloadSequenceNumber(selectedBox);		
+		this.getNotPlacedBoxes().removeBox(selectedBox);
+		this.getPlacedBoxes().getBoxes().add(selectedBox);
+		this.reloadSequenceNumber(selectedBox);
 	}
+	
+	
 
 	private Dimension getMaximumDimension(String selectedRotation, Dimension minimum, Box selectedBox) {
 		Dimension maximumDimension = null;
 		switch (selectedRotation) {
 		case Rotation.XYZ:
 			maximumDimension = minimum.addDimension(new Dimension(selectedBox.getBiggestDimension(),
-					selectedBox.getMiddleDimension(), selectedBox.getSmallestDimension()));
+					selectedBox.getMiddleDimension(), selectedBox.getSmallestDimension()));					
+			
+			selectedBox.setLength(selectedBox.getBiggestDimension());
+			selectedBox.setWidth(selectedBox.getMiddleDimension());
+			selectedBox.setHeight(selectedBox.getSmallestDimension());
 			break;
 		case Rotation.XZY:
 			maximumDimension = minimum.addDimension(new Dimension(selectedBox.getBiggestDimension(),
 					selectedBox.getSmallestDimension(), selectedBox.getMiddleDimension()));
+			
+			selectedBox.setLength(selectedBox.getBiggestDimension());
+			selectedBox.setWidth(selectedBox.getSmallestDimension());
+			selectedBox.setHeight(selectedBox.getMiddleDimension());			
 			break;
 		case Rotation.YXZ:
 			maximumDimension = minimum.addDimension(new Dimension(selectedBox.getMiddleDimension(),
 					selectedBox.getBiggestDimension(), selectedBox.getSmallestDimension()));
+			
+			selectedBox.setWidth(selectedBox.getBiggestDimension());
+			selectedBox.setLength(selectedBox.getMiddleDimension());			
+			selectedBox.setHeight(selectedBox.getSmallestDimension());
+			
 			break;
 		case Rotation.YZX:
 			maximumDimension = minimum.addDimension(new Dimension(selectedBox.getSmallestDimension(),
 					selectedBox.getBiggestDimension(), selectedBox.getMiddleDimension()));
+			
+			selectedBox.setWidth(selectedBox.getBiggestDimension());
+			selectedBox.setLength(selectedBox.getSmallestDimension());			
+			selectedBox.setHeight(selectedBox.getMiddleDimension());
 			break;
 		case Rotation.ZXY:
 			maximumDimension = minimum.addDimension(new Dimension(selectedBox.getMiddleDimension(),
 					selectedBox.getSmallestDimension(), selectedBox.getBiggestDimension()));
+			
+			selectedBox.setLength(selectedBox.getMiddleDimension());
+			selectedBox.setWidth(selectedBox.getSmallestDimension());						
+			selectedBox.setHeight(selectedBox.getBiggestDimension());
 			break;
 		case Rotation.ZYX:
 			maximumDimension = minimum.addDimension(new Dimension(selectedBox.getSmallestDimension(),
 					selectedBox.getMiddleDimension(), selectedBox.getBiggestDimension()));
+			
+			selectedBox.setLength(selectedBox.getSmallestDimension());
+			selectedBox.setWidth(selectedBox.getMiddleDimension());						
+			selectedBox.setHeight(selectedBox.getBiggestDimension());
 			break;
 
 		}
 		return maximumDimension;
 	}
+	
+	
 
 	public void showResult() {
 		logger.info("\n\n\n");
@@ -752,89 +880,91 @@ public class Greedy {
 		List<Box> placedBoxes = this.getPlacedBoxes().getBoxes();
 
 		logger.info(String.format("Number of item: %d, number of placed box: %d",
-				new Object[] { numberOfItem, numberOfPlacedBoxes }));		
+				new Object[] { numberOfItem, numberOfPlacedBoxes }));
 
 		this.containerVolumes = this.getContainer().getLength() * this.getContainer().getWidth()
 				* this.getContainer().getHeight();
+
 		for (Box box : placedBoxes) {
 			double boxVolume = box.getLength() * box.getWidth() * box.getHeight();
 			this.totalBoxVolumes = this.totalBoxVolumes + boxVolume;
-			this.showCuboidInfo("", box);
+			this.showBoxInfo("", box);
 		}
 
 		logger.info("List of not placed box: " + this.getNotPlacedBoxes().getBoxes().size());
+
 		for (Box box : this.getNotPlacedBoxes().getBoxes()) {
-			this.getConLoading().showCuboidInfo("", box);
+			this.showBoxInfo("", box);
 		}
+		logger.info("\n");
+
 		logger.info(String.format("Volume utilisation: %.2f",
 				new Object[] { this.totalBoxVolumes / this.containerVolumes * 100 }));
-		
+
 		logger.info(String.format(String.format("Number of amalgamation: %d", this.amalgamateCount)));
 		Utility.getInstance().writeResultToFile(this.placedBoxes.getBoxes()); // write result to file.
-		
+
 	}
 
 	public void showCuboidInfo(String name, Cuboid c) {
 		if (c.getMinimumPoint() == null && c.getMaximumPoint() == null) {
-			logger.info(String.format("%s length: %.2f, width: %.2f, height: %.2f%, volume: %.2f, min: null  max: null",
+			logger.info(String.format("%s l: %.2f, w: %.2f, h: %.2f%, v: %.2f, mi: null  ma: null",
 					new Object[] { name, c.getLength(), c.getWidth(), c.getHeigth(), c.getVolume() }));
 			return;
 		}
 
 		if (c.getMinimumPoint() == null) {
-			logger.info(String
-					.format("%s length: %.2f, width: %.2f, height: %.2f, volume: %.2f min: null max(%.2f, %.2f, %.2f)",
-							new Object[] { name, c.getLength(), c.getWidth(), c.getHeigth(), c.getVolume(),
-									c.getMaximumPoint().getX(), c.getMaximumPoint().getY(),
-									c.getMaximumPoint().getZ() }));
+			logger.info(String.format("%s l: %.2f, w: %.2f, h: %.2f, v: %.2f mi: null ma(%.2f, %.2f, %.2f)",
+					new Object[] { name, c.getLength(), c.getWidth(), c.getHeigth(), c.getVolume(),
+							c.getMaximumPoint().getX(), c.getMaximumPoint().getY(), c.getMaximumPoint().getZ() }));
 			return;
 		}
 
 		if (c.getMaximumPoint() == null) {
-			logger.info(String
-					.format("%s length: %.2f, width: %.2f, height: %.2f, volume: %2.f min(%.2f, %.2f, %.2f) max: null",
-							new Object[] { name, c.getLength(), c.getWidth(), c.getHeigth(), c.getVolume(),
-									c.getMinimumPoint().getX(), c.getMinimumPoint().getY(),
-									c.getMinimumPoint().getZ() }));
+			logger.info(String.format("%s l: %.2f, w: %.2f, h: %.2f, v: %2.f mi(%.2f, %.2f, %.2f) ma: null",
+					new Object[] { name, c.getLength(), c.getWidth(), c.getHeigth(), c.getVolume(),
+							c.getMinimumPoint().getX(), c.getMinimumPoint().getY(), c.getMinimumPoint().getZ() }));
 			return;
 		}
 
-		logger.info(String.format(
-				"%s length: %.2f, width: %.2f, height: %.2f, volume: %.2f  min(%.2f, %.2f, %.2f) max(%.2f, %.2f, %.2f)",
+		logger.info(String.format("%s l: %.2f, w: %.2f, h: %.2f, v: %.2f  mi(%.2f, %.2f, %.2f) ma(%.2f, %.2f, %.2f)",
 				new Object[] { name == null ? "" : name, c.getLength(), c.getWidth(), c.getHeigth(), c.getVolume(),
 						c.getMinimumPoint().getX(), c.getMinimumPoint().getY(), c.getMinimumPoint().getZ(),
 						c.getMaximumPoint().getX(), c.getMaximumPoint().getY(), c.getMaximumPoint().getZ() }));
 	}
 
 	public void showSpaceInfo(String name, Space s) {
+		if (s == null) {
+			return;
+		}
 
 		if (s.getMinimumPoint() == null && s.getMaximumPoint() == null) {
-			logger.info(String.format("%s length: %.2f, width: %.2f, height: %.2f%, volume: %.2f a:%2f  b:%2f",
+			logger.info(String.format("%s l: %.2f, w: %.2f, h: %.2f%, v: %.2f a:%2f  b:%2f",
 					new Object[] { name, s.getLength(), s.getWidth(), s.getHeigth(), s.getVolume(),
 							s.getMaximumSupportX(), s.getMaximumSupportY() }));
 			return;
 		}
 
 		if (s.getMinimumPoint() == null) {
-			logger.info(String.format(
-					"%s length: %.2f, width: %.2f, height: %.2f, volume: %.2f a:%2f  b:%2f min: null max(%.2f, %.2f, %.2f)",
-					new Object[] { name, s.getLength(), s.getWidth(), s.getHeigth(), s.getVolume(),
-							s.getMaximumSupportX(), s.getMaximumSupportY(), s.getMaximumPoint().getX(),
-							s.getMaximumPoint().getY(), s.getMaximumPoint().getZ() }));
+			logger.info(
+					String.format("%s l: %.2f, w: %.2f, h: %.2f, v: %.2f a:%2f  b:%2f mi: null ma(%.2f, %.2f, %.2f)",
+							new Object[] { name, s.getLength(), s.getWidth(), s.getHeigth(), s.getVolume(),
+									s.getMaximumSupportX(), s.getMaximumSupportY(), s.getMaximumPoint().getX(),
+									s.getMaximumPoint().getY(), s.getMaximumPoint().getZ() }));
 			return;
 		}
 
 		if (s.getMaximumPoint() == null) {
-			logger.info(String.format(
-					"%s length: %.2f, width: %.2f, height: %.2f, volume: %2.f a:%2f  b:%2f min(%.2f, %.2f, %.2f) max: null",
-					new Object[] { name, s.getLength(), s.getWidth(), s.getHeigth(), s.getVolume(),
-							s.getMaximumSupportX(), s.getMaximumSupportY(), s.getMinimumPoint().getX(),
-							s.getMinimumPoint().getY(), s.getMinimumPoint().getZ() }));
+			logger.info(
+					String.format("%s l: %.2f, w: %.2f, h: %.2f, v: %2.f a:%2f  b:%2f mi(%.2f, %.2f, %.2f) ma: null",
+							new Object[] { name, s.getLength(), s.getWidth(), s.getHeigth(), s.getVolume(),
+									s.getMaximumSupportX(), s.getMaximumSupportY(), s.getMinimumPoint().getX(),
+									s.getMinimumPoint().getY(), s.getMinimumPoint().getZ() }));
 			return;
 		}
 
 		logger.info(String.format(
-				"%s length: %.2f, width: %.2f, height: %.2f, volume: %.2f a:%2f  b:%2f   min(%.2f, %.2f, %.2f) max(%.2f, %.2f, %.2f)",
+				"%s l: %.2f, w: %.2f, h: %.2f, v: %.2f a:%2f  b:%2f   mi(%.2f, %.2f, %.2f) ma(%.2f, %.2f, %.2f)",
 				new Object[] { name == null ? "" : name, s.getLength(), s.getWidth(), s.getHeigth(), s.getVolume(),
 						s.getMaximumSupportX(), s.getMaximumSupportY(), s.getMinimumPoint().getX(),
 						s.getMinimumPoint().getY(), s.getMinimumPoint().getZ(), s.getMaximumPoint().getX(),
@@ -842,32 +972,26 @@ public class Greedy {
 
 	}
 
-	public void showBoxInfo(String name, Box box) {		
-		if (box.getMinimumPoint() == null && box.getMaximumPoint() == null) {
-			logger.info(String.format("%s : %s length: %.2f, width: %.2f, height: %.2f, volume: %.2f, sequence-number: %d, min: null  max: null",
-					new Object[] { box.getCustomerId(), name, box.getLength(), box.getWidth(), box.getHeigth(), box.getVolume(), box.getSequenceNumber() }));
-			return;
+	public void showBoxInfo(String name, Box box) {
+		String stringFormat = "id: %s, bt: %s,dimen: %f, suface: %f, l: %.2f, w: %.2f, h: %.2f, v: %.2f, sq: %d ";
+
+		if (box.getMinimumPoint() != null) {
+			stringFormat = stringFormat.concat(" ,mi(%.2f, %.2f, %.2f)");
 		}
 
-		if (box.getMinimumPoint() == null) {
-			logger.info(String.format("%s : %s length: %.2f, width: %.2f, height: %.2f, volume: %.2f, sequence-number: %d, min: null max(%.2f, %.2f, %.2f)",
-					new Object[] { box.getCustomerId(), name, box.getLength(), box.getWidth(), box.getHeigth(),box.getVolume(),box.getSequenceNumber(), box.getMaximumPoint().getX(),
-							box.getMaximumPoint().getY(), box.getMaximumPoint().getZ() }));
-			return;
+		if (box.getMaximumPoint() != null) {
+			stringFormat = stringFormat.concat(" ,ma(%.2f, %.2f, %.2f)");
 		}
 
-		if (box.getMaximumPoint() == null) {
-			logger.info(String.format("%s : %s length: %.2f, width: %.2f, height: %.2f, volume: %.2f, sequence-number: %d, min(%.2f, %.2f, %.2f) max: null",
-					new Object[] { box.getCustomerId(),name, box.getLength(), box.getWidth(), box.getHeigth(),box.getVolume(), box.getSequenceNumber(), box.getMinimumPoint().getX(),
-							box.getMinimumPoint().getY(), box.getMinimumPoint().getZ() }));
-			return;
-		}
-
-		logger.info(String.format(
-				"%s : %s length: %.2f, width: %.2f, height: %.2f, volume: %.2f, sequence-number: %d, min(%.2f, %.2f, %.2f) max(%.2f, %.2f, %.2f)",
-				new Object[] { box.getCustomerId(), name == null ? "" : name, box.getLength(), box.getWidth(), box.getHeigth(), box.getVolume(), box.getSequenceNumber(),
-						box.getMinimumPoint().getX(), box.getMinimumPoint().getY(), box.getMinimumPoint().getZ(),
-						box.getMaximumPoint().getX(), box.getMaximumPoint().getY(), box.getMaximumPoint().getZ() }));
+		logger.info(String.format(stringFormat,
+				new Object[] { box.getCustomerId(), box.getBoxType(),box.getBiggestDimension(), box.getLargestSurface(), box.getLength(), box.getWidth(), box.getHeigth(),
+						box.getVolume(), box.getSequenceNumber(),
+						box.getMinimum() == null ? -1 : box.getMinimum().getX(),
+						box.getMinimum() == null ? -1 : box.getMinimum().getY(),
+						box.getMinimum() == null ? -1 : box.getMinimum().getZ(),
+						box.getMaximum() == null ? -1 : box.getMaximum().getX(),
+						box.getMaximum() == null ? -1 : box.getMaximum().getY(),
+						box.getMaximum() == null ? -1 : box.getMaximum().getZ()}));
 	}
 
 	public void sortSpaces() {
@@ -933,9 +1057,11 @@ public class Greedy {
 	}
 
 	public void showSpaceInfo() {
+		logger.info("Space info");
 		for (Space s : this.getAvaiableSpaces()) {
 			this.showSpaceInfo("", s);
 		}
+		logger.info("\n");
 	}
 
 	public void updateBoxPosition(Box selectedBox, Space space, String rotation) {
@@ -956,6 +1082,9 @@ public class Greedy {
 		Dimension maxSpace = space.getMaximum();
 
 		double xMaxTemp = minSpace.getX() + box.getLength() * (1 + this.getNSupportRatio());
+		if(roundNumber == 4) {
+			logger.info(String.format("X max temp: %f, space max: %f", new Object[] {xMaxTemp, maxSpace.getX()}));
+		}
 		double xMax = maxSpace.getX() < xMaxTemp ? maxSpace.getX() : xMaxTemp;
 		double yMaxTemp = minSpace.getY() + box.getWidth() * (1 + this.getNSupportRatio());
 		double yAboveMaximum = maxSpace.getY() < yMaxTemp ? maxSpace.getY() : yMaxTemp;
@@ -963,14 +1092,15 @@ public class Greedy {
 		Dimension minimum = new Dimension(minSpace.getX(), minSpace.getY(), maxBox.getZ());
 		Dimension maximum = new Dimension(xMax, yAboveMaximum, maxSpace.getZ());
 		Space result = new Space(minimum, maximum);
+		logger.info("maximum x: " + box.getMaximum().getX() + " max support box x: " + space.getMaximumSupportX());
 		result.setMaximumSupportX(
-				box.getLength() < space.getMaximumSupportX() ? box.getLength() : space.getMaximumSupportX());
-		
+				box.getMaximum().getX() < space.getMaximumSupportX() ? box.getMaximum().getX() : space.getMaximumSupportX());
+
 		result.setMaximumSupportY(
-				box.getWidth() < space.getMaximumSupportY() ? box.getWidth() : space.getMaximumSupportY());
-		
+				box.getMaximum().getY() < space.getMaximumSupportY() ? box.getMaximum().getY() : space.getMaximumSupportY());
+
 		result.setRatioSupport(this.getNSupportRatio());
-		
+
 		return result;
 	}
 
@@ -979,23 +1109,26 @@ public class Greedy {
 		Dimension minSpace = space.getMinimum();
 		Dimension maxSpace = space.getMaximum();
 
-		if (minSpace.getZ() == 0 || isOverhang == false) { // Incase space is full support from below and no overhang is allow.
+		if (minSpace.getZ() == 0 || isOverhang == false) { // In case space is full support from below and no overhang is
+															// allow.
 			// create new front space
 			Dimension minimum = new Dimension(maxBox.getX(), minSpace.getY(), minSpace.getZ());
 			Dimension maximum = maxSpace;
-			return new Space(minimum, maximum, 0, maxSpace.getX(), maxSpace.getY());			
+			return new Space(minimum, maximum, 0, maxSpace.getX(), maxSpace.getY());
 		}
-			
-		double xFrontMaximum = (1 + getNSupportRatio()) * space.getMaximumSupportX() - maxBox.getX() * getNSupportRatio();
+
+		double xFrontMaximum = (1 + getNSupportRatio()) * space.getMaximumSupportX()
+				- maxBox.getX() * getNSupportRatio();
 		Dimension minimum = new Dimension(maxBox.getX(), minSpace.getY(), minSpace.getZ());
 		Dimension maximum = new Dimension(xFrontMaximum, maxSpace.getY(), maxSpace.getZ());
-		return new Space(minimum, maximum, this.getNSupportRatio(), space.getMaximumSupportX(), space.getMaximumSupportY());			
-		
-		
+		return new Space(minimum, maximum, this.getNSupportRatio(), space.getMaximumSupportX(),
+				space.getMaximumSupportY());
+
 		// create new front space
-		//Dimension minimum = new Dimension(maxBox.getX(), minSpace.getY(), minSpace.getZ());
-		//Dimension maximum = maxSpace;
-		//return new Space(minimum, maximum);				
+		// Dimension minimum = new Dimension(maxBox.getX(), minSpace.getY(),
+		// minSpace.getZ());
+		// Dimension maximum = maxSpace;
+		// return new Space(minimum, maximum);
 	}
 
 	private Space generateRightSpace(Box box, Space space) {
@@ -1007,16 +1140,18 @@ public class Greedy {
 		if (minSpace.getZ() == 0) {
 			Dimension minimum = new Dimension(minBox.getX(), maxBox.getY(), minBox.getZ());
 			Dimension maximum = maxSpace;
-			return new Space(minimum, maximum, 0, maxSpace.getX(), maxSpace.getY());									
+			return new Space(minimum, maximum, 0, maxSpace.getX(), maxSpace.getY());
 		}
-		
-		if(isOverhang) {
+
+		if (isOverhang) {
 			Dimension minimum = new Dimension(minSpace.getX(), maxBox.getY(), minSpace.getZ());
-			double yMaximum = (1 + this.getNSupportRatio()) * space.getMaximumSupportY() - maxBox.getY() * this.getNSupportRatio();
+			double yMaximum = (1 + this.getNSupportRatio()) * space.getMaximumSupportY()
+					- maxBox.getY() * this.getNSupportRatio();
 			Dimension maximum = new Dimension(maxSpace.getX(), yMaximum, maxSpace.getZ());
-			return new Space(minimum, maximum, getNSupportRatio(), space.getMaximumSupportX(), space.getMaximumSupportY());						
+			return new Space(minimum, maximum, getNSupportRatio(), space.getMaximumSupportX(),
+					space.getMaximumSupportY());
 		}
-		
+
 		// create new right space
 		Dimension minimum = new Dimension(minBox.getX(), maxBox.getY(), minBox.getZ());
 		Dimension maximum = maxSpace;
@@ -1146,6 +1281,10 @@ public class Greedy {
 			space = new Space(minimum, maximum);
 			space.setMaximumSupportX(maxSupportX);
 			space.setMaximumSupportY(maxSupportY);
+			logger.info("Amalgamate folow x direction");
+			this.showSpaceInfo("", s);
+			this.showSpaceInfo("",t);
+			this.showSpaceInfo("",space);
 			return space;
 		}
 
@@ -1173,66 +1312,87 @@ public class Greedy {
 			space = new Space(minimum, maximum);
 			space.setMaximumSupportX(maxSupportX);
 			space.setMaximumSupportY(maxSupportY);
+			logger.info("Amalgamate folow y direction");
+			this.showSpaceInfo("", s);
+			this.showSpaceInfo("",t);
+			this.showSpaceInfo("",space);
 			return space;
 		}
 		return null;
 	}
-	
+
 	private boolean checkPassageExist(Box box) {
 		for (Box b : this.getPlacedBoxes().getBoxes()) {
 
-//			double boxDistance = Math.sqrt(Math.pow(box.getMaximumPoint().getX(), 2) + Math.pow(box.getMaximumPoint().getY(), 2));
+			// double boxDistance = Math.sqrt(Math.pow(box.getMaximumPoint().getX(), 2) +
+			// Math.pow(box.getMaximumPoint().getY(), 2));
 
-//			double distance = Math.sqrt(Math.pow(b.getMinimum().getX(), 2) + Math.pow(b.getMinimumPoint().getY(), 2));
+			// double distance = Math.sqrt(Math.pow(b.getMinimum().getX(), 2) +
+			// Math.pow(b.getMinimumPoint().getY(), 2));
 
-//			if (boxDistance > distance) {
-//				if (b.getMinimumPoint().getY() < selectedBox.getMaximumPoint().getY()
-//						&& selectedBox.getMinimumPoint().getY() < b.getMaximumPoint().getY()) {
-//					if (selectedBox.getSequenceNumber() > b.getSequenceNumber()) {
-//						return false;
-//					}
-//				}
-//			}
-//
-//			if (boxDistance < distance) {
-//				if (b.getMinimumPoint().getY() < selectedBox.getMaximumPoint().getY()
-//						&& selectedBox.getMinimumPoint().getY() < b.getMaximumPoint().getY()) {
-//					if (selectedBox.getSequenceNumber() < b.getSequenceNumber()) {
-//						return false;
-//					}
-//				}
-//			}
-			logger.info(String.format("sequence %d : %d", new Object[] {box.getSequenceNumber(), b.getSequenceNumber()}));
-			if((box.getMaximum().getX() <= b.getMinimum().getX()) && (box.getSequenceNumber() < b.getSequenceNumber())) {				
-					return false;				
+			// if (boxDistance > distance) {
+			// if (b.getMinimumPoint().getY() < selectedBox.getMaximumPoint().getY()
+			// && selectedBox.getMinimumPoint().getY() < b.getMaximumPoint().getY()) {
+			// if (selectedBox.getSequenceNumber() > b.getSequenceNumber()) {
+			// return false;
+			// }
+			// }
+			// }
+			//
+			// if (boxDistance < distance) {
+			// if (b.getMinimumPoint().getY() < selectedBox.getMaximumPoint().getY()
+			// && selectedBox.getMinimumPoint().getY() < b.getMaximumPoint().getY()) {
+			// if (selectedBox.getSequenceNumber() < b.getSequenceNumber()) {
+			// return false;
+			// }
+			// }
+			// }
+			// logger.info(String.format("sequence %d : %d", new Object[]
+			// {box.getSequenceNumber(), b.getSequenceNumber()}));
+
+			if (box.getMinimum().getY() < b.getMaximum().getY() && b.getMinimum().getY() < box.getMaximum().getY()) {
+				if (box.getSequenceNumber() > b.getSequenceNumber()) {
+					return false;
+				}
 			}
+			// if ((box.getMaximum().getX() <= b.getMinimum().getX())
+			// && (box.getSequenceNumber() > b.getSequenceNumber())) {
+			// return false;
+			// }else {
+
+			// }
+
 		}
 		return true;
 	}
-	
-	
-	private boolean checkNoneOverlappingPlane(Box box) {
-		for (Box b : this.getConLoading().getPlacedBox().getBoxes()) {
-			if (box.getMinimum().getX() < b.getMaximum().getX()
-					&& b.getMinimum().getX() < box.getMinimum().getX()
-					&& box.getMaximum().getY() < b.getMaximum().getY()
-					&& b.getMinimum().getY() < box.getMaximum().getY()
-					&& box.getMaximum().getZ() <= b.getMinimum().getZ()) {
 
-				if (box.getSequenceNumber() < b.getSequenceNumber()) {
+	private boolean checkNoneOverlappingPlane(Box box) {
+		for (Box b : this.getPlacedBoxes().getBoxes()) {
+			if (roundNumber == 6) {
+				System.out.println("Round 6");
+			}
+
+			if (box.getMinimum().getX() < b.getMaximum().getX() && b.getMinimum().getX() < box.getMaximum().getX()
+					&& box.getMinimum().getY() < b.getMaximum().getY()
+					&& b.getMinimum().getY() < box.getMinimum().getY()) {
+
+				if (box.getSequenceNumber() > b.getSequenceNumber()) {
 					return false;
 				}
 			}
 		}
 		return true;
 	}
-	
+
 	private boolean isMultiDropFeasiblePacking(Box selectedBox) {
-		if (checkPassageExist(selectedBox) == false) {
+		if (roundNumber == 6) {
+			System.out.println("Testing");
+		}
+		if (checkNoneOverlappingPlane(selectedBox) == false) {
 			return false;
 		}
 
-		if (checkNoneOverlappingPlane(selectedBox) == false) {
+		if (checkPassageExist(selectedBox) == false) {
 			return false;
 		}
 
@@ -1244,34 +1404,88 @@ public class Greedy {
 	private void clearCandidates() {
 		this.candidates.clear();
 	}
-	
+
 	public int getRoundNumber() {
 		return roundNumber;
 	}
-	
+
 	public void setRoundNumber(int roundNumber) {
 		this.roundNumber = roundNumber;
 	}
-	
+
 	private void reloadSequenceNumber(Box box) {
-		if(!isLifo) {
+		if (!isLifo) {
 			return;
 		}
-		
-		if(box.getSequenceNumber() > 0) {
+
+		if (box.getSequenceNumber() > 0) {
 			return;
 		}
-		
-		box.setSequenceNumber(1);		
-		for(Box b : this.getNotPlacedBoxes().getBoxes()) {
-			if(box.getCustomerId().compareTo(b.getCustomerId()) == 0) {
+
+		box.setSequenceNumber(1);
+		for (Box b : this.getNotPlacedBoxes().getBoxes()) {
+			if (box.getCustomerId().compareTo(b.getCustomerId()) == 0) {
 				b.setSequenceNumber(1);
 			}
-		}							
-		
-		//update all sequence number
-		for(Box b : this.getPlacedBoxes().getBoxes()) {						
+		}
+
+		// update all sequence number
+		for (Box b : this.getPlacedBoxes().getBoxes()) {
+			if (b.getCustomerId() == box.getCustomerId()) {
+				continue;
+			}
+
 			b.setSequenceNumber(b.getSequenceNumber() + 1);
+			for (Box b1 : this.getNotPlacedBoxes().getBoxes()) {
+				if (b.getCustomerId() == b1.getCustomerId()) {
+
+					b1.setSequenceNumber(b.getSequenceNumber());
+				}
+			}
+		}
+	}
+	
+	private void reloadSequenceNumberTest(Box box) {
+		if (!isLifo) {
+			return;
+		}
+
+		if (box.getSequenceNumber() > 0) {
+			return;
+		}
+
+		box.setSequenceNumber(1);
+		
+		for(BoxType boxType : this.notPlacedBoxes.getBoxTypes()) {
+			for(Box b : boxType.getBoxes()) {
+				if (box.getCustomerId().compareTo(b.getCustomerId()) == 0) {
+					b.setSequenceNumber(1);
+				}
+			}
+		}
+		
+//		for (Box b : this.getNotPlacedBoxes().getBoxes()) {
+//			if (box.getCustomerId().compareTo(b.getCustomerId()) == 0) {
+//				b.setSequenceNumber(1);
+//			}
+//		}
+
+		// update all sequence number
+		for (Box b : this.getPlacedBoxes().getBoxes()) {
+			if (b.getCustomerId() == box.getCustomerId()) {
+				continue;
+			}
+
+			b.setSequenceNumber(b.getSequenceNumber() + 1);
+			
+			for(BoxType  bt : this.getNotPlacedBoxes().getBoxTypes()) {
+				for(Box b1 : bt.getBoxes()) {
+					if (b.getCustomerId() == b1.getCustomerId()) {
+
+						b1.setSequenceNumber(b.getSequenceNumber());
+					}
+				}
+			}		
 		}
 	}
 
@@ -1291,13 +1505,12 @@ public class Greedy {
 	private boolean isLifo;
 	private boolean isOverhang;
 	private int roundNumber = 0;
-	
 
 	public static final String SB_ALGORITHM = "SB";
 	public static final String BS_ALGORITHM = "BS";
 	public static final String ST_VL_ALGORITHM = "ST_VL";
 	public static final String ST_ALGORITHM = "ST";
 	public static final String VL_ALGORITHM = "AL";
-	public static final String EL_ALGORITHM = "EL";	
+	public static final String EL_ALGORITHM = "EL";
 	public static final double NOT_SUPPORT_RATIO = 0.25;
 }

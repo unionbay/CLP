@@ -137,7 +137,7 @@ public class Utility {
 	private int compareBoxBySequence(Box a,Box b) {
 		int sequenceNumA = a.getSequenceNumber();
 		int sequenceNumB = b.getSequenceNumber();
-
+	
 		if (sequenceNumA > sequenceNumB) {
 			return 1;
 		}
@@ -145,6 +145,7 @@ public class Utility {
 		if (sequenceNumA < sequenceNumB) {
 			return -1;
 		}
+				
 
 		double volumeA = a.getLength() * a.getWidth() * a.getHeight();
 		double volumeB = b.getLength() * b.getWidth() * b.getHeight();
@@ -159,6 +160,11 @@ public class Utility {
 
 		return 0;
 	}
+	
+//	private intCompareBox() {	
+//		
+//	}
+	
 
 	private int compareDimension(Dimension x, Dimension y) {
 		double xLength = Math.sqrt(Math.pow(x.getX(), 2) + Math.pow(x.getY(), 2));
@@ -190,7 +196,7 @@ public class Utility {
 		} catch (IOException e) {
 			e.printStackTrace();
 			return "";
-		}
+		}		
 		return prop.getProperty(propertyName);
 	}
 
@@ -202,8 +208,8 @@ public class Utility {
 
 		for (int i = 0; i < boxes.size(); i++) {
 			Box selectedBox = boxes.get(i);
-			Boxes oBox = new Boxes(selectedBox.getMinimum(), selectedBox.getLength(), selectedBox.getWidth(),
-					selectedBox.getHeight(), selectedBox.getSequenceNumber());
+			Boxes oBox = new Boxes(selectedBox.getMinimum(),selectedBox.getMaximum(), selectedBox.getLength(), selectedBox.getWidth(),
+					selectedBox.getHeight(),selectedBox.getVolume(), selectedBox.getSequenceNumber(),selectedBox.getCustomerId());
 			outBoxList[i] = oBox;
 			sortedBoxList[i] = oBox;
 		}

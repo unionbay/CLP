@@ -4,7 +4,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class Box extends Cuboid {
+import org.apache.log4j.Logger;
+
+public class Box extends Cuboid{
+	final static Logger logger = Logger.getLogger(Box.class);
 	private int id;
 	private String customerId;
 	private double biggestDimension;
@@ -19,40 +22,49 @@ public class Box extends Cuboid {
 	private int[] fRotation;
 	private double[] dimension;
 	private String boxType;
+	private int numberOfItem;
 	private double supportParamA;
 	private double supportParamB;
 	private double largestSurface;
 	private double volume;
-	
+
+	public int getNumberOfItem() {
+		return numberOfItem;
+	}
+
+	public void setNumberOfItem(int numberOfItem) {
+		this.numberOfItem = numberOfItem;
+	}
+
 	public List<Rotation> getPossibleRotations() {
 		return pRotations;
 	}
-	
+
 	public String getCustomerId() {
 		return customerId;
 	}
-	
+
 	public void setCustomerId(String id) {
 		this.customerId = id;
 	}
-	
+
 	public void setPossibleRotations(List<String> rotations) {
-		if(rotations == null) {
+		if (rotations == null) {
 			return;
-		}		
-		
-		for(String rotationString : rotations) {
+		}
+
+		for (String rotationString : rotations) {
 			Rotation r = this.calculateSize(rotationString, this);
-			if(r != null) {
+			if (r != null) {
 				this.pRotations.add(r);
-			}			
+			}
 		}
 	}
-	
+
 	public double getVolume() {
 		return volume;
 	}
-	
+
 	public void setVolume(double volume) {
 		this.volume = volume;
 	};
@@ -109,16 +121,16 @@ public class Box extends Cuboid {
 	public void setLength(double length) {
 		super.setLength(length);
 	}
-	private Rotation calculateSize(String selectedRotation, Box box) {		
-		Rotation rotation = new Rotation();		
+
+	private Rotation calculateSize(String selectedRotation, Box box) {
+		Rotation rotation = new Rotation();
 		switch (selectedRotation) {
 		case Rotation.XYZ:
 			rotation.setRotationCode(Rotation.XYZ);
 			rotation.setLength(this.getBiggestDimension());
 			rotation.setWidth(this.getMiddleDimension());
-			rotation.setHeight(this.getSmallestDimension());			
+			rotation.setHeight(this.getSmallestDimension());
 			break;
-
 		case Rotation.XZY:
 			rotation.setRotationCode(Rotation.XZY);
 			rotation.setLength(this.getBiggestDimension());
@@ -152,9 +164,9 @@ public class Box extends Cuboid {
 		default:
 			return null;
 		}
-		
+
 		return rotation;
-		
+
 	}
 
 	public double getBiggestDimension() {
@@ -173,14 +185,31 @@ public class Box extends Cuboid {
 		return selectedRotation;
 	}
 
-	public void setSelectedRotation(Rotation rotation) {				
+	public void setSelectedRotation(Rotation rotation) {
 		this.selectedRotation = rotation;
 		this.selectedRotation.setLength(rotation.getLength());
 		this.selectedRotation.setWidth(rotation.getWidth());
-		this.selectedRotation.setHeight(rotation.getHeight());		
+		this.selectedRotation.setHeight(rotation.getHeight());
 		this.setLength(rotation.getLength());
 		this.setWidth(rotation.getWidth());
 		this.setHeight(rotation.getHeight());
+	}
+
+	public void setSelectedRotation(String rCode) {
+		if (rCode == null || rCode.isEmpty()) {
+			this.setSelectedRotation(new Rotation());
+		}
+		Rotation rotation = findRotation(rCode);
+		this.selectedRotation = rotation;
+	}
+
+	private Rotation findRotation(String rCode) {
+		for (Rotation r : this.pRotations) {
+			if (rCode.compareToIgnoreCase(r.getRotationCode()) == 0) {
+				return r;
+			}
+		}
+		return null;
 	}
 
 	public int getSequenceNumber() {
@@ -247,8 +276,9 @@ public class Box extends Cuboid {
 		this.fragile = fragile;
 	}
 
-	public Box(double l, double w, double h) {
+	public Box(int id, double l, double w, double h) {
 		super();
+		this.setId(id);
 		super.setLength(l);
 		super.setWidth(w);
 		super.setHeight(h);
@@ -257,31 +287,51 @@ public class Box extends Cuboid {
 
 	public Box() {
 		this.initializationModel();
-	}		
-	
+	}
+
 	public double[] getDimension() {
 		return dimension;
 	}
 
 	public Box(Box obj) {
-		this. id = obj.getId();
+		this.id = obj.getId();
 		this.customerId = obj.getCustomerId();
+		this.volume = obj.getVolume();
 		this.biggestDimension = obj.getBiggestDimension();
-		this.middleDimension = obj.getMiddleDimension();		
+		this.middleDimension = obj.getMiddleDimension();
 		this.smallestDimension = obj.getSmallestDimension();
 		this.mass = obj.getMass();
 		this.fragile = obj.isFragile();
 		this.priority = obj.getPriority();
-		this.sequenceNumber = obj.getSequenceNumber();				
+		this.sequenceNumber = obj.getSequenceNumber();
 		this.fRotation = obj.getfRotation();
-		this.dimension = obj.getDimension();
-		this.pRotations = new ArrayList<Rotation>();
+		this.dimension = obj.getDimension();						
 		this.boxType = obj.getBoxType();
 		this.supportParamA = obj.getSupportParamA();
-		this.supportParamB = obj.getSupportParamB();		
+		this.supportParamB = obj.getSupportParamB();
 		this.largestSurface = obj.getLargestSurface();
-		this.volume  = obj.getVolume();		
+		this.setLength(obj.getLength());
+		this.setWidth(obj.getWidth());
+		this.setHeight(obj.getHeight());
+		
+		if(obj.getSelectedRotation() != null) {
+			this.selectedRotation = new Rotation(obj.getSelectedRotation());
+		}else {
+			this.selectedRotation = new Rotation();
+		}
+		
+		if(obj.getPossibleRotations() != null) {
+			List<Rotation> rotations = new ArrayList<Rotation>();
+			for(Rotation r : obj.getPossibleRotations()) {
+				Rotation nRotation = new Rotation(r);
+				rotations.add(nRotation);
+			}
+			this.pRotations = rotations;			
+		}else {
+			this.pRotations = new ArrayList<Rotation>();
+		}
 	}
+
 	public int[] getfRotation() {
 		return fRotation;
 	}
@@ -300,11 +350,11 @@ public class Box extends Cuboid {
 		this.pRotations = new ArrayList<Rotation>();
 		this.caculateVolume();
 		this.loadingDimension();
-		this.calculateLargestSurface();		
+		this.calculateLargestSurface();
 	}
-	
+
 	private void caculateVolume() {
-			this.volume = this.getWidth() * this.getHeight() * this.getLength();
+		this.volume = this.getWidth() * this.getHeight() * this.getLength();
 	}
 
 	private void loadingDimension() {
@@ -312,14 +362,14 @@ public class Box extends Cuboid {
 		Arrays.sort(dimension);
 		this.smallestDimension = dimension[0];
 		this.middleDimension = dimension[1];
-		this.biggestDimension = dimension[2];		
+		this.biggestDimension = dimension[2];
 	}
 
-	private void  calculateLargestSurface() {
+	private void calculateLargestSurface() {
 		double surface01 = this.getLength() * this.getWidth();
 		double surface02 = this.getLength() * this.getHeight();
 		double surface03 = this.getWidth() * this.getHeight();
-		double[] surfaces = new double[] {surface01, surface02, surface03};
+		double[] surfaces = new double[] { surface01, surface02, surface03 };
 		Arrays.sort(surfaces);
 		this.setLargestSurface(surfaces[2]);
 	}

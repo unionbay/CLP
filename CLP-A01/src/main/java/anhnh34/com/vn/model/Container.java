@@ -116,8 +116,7 @@ public class Container {
 
 	}
 
-	public void mergeSort(Space[] spaceList, int start, int end) {
-		Space[] returnSpace = new Space[spaceList.length];
+	public void mergeSort(Space[] spaceList, int start, int end) {		
 		if (end - start > 0) {
 			int mid = start + (end - start) / 2;
 			mergeSort(spaceList, start, mid);

@@ -5,7 +5,11 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.io.IOException;
+import java.io.InputStream;
+
 import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
+
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,6 +18,11 @@ public class SolutionMethod {
 	final static Logger logger = Logger.getLogger(SolutionMethod.class);
 	public ContainerLoading conLoading;
 	private Greedy greedyInstance;
+	
+	public void setupLog4j() {
+		InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("log4j.properties");
+		PropertyConfigurator.configure(inputStream);
+	}
 
 	public Greedy getGreedyInstance() {
 		return greedyInstance;
@@ -40,7 +49,7 @@ public class SolutionMethod {
 		while (greedyInstance.getNotPlacedBoxes().getBoxes().size() > 0) {	
 			
 			for (Box box : greedyInstance.getNotPlacedBoxes().getBoxes()) {
-				greedyInstance.showBoxInfo("", box);
+				greedyInstance.showBoxInfo("box:", box);
 			}
 			
 			logger.info(String.format("-------Start round: %d %n", new Object[] { roundNumber }));
@@ -52,8 +61,7 @@ public class SolutionMethod {
 			}
 			greedyInstance.update(feaObject);
 			greedyInstance.updateSpaces(feaObject);
-			Object[] objects = greedyInstance.getNotPlacedBoxes().getBoxes().toArray();
-			//Box[] boxList = (Box[]) greedyInstance.getNotPlacedBoxes().getBoxes().toArray();
+			Object[] objects = greedyInstance.getNotPlacedBoxes().getBoxes().toArray();		
 			
 			Box[] boxList = Arrays.copyOf(objects,objects.length,Box[].class);
 			Utility.getInstance().reOrderBox(boxList);
@@ -344,8 +352,8 @@ public class SolutionMethod {
 
 		for (int i = 0; i < placedBox.size(); i++) {
 			Box selectedBox = placedBox.get(i);
-			Boxes oBox = new Boxes(selectedBox.getMinimum(), selectedBox.getLength(), selectedBox.getWidth(),
-					selectedBox.getHeight(), selectedBox.getSequenceNumber());
+			Boxes oBox = new Boxes(selectedBox.getMinimum(),selectedBox.getMaximum(), selectedBox.getLength(), selectedBox.getWidth(),
+					selectedBox.getHeight(),selectedBox.getVolume(), selectedBox.getSequenceNumber(),selectedBox.getCustomerId());
 			outBoxList[i] = oBox;
 			sortedBoxList[i] = oBox;
 		}

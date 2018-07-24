@@ -3,11 +3,39 @@ package anhnh34.com.vn.model;
 //Json Boxes
 public class Boxes {
 	private Dimension root;
+	private String customerId;
+	private Dimension maximum;
+	private double volume;
 	private double length;
 	private double width;
 	private double height;
 	private int sequenceNumber;
 	private String colorCode;
+	
+	public double getVolume() {
+		return volume;
+	}
+	
+	public void setVolume(double volume) {
+		this.volume = volume;
+	}
+	
+	public String getCustomerId() {
+		return customerId;
+	}
+	
+	public void setCustomerId(String customerId) {
+		this.customerId = customerId;
+	}
+	
+	public void setMaximum(Dimension maximum) {
+		this.maximum = maximum;
+	}
+	
+	public Dimension getMaximum() {
+		return maximum;
+	}
+	
 
 	public String getColorCode() {
 		return colorCode;
@@ -61,11 +89,14 @@ public class Boxes {
 
 	}
 
-	public Boxes(Dimension root, double length, double width, double height, int sequenceNumber) {
+	public Boxes(Dimension root,Dimension max, double length, double width, double height,double volume, int sequenceNumber, String customerId) {		
 		this.setRoot(root);
+		this.setMaximum(max);
 		this.setLength(length);
 		this.setWidth(width);
 		this.setHeight(height);
+		this.setVolume(volume);
+		this.setCustomerId(customerId);
 		this.setSequenceNumber(sequenceNumber);		
 	}
 }

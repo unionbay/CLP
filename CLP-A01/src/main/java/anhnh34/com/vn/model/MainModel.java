@@ -55,7 +55,7 @@ public class MainModel {
 
 		for (int i = 0; i < numberOfBox; i++) {
 			int id = i + 1;
-			Box box = new Box(depth, width, height);
+			Box box = new Box(i+1,depth, width, height);
 			box.setId(id);
 			box.setPriority(priority);
 			boxes.add(box);
