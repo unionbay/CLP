@@ -32,11 +32,13 @@ public class Space extends Cuboid {
 	}
 
 	public void setMinimum(Dimension minimum) {
+		Dimension sMinimum = new Dimension(minimum.getX(), minimum.getY(), minimum.getZ());
 		super.setMinimumPoint(minimum);
 	}
 
 	public void setMaximum(Dimension maximum) {
-		super.setMaximumPoint(maximum);
+		Dimension sMaximum = new Dimension(maximum.getX(), maximum.getY(), maximum.getZ());
+		super.setMaximumPoint(sMaximum);
 	}
 
 	public Dimension getMinimum() {

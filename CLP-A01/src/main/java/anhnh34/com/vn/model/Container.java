@@ -3,18 +3,58 @@ package anhnh34.com.vn.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.omg.CORBA.OMGVMCID;
+import org.apache.log4j.Logger;
 
 public class Container {
 	private double length;
 	private double width;
 	private double height;
-	private int capacity;
+	private double capacity;
+	private double currentCapacity;
+	private List<PartialSolution> solutionList;
+	private PartialSolution currentSolution;
 	private List<Space> avaiableSpaces;
 	private List<Node> nodeList;
+	
+	private static Logger logger = Logger.getLogger(Container.class);
+	
+	public double getCurrentCapacity() {
+		return currentCapacity;
+	}
+	
+	public void setCurrentCapacity(int currentCapacity) {
+		this.currentCapacity = currentCapacity;
+	}
+
+	public List<PartialSolution> getSolutionList() {
+		return solutionList;
+	}
+
+	public void setSolutionList(List<PartialSolution> solutionList) {
+		this.solutionList = solutionList;
+	}
+
+	public PartialSolution getCurrentSolution() {
+		return this.currentSolution;
+	}
+
+	public void setCurrentSolution(PartialSolution currentSolution) {
+		this.currentSolution = currentSolution;
+	}
 
 	public List<Space> getAvaiableSpaces() {
 		return avaiableSpaces;
+	}
+
+	public boolean checkCapacity(double additionCapacity) {
+		if (this.currentCapacity + additionCapacity > this.capacity) {
+			return false;
+		}
+		return true;
+	}
+
+	public void addCapacity(double additionCapacity) {
+		this.currentCapacity = this.currentCapacity + additionCapacity;
 	}
 
 	public void setLength(double length) {
@@ -37,7 +77,7 @@ public class Container {
 		getNodeList().add(node);
 	}
 
-	public int getCapacity() {
+	public double getCapacity() {
 		return capacity;
 	}
 
@@ -45,7 +85,7 @@ public class Container {
 		this.height = height;
 	}
 
-	public void setCapacity(int capacity) {
+	public void setCapacity(double capacity) {
 		this.capacity = capacity;
 	}
 
@@ -83,10 +123,7 @@ public class Container {
 
 	}
 
-	public Container() {
-		this.avaiableSpaces = new ArrayList<Space>();
-		this.nodeList = new ArrayList<Node>();
-
+	public Container() {		
 	}
 
 	public void loadingSpace() {
@@ -103,11 +140,32 @@ public class Container {
 		}
 	}
 
+	public void updateContainer(Greedy obj, Location lc) {				
+		this.getSolutionList().add(currentSolution);				
+		
+		PartialSolution nCurrSolution = new PartialSolution(obj.getAvaiableSpaces(),
+				obj.getPlacedBoxes(), obj.getNotPlacedBoxes(),currentSolution.getIdList(),currentSolution.getLocationList());
+		
+//		for(Location l : currentSolution.getLocationList()) {
+//			logger.info("current location id: " + l.getLocationID());
+//		}
+		
+		//logger.info("\n\n");
+		nCurrSolution.addLocation(lc);
+		
+//		for(Location l : nCurrSolution.getLocationList()) {
+//			logger.info("new location id: " + l.getLocationID());
+//		}
+		
+		this.currentSolution = nCurrSolution;
+
+	}
+
 	public void sortSpaces() {
 		// check spaces's size.
 		if (avaiableSpaces.isEmpty() || avaiableSpaces.size() == 1)
 			return;
-		Space[] avaiableSpaceList = (Space[]) (Space[]) this.avaiableSpaces.toArray(new Space[0]);
+		Space[] avaiableSpaceList = this.avaiableSpaces.toArray(new Space[0]);
 		this.mergeSort(avaiableSpaceList, 0, this.avaiableSpaces.size() - 1);
 		this.avaiableSpaces.clear();
 		for (int i = 0; i < avaiableSpaceList.length; i++) {
@@ -116,7 +174,7 @@ public class Container {
 
 	}
 
-	public void mergeSort(Space[] spaceList, int start, int end) {		
+	public void mergeSort(Space[] spaceList, int start, int end) {
 		if (end - start > 0) {
 			int mid = start + (end - start) / 2;
 			mergeSort(spaceList, start, mid);
@@ -165,5 +223,25 @@ public class Container {
 		// are already at the right position.
 		return spaceList;
 	}
+	
+	public void initiliaze(ContainerLoading containerLoading) {
+		this.currentSolution = new PartialSolution();
+		this.avaiableSpaces = new ArrayList<Space>();
+		this.nodeList = new ArrayList<Node>();		
+		this.solutionList = new ArrayList<PartialSolution>();
+		this.avaiableSpaces = new ArrayList<Space>();
+		
+		Dimension minDimension = new Dimension(0, 0, 0);
+		// init maximum dimension with corresponde coordinate X, Y, Z
+		Dimension maxDimension = new Dimension(length, width, height);
+		Space containerSpace = new Space(minDimension, maxDimension);
+		containerSpace.setMaximumSupportX(maxDimension.getX());
+		containerSpace.setMaximumSupportY(maxDimension.getY());
 
+		if (this.getAvaiableSpaces().isEmpty()) {			
+			this.currentSolution.getAvaiableSpaces().add(containerSpace);							
+		}		
+		this.currentSolution.getPlacedBoxes().setBoxes(new ArrayList<Box>());
+		this.currentSolution.getNotPlacedBoxes().setBoxes(containerLoading.getNotPlacedBox().getBoxes());
+	}
 }

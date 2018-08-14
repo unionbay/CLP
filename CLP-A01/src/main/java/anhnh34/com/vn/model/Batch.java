@@ -15,13 +15,25 @@ public class Batch {
 	public void setBoxNumber(int boxNumber) {
 		this.boxNumber = boxNumber;
 	}
+	
+	public void initialize() {
+		this.boxes = new ArrayList<Box>();
+		this.boxTypes = new ArrayList<BoxType>();
+	}
 
 	public List<BoxType> getBoxTypes() {
 		return boxTypes;
 	}
 	
 	public void setBoxTypes(List<BoxType> boxTypes) {
-		this.boxTypes = boxTypes;
+		for(BoxType bt : boxTypes) {
+			this.addBoxType(bt);
+		}
+		
+	}
+	
+	public void addBoxType(BoxType boxType) {
+		this.getBoxTypes().add(new BoxType());
 	}
 
 	public List<Box> getBoxes() {
@@ -29,11 +41,14 @@ public class Batch {
 	}
 
 	public void setBoxes(List<Box> boxes) {
-		this.boxes = boxes;
+		for(Box box : boxes) {			
+			this.addBox(box);
+		}		
 	}
 
 	public Batch(List<Box> boxes) {
-		this.boxes = boxes;
+		this.initialize();
+		this.setBoxes(boxes);		
 	}
 
 	public void placeBox() throws Exception {
@@ -73,8 +88,14 @@ public class Batch {
 	 * default contructor
 	 */
 	public Batch() {
-		this.boxes = new ArrayList<Box>();
-		this.boxTypes = new ArrayList<BoxType>();
+		this.initialize();
+	}
+	
+	public Batch(Batch bObj) {
+		this.initialize();
+		setBoxNumber(bObj.getBoxNumber());
+		setBoxes(bObj.getBoxes());
+		setBoxTypes(bObj.getBoxTypes());
 	}
 
 	public void removeBox(Box box) {
@@ -90,7 +111,7 @@ public class Batch {
 		}
 	}
 	
-	public void addBox(Box box) {
-		
+	public void addBox(Box box) { 		
+		this.getBoxes().add(new Box(box));
 	}
 }

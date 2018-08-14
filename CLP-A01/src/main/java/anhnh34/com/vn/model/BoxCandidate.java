@@ -1,6 +1,12 @@
 package anhnh34.com.vn.model;
 
+import java.nio.channels.ShutdownChannelGroupException;
+
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+
 public class BoxCandidate {
+
 	private Box box;
 	private Space space;
 	private int k;
@@ -8,17 +14,23 @@ public class BoxCandidate {
 	private double lengthwiseProtrustion;
 	private double boxVolume;
 
+	final static Logger logger = Logger.getLogger(BoxCandidate.class);
+
 	public int getK() {
 		return k;
+	}
+	
+	private void setLoggerLevel() {
+		logger.setLevel(Level.FATAL);
 	}
 
 	public void setK(int k) {
 		this.k = k;
 	}
-	
+
 	public Space getSpace() {
 		return space;
-	}	
+	}
 
 	public Box getBox() {
 		return box;
@@ -48,26 +60,38 @@ public class BoxCandidate {
 		this.k = k;
 		this.box = box;
 		this.space = space;
+		this.setLoggerLevel();
+	}
+
+	public BoxCandidate(Box box, Space space) {
+		this.setBox(box);
+		this.setSpace(space);
+		this.setLoggerLevel();
 	}
 
 	public void initialize(String algorithmType) {
 		switch (algorithmType) {
-		case Greedy.ST_ALGORITHM:
+		case Constant.GREEDY_ST:
 			this.stType();
 			break;
-		case Greedy.VL_ALGORITHM:
-			this.vlType();
-			break;
-		case Greedy.EL_ALGORITHM:
-			this.elType();
+		case Constant.GREEDY_VL:
+			this.vlType();				
 			break;
 		}
 	}
 
 	private void stType() {
+		//logger.info("setup candidate");
 		// find minK
 		int numOfAvaiableBox = (int) Math.round(space.getHeight() / box.getHeight());
 		this.k = this.k < numOfAvaiableBox ? k : numOfAvaiableBox;
+//
+		logger.info(String.format("id: %s l:%f w: %f h: %f min(%f %f %f) max(%f %f %f) %s",
+				new Object[] { box.getCustomerId(), box.getLength(), box.getWidth(), box.getHeight(),
+						box.getMinimum().getX(), box.getMinimum().getY(), box.getMinimum().getZ(),
+						box.getMaximum().getX(), box.getMaximum().getY(), box.getMaximum().getZ(),
+						box.getSelectedRotation().getRotationCode() }));
+		logger.info(String.format("avaiable number: %d, k: %d", new Object[] { numOfAvaiableBox, this.k }));
 
 		// caculate pontetial Space Utilization
 		this.potenSpaceUtilization = this.k * (this.box.getLength() * this.box.getWidth() * this.box.getHeight()
@@ -78,26 +102,29 @@ public class BoxCandidate {
 
 		// caculate volume of box.
 		this.boxVolume = this.box.getLength() * this.box.getWidth() * this.box.getHeight();
+
+		logger.info(String.format("%f %f %f", this.potenSpaceUtilization, this.lengthwiseProtrustion, this.boxVolume));
+		logger.info("Finish setup candidate");
 	}
 
 	private void vlType() {
-			int feasibleBoxX = (int) Math.round(space.getLength()/box.getLength());
-			int feasibleBoxY = (int) Math.round(space.getWidth()/box.getWidth());
-			int feasibleBoxZ = (int) Math.round(space.getHeight()/box.getHeight());
-			
-			int numVolumeUsageNum = feasibleBoxX * feasibleBoxY * feasibleBoxZ;
-			
-			this.k = this.k < numVolumeUsageNum  ? this.k : numVolumeUsageNum;
-			
-			// caculate pontetial Space Utilization
-			this.potenSpaceUtilization = this.k * (this.box.getLength() * this.box.getWidth() * this.box.getHeight()
-					/ (this.space.getLength() * this.space.getWidth() * this.space.getHeight()));
+		int feasibleBoxX = (int) Math.round(space.getLength() / box.getLength());
+		int feasibleBoxY = (int) Math.round(space.getWidth() / box.getWidth());
+		int feasibleBoxZ = (int) Math.round(space.getHeight() / box.getHeight());
 
-			// caculate lengthwise protrution.
-			this.lengthwiseProtrustion = this.space.getMinimum().getX() + this.box.getLength();
+		int numVolumeUsageNum = feasibleBoxX * feasibleBoxY * feasibleBoxZ;
 
-			// caculate volume of box.
-			this.boxVolume = this.box.getLength() * this.box.getWidth() * this.box.getHeight();
+		this.k = this.k < numVolumeUsageNum ? this.k : numVolumeUsageNum;
+
+		// caculate pontetial Space Utilization
+		this.potenSpaceUtilization = this.k * (this.box.getLength() * this.box.getWidth() * this.box.getHeight()
+				/ (this.space.getLength() * this.space.getWidth() * this.space.getHeight()));
+
+		// caculate lengthwise protrution.
+		this.lengthwiseProtrustion = this.space.getMinimum().getX() + this.box.getLength();
+
+		// caculate volume of box.
+		this.boxVolume = this.box.getLength() * this.box.getWidth() * this.box.getHeight();
 	}
 
 	private void elType() {

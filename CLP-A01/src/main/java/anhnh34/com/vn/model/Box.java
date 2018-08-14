@@ -310,6 +310,9 @@ public class Box extends Cuboid{
 		this.supportParamA = obj.getSupportParamA();
 		this.supportParamB = obj.getSupportParamB();
 		this.largestSurface = obj.getLargestSurface();
+	
+		
+		
 		this.setLength(obj.getLength());
 		this.setWidth(obj.getWidth());
 		this.setHeight(obj.getHeight());
@@ -318,6 +321,18 @@ public class Box extends Cuboid{
 			this.selectedRotation = new Rotation(obj.getSelectedRotation());
 		}else {
 			this.selectedRotation = new Rotation();
+		}
+		
+		if(obj.getMinimum() != null) {
+			this.setMinimum(obj.getMinimum());
+		}else {
+			this.setMinimum(new Dimension());
+		}
+		
+		if(obj.getMaximum() != null) {
+			this.setMaximum(obj.getMaximum());
+		}else {
+			this.setMaximum(new Dimension());
 		}
 		
 		if(obj.getPossibleRotations() != null) {

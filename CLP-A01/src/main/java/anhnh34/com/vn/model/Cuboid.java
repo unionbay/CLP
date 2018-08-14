@@ -37,17 +37,21 @@ public class Cuboid {
 		return minimumPoint;		
 	}
 
-	public void setMaximumPoint(Dimension maximumPoint) {
-		this.maximumPoint = maximumPoint;
+	public void setMaximumPoint(Dimension maximum) {
+		Dimension max = new Dimension(maximum.getX(), maximum.getY(), maximum.getZ());
+		this.maximumPoint = max;
 	}
 
 	public void setMinimumPoint(Dimension minimumPoint) {
-		this.minimumPoint = minimumPoint;
+		Dimension minimum = new Dimension(minimumPoint.getX(), minimumPoint.getY(), minimumPoint.getZ());
+		this.minimumPoint = minimum;
 	}
 
 	public Cuboid(Dimension min, Dimension max) {
-		this.minimumPoint = min;
-		this.maximumPoint = max;
+		Dimension cMin = new Dimension(min.getX(), min.getY(), min.getZ());
+		Dimension cMax = new Dimension(max.getX(), max.getY(), max.getZ());
+		this.minimumPoint = cMin;
+		this.maximumPoint = cMax;
 	}
 	
 	public double getVolume() {

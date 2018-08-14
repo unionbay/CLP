@@ -60,7 +60,7 @@ public class Utility {
 				boxList[k] = helperList[i];
 				i++;
 			} else {
-				boxList[k] = helperList[j];			
+				boxList[k] = helperList[j];
 				j++;
 			}
 			k++;
@@ -104,7 +104,7 @@ public class Utility {
 				boxList[k] = helperList[i];
 				i++;
 			} else {
-				boxList[k] = helperList[j];				
+				boxList[k] = helperList[j];
 				j++;
 			}
 			k++;
@@ -128,16 +128,77 @@ public class Utility {
 		// new Object[] { b.getRoot().getX(), b.getRoot().getY(), b.getRoot().getZ()
 		// }));
 
-		int result = this.compareDimension(a.getRoot(), b.getRoot());
+		// int result = this.compareDimension(a.getRoot(), b.getRoot());
+		int result = compareBox(a, b);
 		// logger.info("Result: " + result);
 		// logger.info("End compareBoxPosition");
 		return result;
 	}
 
-	private int compareBoxBySequence(Box a,Box b) {
+	private int compareBox(Boxes firstBox, Boxes secondBox) {
+		Dimension fbMininum = firstBox.getRoot();		
+		Dimension sbMinimum = secondBox.getRoot();		
+		Dimension fbMaximum = firstBox.getMaximum();
+		Dimension sbMaximum = secondBox.getMaximum();
+
+		if (fbMininum.getZ() < sbMinimum.getZ()) {
+			return 1;
+		}
+
+		if (fbMininum.getZ() > sbMinimum.getZ()) {
+			return -1;
+		}
+
+		if (fbMininum.getX() < sbMinimum.getX()) {
+			if(sbMaximum.getX() > fbMininum.getX()  && sbMaximum.getX() <= fbMaximum.getX()) {
+				return -1;
+			}
+			
+			return 1;
+		}
+
+		if (fbMininum.getX() > sbMinimum.getX()) {
+			return -1;
+		}
+
+		if (fbMininum.getY() < sbMinimum.getY()) {
+			return 1;
+		}
+
+		if (fbMininum.getY() > sbMinimum.getY()) {
+			return -1;
+		}
+
+		return 0;
+
+		// if (xLength <= yLength) {
+		// if (fbMininum.getZ() > sbMinimum.getZ() && xLength <= yLength) {
+		// return -1;
+		// }
+		//
+		// if ((fbMininum.getZ() == sbMinimum.getZ()) && (fbMininum.getY() >
+		// sbMinimum.getY())) {
+		// if (fbMininum.getX() < sbMinimum.getX() && fbMininum.getX() >=
+		// sbMaximum.getX()) {
+		// return 1;
+		// }
+		// return -1;
+		// }
+		// return 1;
+		// }else {
+		// if (fbMininum.getY() <= sbMinimum.getY() && fbMininum.getX() >=
+		// sbMaximum.getX()) {
+		// return 1;
+		// }
+		// }
+		//
+
+	}
+
+	private int compareBoxBySequence(Box a, Box b) {
 		int sequenceNumA = a.getSequenceNumber();
 		int sequenceNumB = b.getSequenceNumber();
-	
+
 		if (sequenceNumA > sequenceNumB) {
 			return 1;
 		}
@@ -145,7 +206,6 @@ public class Utility {
 		if (sequenceNumA < sequenceNumB) {
 			return -1;
 		}
-				
 
 		double volumeA = a.getLength() * a.getWidth() * a.getHeight();
 		double volumeB = b.getLength() * b.getWidth() * b.getHeight();
@@ -160,11 +220,10 @@ public class Utility {
 
 		return 0;
 	}
-	
-//	private intCompareBox() {	
-//		
-//	}
-	
+
+	// private intCompareBox() {
+	//
+	// }
 
 	private int compareDimension(Dimension x, Dimension y) {
 		double xLength = Math.sqrt(Math.pow(x.getX(), 2) + Math.pow(x.getY(), 2));
@@ -196,10 +255,44 @@ public class Utility {
 		} catch (IOException e) {
 			e.printStackTrace();
 			return "";
-		}		
+		}
 		return prop.getProperty(propertyName);
 	}
 
+	public void writeJsonFile(List<Box> placedBoxes,String fileName) {
+		Boxes[] outBoxList = new Boxes[placedBoxes.size()];
+		
+		List<Node> nodeList = new ArrayList<Node>();
+		
+		for(int i = 0; i < placedBoxes.size(); i++) {
+			Box selectedBox = placedBoxes.get(i);
+			Boxes objBox = new Boxes(selectedBox.getMinimum(), selectedBox.getMaximum(), selectedBox.getLength(),
+					selectedBox.getWidth(), selectedBox.getHeight(), selectedBox.getVolume(),
+					selectedBox.getSequenceNumber(), selectedBox.getCustomerId());
+			outBoxList[i] = objBox;
+		}
+		
+		for(int i = 0 ; i < outBoxList.length; i++) {
+			Node node = new Node(i+1, outBoxList[i]);
+			nodeList.add(node);						
+		}
+		
+		Nodes nodes = new Nodes(nodeList);
+		ObjectMapper mapper = new ObjectMapper();		
+		
+		try {
+			
+				
+			mapper.writeValue(new File(fileName), nodes);			
+		} catch (JsonGenerationException e) {
+			e.printStackTrace();
+		} catch (JsonMappingException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+	}
 	public void writeResultToFile(List<Box> boxes) {
 		Boxes[] outBoxList = new Boxes[boxes.size()];
 		Boxes[] sortedBoxList = new Boxes[boxes.size()];
@@ -208,8 +301,9 @@ public class Utility {
 
 		for (int i = 0; i < boxes.size(); i++) {
 			Box selectedBox = boxes.get(i);
-			Boxes oBox = new Boxes(selectedBox.getMinimum(),selectedBox.getMaximum(), selectedBox.getLength(), selectedBox.getWidth(),
-					selectedBox.getHeight(),selectedBox.getVolume(), selectedBox.getSequenceNumber(),selectedBox.getCustomerId());
+			Boxes oBox = new Boxes(selectedBox.getMinimum(), selectedBox.getMaximum(), selectedBox.getLength(),
+					selectedBox.getWidth(), selectedBox.getHeight(), selectedBox.getVolume(),
+					selectedBox.getSequenceNumber(), selectedBox.getCustomerId());
 			outBoxList[i] = oBox;
 			sortedBoxList[i] = oBox;
 		}

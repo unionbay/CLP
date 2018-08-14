@@ -51,11 +51,20 @@ public class Dimension {
 		return null;
 	}
 
-	public int compare(Dimension d) {		
-		if(this.x >= d.x && this.y >= d.y && this.z >= d.z) {
-			return 1;
-		}					
-		return -1;	
+	public boolean compare(Dimension d) {		
+		if(this.x == d.x && this.y == d.y && this.z == d.z) {
+			return true;
+		}
+		
+		if(this.x > d.x && this.y > d.y && this.z > d.z) {
+			return true;
+		}			
+		
+		if(this.x < d.x && this.y < d.y && this.z < d.z) {
+			return true;
+		}
+		
+		return false;
 	}
 
 }

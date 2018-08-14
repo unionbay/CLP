@@ -50,4 +50,11 @@ public class FeasibleObject {
 		this.selectedRotation = selectedRotation;
 		this.space = space;
 	}		
+	
+	public FeasibleObject(Box box, Space space) {
+		super();
+		this.setBox(box);		
+		this.setSpace(space);
+		this.setSelectedRotation(box.getSelectedRotation());
+	}
 }
