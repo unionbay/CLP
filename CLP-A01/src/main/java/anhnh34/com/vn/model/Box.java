@@ -27,6 +27,7 @@ public class Box extends Cuboid{
 	private double supportParamB;
 	private double largestSurface;
 	private double volume;
+	
 
 	public int getNumberOfItem() {
 		return numberOfItem;
