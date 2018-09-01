@@ -185,6 +185,7 @@ public class Box extends Cuboid{
 	public Rotation getSelectedRotation() {
 		return selectedRotation;
 	}
+	
 
 	public void setSelectedRotation(Rotation rotation) {
 		this.selectedRotation = rotation;
