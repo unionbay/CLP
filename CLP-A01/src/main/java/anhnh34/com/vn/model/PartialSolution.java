@@ -208,6 +208,26 @@ public class PartialSolution {
 	    bd = bd.setScale(places, RoundingMode.HALF_UP);
 	    return bd.doubleValue();
 	}
+	
+	public void setTakeOutLocation(List<Location> takeOutLocation) {
+		this.takeOutLocation.clear();
+		
+		for(Location lc : takeOutLocation) {
+			Location location = new Location(lc.getLocationID(), lc.getX(), lc.getY(),
+					lc.getDemand());
+			takeOutLocation.add(location);
+		}		
+	}
+	
+	public void addTakeoutLocation(Location lc) {
+		Location location = new Location(lc.getLocationID(), lc.getX(), lc.getY(),
+				lc.getDemand());
+		takeOutLocation.add(location);
+	}
+	
+	public List<Location> getTakeOutLocation() {
+		return takeOutLocation;
+	}
 
 	private Batch placedBoxes;
 	private Batch notPlacedBoxes;
@@ -220,5 +240,6 @@ public class PartialSolution {
 	private List<PartialSolution> subPartialSolutions;
 	private double totalCost;
 	private List<String> idList;
+	private List<Location> takeOutLocation;
 
 }
