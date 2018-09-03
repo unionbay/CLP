@@ -629,19 +629,14 @@ public class GreedyHeuristic {
 
 		// Prepared data for exchange customers.
 		for (Container container : containerList) {
-			PartialSolution lastSolution = container.getCurrentSolution();
-			List<String> lastIdList = lastSolution.getIdList();
-			PartialSolution previousSolution = container.getSolutionList()
-					.get(container.getSolutionList().size() - takeOutNumber);
-
-			PartialSolution testSolution = this.cloneSolution(previousSolution);
-
-			// List<String> testIdList = previousSolution.getIdList();
-
-			List<Location> takeOutLocationList = this.getTestLocations(lastSolution.getLocationList(), takeOutNumber);
-			notPlacedLocations.put(String.valueOf(containerList.indexOf(container)), takeOutLocationList);
-			testSolution.setTakeOutLocation(takeOutLocationList);
-			testSolutionList.add(testSolution);
+			//PartialSolution lastSolution = container.getCurrentSolution();
+			
+			//testSolution.setTakeOutLocation(takeOutLocationList);
+			testSolutionList.add(this.initRoutingData(container, takeOutNumber));
+		}
+		
+		for(PartialSolution ts : testSolutionList) {
+			logger.info(ts.getIdList().toString());
 		}
 
 		/*while (notPlacedLocations.size() > 0) {
@@ -653,7 +648,6 @@ public class GreedyHeuristic {
 		}
 */
 		return true;
-
 	}
 
 	private boolean CheckPossibleLocations(List<Location> testLocations, int index) {
@@ -665,18 +659,35 @@ public class GreedyHeuristic {
 
 	private List<Location> getTestLocations(List<Location> lastLocations, int takeOutNumber) {
 		List<Location> testLocationList = new ArrayList<Location>();
+		
 		int startIndex = locationList.size() - takeOutNumber;
 		while (startIndex < locationList.size()) {
-			testLocationList.add(locationList.get(startIndex));
+			testLocationList.add(locationList.get(startIndex));			
 			startIndex++;
 		}
-
+		
 		return testLocationList;
 	}
 
 	private PartialSolution cloneSolution(PartialSolution solution) {
 		PartialSolution cloneSolution = new PartialSolution(solution.getAvaiableSpaces(), solution.getPlacedBoxes(),
 				solution.getNotPlacedBoxes(), solution.getIdList(), solution.getLocationList());
+		return cloneSolution;
+	}
+	
+	private PartialSolution initRoutingData(Container container, int takeoutNumber) {
+		PartialSolution lastSolution = container.getCurrentSolution();
+		PartialSolution preSolution = container.getSolutionList().get(container.getSolutionList().size() - takeoutNumber);
+		PartialSolution cloneSolution = this.cloneSolution(preSolution);
+		List<Location> takeoutLocationList = new ArrayList<Location>();
+		int startIndex = locationList.size() - takeoutNumber;
+		
+		while(startIndex < lastSolution.getLocationList().size()) {
+			takeoutLocationList.add(locationList.get(startIndex));
+			startIndex++;
+		}
+		
+		cloneSolution.setTakeOutLocation(takeoutLocationList);	
 		return cloneSolution;
 	}
 
@@ -687,6 +698,8 @@ public class GreedyHeuristic {
 			}
 		}
 		return null;
+	
+	
 	}
 
 	public HashMap<String, List<Location>> notPlacedLocations;
