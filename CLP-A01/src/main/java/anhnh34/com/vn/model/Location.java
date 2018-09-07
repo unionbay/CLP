@@ -9,12 +9,14 @@ public class Location {
 		this.initialize();
 	}
 	
-	public Location(String id, double x, double y, int demand) {		
+	public Location(String id, double x, double y, int demand,List<Box>boxes) {		
+		this.initialize();
 		this.setX(x);
 		this.setY(y);	
 		this.setLocationID(id);
 		this.setDemand(demand);		
-		this.initialize();
+		this.setBoxes(boxes);
+		
 	}
 	
 	private void initialize() {
@@ -111,7 +113,7 @@ public class Location {
 				continue;
 			}
 						
-			Location neightborLocation = new Location(location.getLocationID(),location.getX(), location.getY(), location.getDemand());
+			Location neightborLocation = new Location(location.getLocationID(),location.getX(), location.getY(), location.getDemand(),location.getBoxes());
 			double distance = Math.sqrt(Math.pow(getX() - neightborLocation.getX(), 2) + Math.pow(getY() - neightborLocation.getY(),2));
 			neightborLocation.setDistance(distance);
 			neightborLocation.setBoxes(location.getBoxes());

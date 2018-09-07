@@ -2,6 +2,7 @@ package anhnh34.com.vn.test;
 
 import org.junit.Test;
 
+import anhnh34.com.vn.model.Box;
 import anhnh34.com.vn.model.Location;
 import anhnh34.com.vn.model.PartialSolution;
 
@@ -26,15 +27,12 @@ public class LoadingTest {
 	public void calculation() {
 		PartialSolution partialSolution = new PartialSolution();
 		List<Location> locationList =new  ArrayList<Location>();
-		locationList.add(new Location("0",30,40,0));
-		locationList.add(new Location("13",5,25,0));
-		locationList.add(new Location("14",12,42,0));
+		locationList.add(new Location("0",30,40,0,new ArrayList<Box>()));
+		locationList.add(new Location("13",5,25,0, new ArrayList<Box>()));
+		locationList.add(new Location("14",12,42,0, new ArrayList<Box>()));
 		partialSolution.setLocationList(locationList);
 		partialSolution.calculateCost();
 		System.out.println(partialSolution.getCost());
-		assertEquals(65.6503, partialSolution.getCost(),0.00002);
-		
-		
-		
+		assertEquals(65.6503, partialSolution.getCost(),0.00002);						
 	}
 }

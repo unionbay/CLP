@@ -44,6 +44,7 @@ public class Solution {
 	}
 	
 	public void calculateTotalCost() {
+		this.totalCost = 0;
 		for(Container container : containerList) {
 			PartialSolution partialSolution = container.getCurrentSolution();
 			this.totalCost += partialSolution.getCost();

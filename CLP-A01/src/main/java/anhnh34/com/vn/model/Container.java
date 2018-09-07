@@ -55,6 +55,7 @@ public class Container {
 
 	public void addCapacity(double additionCapacity) {
 		this.currentCapacity = this.currentCapacity + additionCapacity;
+		this.currentSolution.setCurrCapacity(this.currentCapacity);
 	}
 
 	public void setLength(double length) {
@@ -140,17 +141,19 @@ public class Container {
 		}
 	}
 
-	public void updateContainer(Greedy obj, Location lc) {				
+	public void updateContainer(Greedy greedy, Location lc) {				
 		this.getSolutionList().add(currentSolution);				
 		
-		PartialSolution nCurrSolution = new PartialSolution(obj.getAvaiableSpaces(),
-				obj.getPlacedBoxes(), obj.getNotPlacedBoxes(),currentSolution.getIdList(),currentSolution.getLocationList());
+		PartialSolution nCurrSolution = new PartialSolution(greedy.getAvaiableSpaces(),
+				greedy.getPlacedBoxes(), greedy.getNotPlacedBoxes(),currentSolution.getIdList(),currentSolution.getLocationList());
+		nCurrSolution.setCapacity(this.getCapacity());
 		
 //		for(Location l : currentSolution.getLocationList()) {
 //			logger.info("current location id: " + l.getLocationID());
 //		}
 		
 		//logger.info("\n\n");
+		nCurrSolution.getIdList().add(lc.getLocationID());
 		nCurrSolution.addLocation(lc);
 		
 //		for(Location l : nCurrSolution.getLocationList()) {

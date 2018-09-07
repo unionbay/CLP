@@ -3,13 +3,11 @@ package anhnh34.com.vn.model;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
@@ -18,8 +16,7 @@ import org.apache.log4j.Logger;
 public class GreedyHeuristic {
 	final static Logger logger = Logger.getLogger(GreedyHeuristic.class);
 
-	public void run() throws Exception {
-		while (true) {			
+	public void run() throws Exception {		
 			while (this.checkContinue()) {
 				this.initiliaze();
 				boolean isStop = false;
@@ -89,13 +86,13 @@ public class GreedyHeuristic {
 							continue;
 						}
 
-						isFound = checkLocationIsFeasible(container, randomLocation);
+						isFound = checkLocationIsFeasible(container.getCurrentSolution(), randomLocation);
 
 						if (isFound) {
 
 							// logger.info("Found id: " + randomLocation.getLocationID());
 
-							container.getCurrentSolution().getIdList().add(randomLocation.getLocationID());
+							// container.getCurrentSolution().getIdList().add(randomLocation.getLocationID());
 							// container.getCurrentSolution().getLocationList().add(randomLocation);
 							// remove location out of location list.
 
@@ -143,14 +140,13 @@ public class GreedyHeuristic {
 				this.showResult();
 				roundNumber++;
 			}
-			
-			this.calculateTimeConsume();
+
+			/*this.calculateTimeConsume();
 			this.writeToFile();
-			
-			if(exchangeCustomer()){				
+
+			if (exchangeCustomer()) {
 				break;
-			}			
-		}
+			}*/		
 
 	}
 
@@ -170,21 +166,43 @@ public class GreedyHeuristic {
 		return endDate;
 	}
 
-	private boolean checkContinue() {
-		// if (this.bestSolutionList.size() <= 1000) {
-		// return true;
-		// }
-
-		if (this.roundNumber < 1000) {
-			return true;
+	private boolean checkContinue() throws Exception {
+		if (this.bestSolutionList.size() == 1) {			
+			
+			this.showResult();
+			Solution solution = new Solution();
+			solution.setContainerList(this.bestSolutionList.get(0).getContainerList());
+			solution.calculateTotalCost();
+			
+			if(bestSolution == null) {							
+				this.bestSolution = solution;
+				this.writeToFile();
+			}									
+			
+			if(this.bestSolution.getTotalCost() > this.bestSolutionList.get(0).getTotalCost()) {
+				this.bestSolution = solution;
+				this.writeToFile();
+			}
+						
+			if(this.exchangeCustomer()) {
+				if(this.routingTotalCost <= this.bestSolution.getTotalCost()) {
+					return false;
+				}				
+			}
+			
+			this.bestSolutionList.clear();			
 		}
+
+//		if (this.roundNumber < 100) {
+//			return true;
+//		}
 
 		// for(Solution solution : this.bestSolutionList) {
 		// if(solution.getTotalCost() <= 400) {
 		// return false;d
 		// }
 		// }
-		return false;
+		return true;
 	}
 
 	private boolean checkRouting() {
@@ -350,12 +368,89 @@ public class GreedyHeuristic {
 
 			bestSolutionList.add(solution);
 
-			logger.info(String.format("round number: %d number of solution: %d",
-					new Object[] { this.roundNumber, bestSolutionList.size() }));
+			logger.info(String.format("round number: %d number of solution:  %.3f",
+					new Object[] { this.roundNumber, solution.getTotalCost() }));
 			// Thread.sleep(1000);
 		}
 
 		this.roundNumber++;
+	}
+
+	private double showResult(List<PartialSolution> solutions) {
+		int numberOfItems = 0;
+		double totalCost = 0;
+		for (PartialSolution currentSolution : solutions) {
+
+			int containerBoxSize = currentSolution.getPlacedBoxes().getBoxes().size();
+			numberOfItems = numberOfItems + containerBoxSize;
+			currentSolution.calculateCost();
+			totalCost+= currentSolution.getCost();
+
+			System.out.println(String.format("%d: number of items: %d - %s - cost: %.4f",
+					new Object[] { solutions.indexOf(currentSolution),
+							currentSolution.getPlacedBoxes().getBoxes().size(), currentSolution.getIdList().toString(),
+							currentSolution.getCost() }));
+		}
+		return totalCost;
+	}
+
+	private void writeToFile(List<PartialSolution> solutions) {
+		PrintWriter writer = null;
+		String folderPath = Utility.getInstance().getConfigValue(Constant.OUTPUT_PATH);
+		try {
+			String filePath = "";
+			String fileName = String.format("Routing_Solution");
+			filePath = folderPath + fileName;
+			FileWriter fileWrite = new FileWriter(filePath);
+			writer = new PrintWriter(fileWrite);
+			double totalCost = 0;
+			// write header.
+			for (PartialSolution s : solutions) {
+				int index = solutions.indexOf(s);
+				totalCost += s.getCost();
+				writer.println(String.format("Route: %d, number of customers %d: %s",
+						new Object[] { index + 1, s.getIdList().size(), s.getLocationIds() }));
+			}
+			
+			writer.println(String.format("Total cost of solution : %f", new Object[] {totalCost}));
+			// write content/
+			for ( PartialSolution s: solutions) {
+				int index = solutions.indexOf(s);				
+				writer.write(String.format("route: %d, customer: %d",
+						new Object[] { index + 1, s.getIdList().size() }));
+				writer.println();
+				writer.println();
+				writer.println();
+				for (String id : s.getIdList()) {
+					List<Box> boxList = new ArrayList<Box>();
+					for (Box box : s.getPlacedBoxes().getBoxes()) {
+						if (id.equalsIgnoreCase(box.getCustomerId())) {
+							boxList.add(box);
+						}
+					}
+
+					for (Box b : boxList) {
+						writer.println(String.format(
+								"CustomerNo: %2s   (l, w, h): %2.0f %2.0f %2.0f 	(x,y,z): %2.0f %2.0f %2.0f		(x1, y1, z1): %2.0f %2.0f %2.0f",
+								new Object[] { b.getCustomerId(), b.getLength(), b.getWidth(), b.getHeight(),
+										b.getMinimum().getX(), b.getMinimum().getY(), b.getMinimum().getZ(),
+										b.getMaximum().getX(), b.getMaximum().getY(), b.getMaximum().getZ() }));
+					}
+
+					writer.println();
+				}
+				
+				String jsonFilePath = "";
+				jsonFilePath = folderPath + "Routing" + "" + index;
+				Utility.getInstance().writeJsonFile(s.getPlacedBoxes().getBoxes(), jsonFilePath);
+			}
+			writer.flush();
+//			sIndex++;	
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
 	}
 
 	public GreedyHeuristic() throws IOException {
@@ -423,6 +518,7 @@ public class GreedyHeuristic {
 		this.solutions = new ArrayList<PartialSolution>();
 		this.locationList = new ArrayList<Location>(this.getContainerLoading().getLocationList());
 		this.solutionList = new ArrayList<Container>();
+		this.testSolutionList = new ArrayList<PartialSolution>();
 
 		// load deport.
 		Node node = this.getContainerLoading().getDeport();
@@ -517,10 +613,10 @@ public class GreedyHeuristic {
 		return closestLocations;
 	}
 
-	private boolean checkLocationIsFeasible(Container container, Location lc) {
+	private boolean checkLocationIsFeasible(PartialSolution solution, Location lc) {
 		greedyInstance.setAlgorithm(getRandomGreedyAlgorithm());
-		greedyInstance.setAvaiableSpaces(container.getCurrentSolution().getAvaiableSpaces());
-		greedyInstance.setPlacedBoxes(container.getCurrentSolution().getPlacedBoxes());
+		greedyInstance.setAvaiableSpaces(solution.getAvaiableSpaces());
+		greedyInstance.setPlacedBoxes(solution.getPlacedBoxes());
 		greedyInstance.setNotPlacedBoxes(lc.getBoxes());
 
 		while (greedyInstance.getNotPlacedBoxes().getBoxes().size() > 0) {
@@ -561,7 +657,7 @@ public class GreedyHeuristic {
 			// Reload real not placed box.
 			List<Box> notPlacedBoxes = new ArrayList<Box>();
 
-			for (Box box : container.getCurrentSolution().getNotPlacedBoxes().getBoxes()) {
+			for (Box box : solution.getNotPlacedBoxes().getBoxes()) {
 				if (box.getCustomerId().equalsIgnoreCase(lc.getLocationID())) {
 					continue;
 				}
@@ -620,74 +716,301 @@ public class GreedyHeuristic {
 		this.bestSolution = bestSolution;
 	}
 
-	public boolean exchangeCustomer() {
+	public boolean exchangeCustomer() throws Exception {
+		Random randomGenerator = new Random();
 		Solution solution = bestSolutionList.get(0);
 		List<Container> containerList = solution.getContainerList();
+		boolean isFeasible = false;
 
 		// try remove number of customers
-		int takeOutNumber = 2;
+		int takeOutNumber = 1;
 
 		// Prepared data for exchange customers.
+		//logger.info("current solution");
 		for (Container container : containerList) {
-			//PartialSolution lastSolution = container.getCurrentSolution();
-			
-			//testSolution.setTakeOutLocation(takeOutLocationList);
+			// PartialSolution lastSolution = container.getCurrentSolution();
+
+			// testSolution.setTakeOutLocation(takeOutLocationList);
 			testSolutionList.add(this.initRoutingData(container, takeOutNumber));
 		}
-		
-		for(PartialSolution ts : testSolutionList) {
-			logger.info(ts.getIdList().toString());
-		}
 
-		/*while (notPlacedLocations.size() > 0) {
-			for (Map.Entry me : notPlacedLocations.entrySet()) {
-				String index = String.valueOf(me.getKey());
-				List<Location> npLocations = notPlacedLocations.get(index);
+//		for(PartialSolution ts : testSolutionList) {
+//			logger.info(ts.getIdList().toString());
+//			List<Location> takeOutLocationList = ts.getTakeOutLocation();
+//			String takeoutIdList = "";
+//			for(Location lc : takeOutLocationList) {
+//				takeoutIdList = takeoutIdList.concat(lc.getLocationID() + " ");
+//			}
+//			
+//			logger.info("takeout ids: " + takeoutIdList);
+//			logger.info("\n");
+//		}
 
+		int roundNumber = 0;
+		while (!isFeasible) {			 		
+			int index = randomGenerator.nextInt(testSolutionList.size());
+			PartialSolution lSolution = testSolutionList.get(index);
+			
+			if (lSolution.isExChange() || lSolution.isTested()) {
+				continue;
 			}
+					
+			List<Location> locationList = lSolution.getTakeOutLocation();
+			for (PartialSolution iSolution : testSolutionList) {
+				if (index == testSolutionList.indexOf(iSolution) || iSolution.isInserted()) {
+					continue;
+				}
+				if (this.checkExchangeLocationIsPossible(locationList, iSolution)) {
+					lSolution.setExChange(true);
+					iSolution.setInserted(true);
+					//logger.info(String.format("Test: %d %d result: %b", new Object[] {testSolutionList.indexOf(lSolution), testSolutionList.indexOf(iSolution),iSolution.isInserted()}));
+					break;
+				}
+				
+				//logger.info(String.format("Test: %d %d result: %b", new Object[] {testSolutionList.indexOf(lSolution), testSolutionList.indexOf(iSolution),iSolution.isInserted()}));
+			}
+		//	logger.info("solution: " + index  + " is tested");
+			lSolution.setTested(true);
+
+		/*	if (lSolution.isExChange() == false) {
+				boolean isRealNotFit = false;
+				for (PartialSolution pSolution : testSolutionList) {
+					//logger.info(String.format(" %d %d is Exchange: %b isInseted: %b", new Object[] { index,
+						//	testSolutionList.indexOf(pSolution), pSolution.isExChange(), pSolution.isInserted() }));
+					if (index == testSolutionList.indexOf(pSolution)) {
+						continue;
+					}
+
+					if (pSolution.isInserted() == false) {
+						isRealNotFit = true;
+						break;
+					}
+				}
+
+				if (isRealNotFit) {
+					isFeasible = false;
+				} else {
+					isFeasible = true;
+					testSolutionList.remove(index);
+					containerList.get(index).getCurrentSolution().setTested(true);
+					testSolutionList.add(index,containerList.get(index).getCurrentSolution());
+					
+				}
+			}*/
+
+			if (!checkAllLocationsIsTested(testSolutionList)) {
+				continue;
+			}
+			
+			isFeasible = true;
+			for(int i = 0; i < testSolutionList.size(); i++){
+				PartialSolution iSolution = testSolutionList.get(i);				
+				if(iSolution.isExChange() == false && iSolution.isInserted() == false) {
+					testSolutionList.remove(i);
+					containerList.get(i).getCurrentSolution().setTested(true);
+					containerList.get(i).getCurrentSolution().setExChange(true);
+					containerList.get(i).getCurrentSolution().setInserted(true);					
+					testSolutionList.add(i,containerList.get(i).getCurrentSolution());
+					continue;
+				}
+				
+				if(iSolution.isExChange() != iSolution.isInserted()) {
+					isFeasible = false;
+				}
+							
+			}
+
+			if (!isFeasible) {
+//				testSolutionList.clear();
+//				for (Container container : containerList) {
+//					// PartialSolution lastSolution = container.getCurrentSolution();
+//
+//					// testSolution.setTakeOutLocation(takeOutLocationList);
+//					testSolutionList.add(this.initRoutingData(container, takeOutNumber));
+//				}
+				//logger.info("Routing round number: " + roundNumber);
+				roundNumber++;
+				
+				if(roundNumber == 10) {
+					break;
+				}
+				
+				this.initTestRoutingData(containerList, takeOutNumber);
+				continue;
+			}
+			
+			isFeasible = true;
+			logger.info("Found new solution");
+			double totalCost= 0;
+//			for (PartialSolution nSolution : testSolutionList) {
+//				nSolution.calculateCost();
+//				totalCost = totalCost + nSolution.getCost();
+//				//logger.info(nSolution.getIdList().toString() + nSolution.isTested());
+//			}			
+			
+			
+			totalCost = this.showResult(testSolutionList);			
+			logger.info(String.format("nTotalCost: %f oTotalCost: %f bestTotalCost: %f", new Object[] {totalCost, bestSolutionList.get(0).getTotalCost(),bestSolution.getTotalCost()}));
+			this.routingTotalCost = totalCost;
+			this.writeToFile(testSolutionList);						
+			Thread.sleep(500);
+			
+			/*if(totalCost < bestSolutionList.get(0).getTotalCost()) {
+				testSolutionList.clear();
+				for (Container container : containerList) {
+					// PartialSolution lastSolution = container.getCurrentSolution();
+
+					// testSolution.setTakeOutLocation(takeOutLocationList);
+					testSolutionList.add(this.initRoutingData(container, takeOutNumber));
+				}
+				isFeasible = false;
+			}else {
+				this.showResult(testSolutionList);
+				this.writeToFile(testSolutionList);
+			}
+			*/
+			
+			
+			
+
+//			boolean isFoundNewSolution = true;
+//			for (PartialSolution rSolution : testSolutionList) {
+//				if (rSolution.isInserted() == false) {
+//					isFoundNewSolution = false;
+//				}
+//			}
+
+//			if (!isFoundNewSolution) {
+//
+//			} else {
+//				isFeasible = true;
+//			}
+
+			/*
+			 * for(PartialSolution test : testSolutionList) { if(test.isExChange()) {
+			 * continue; }
+			 * 
+			 * List<Location> locationList = test.getTakeOutLocation();
+			 * List<PartialSolution> testAbleSolution = new ArrayList<PartialSolution>();
+			 * 
+			 * for(PartialSolution s : testSolutionList) { if(s.isInserted() ||
+			 * test.getLocationIds().equalsIgnoreCase(s.getLocationIds())) { continue; }
+			 * 
+			 * testAbleSolution.add(s); }
+			 * 
+			 * for(PartialSolution testSolution : testAbleSolution) {
+			 * if(this.checkExchangeLocationIsPossible(locationList, testSolution)) {
+			 * test.setExChange(true); testSolution.setInserted(true); } } }
+			 */
+
 		}
-*/
+		return isFeasible;
+	}
+	
+	private void initTestRoutingData(List<Container> containerList, int takeOutNumber) {
+		testSolutionList.clear();
+		for (Container container : containerList) {
+			// PartialSolution lastSolution = container.getCurrentSolution();
+
+			// testSolution.setTakeOutLocation(takeOutLocationList);
+			testSolutionList.add(this.initRoutingData(container, takeOutNumber));
+		}
+	}
+
+	private boolean checkAllLocationsIsTested(List<PartialSolution> solutions) {
+		for (PartialSolution solution : solutions) {
+			if (!solution.isTested()) {
+				return false;
+			}
+		}						
 		return true;
 	}
 
-	private boolean CheckPossibleLocations(List<Location> testLocations, int index) {
-		for (int i = 0; i < testSolutionList.size(); i++) {
-
+	private boolean checkExchangeLocationIsPossible(List<Location> testLocations, PartialSolution solution) {
+		boolean isExchangeSucess = true;
+		PartialSolution tempSolution = this.cloneSolution(solution);
+		if (checkLocationCapacity(tempSolution, testLocations) == false) {
+			isExchangeSucess = false;
+			return isExchangeSucess;
 		}
-		return false;
+
+		for (Location location : testLocations) {
+			if (checkLocationIsFeasible(tempSolution, location)) {
+				tempSolution.getIdList().add(location.getLocationID());
+				tempSolution.getLocationList().add(location);
+
+				tempSolution.setAvaiableSpaces(this.greedyInstance.getAvaiableSpaces());
+				tempSolution.setPlacedBoxes(greedyInstance.getPlacedBoxes());
+				tempSolution.setNotPlacedBoxes(greedyInstance.getNotPlacedBoxes());
+				tempSolution.setCurrCapacity(tempSolution.getCurrCapacity() + location.getCapacity());
+			} else {
+				isExchangeSucess = false;
+				break;
+			}
+		}
+
+		if (isExchangeSucess) {
+			solution.setIdList(tempSolution.getIdList());
+			solution.setLocationList(tempSolution.getLocationList());
+			solution.setAvaiableSpaces(tempSolution.getAvaiableSpaces());
+			solution.setPlacedBoxes(tempSolution.getPlacedBoxes());
+			solution.setNotPlacedBoxes(tempSolution.getNotPlacedBoxes());
+			solution.setCurrCapacity(tempSolution.getCurrCapacity());
+			solution.setCapacity(tempSolution.getCapacity());
+		}
+
+		return isExchangeSucess;
+	}
+
+	private boolean checkLocationCapacity(PartialSolution solution, List<Location> locationList) {
+		double sumCapacity = 0;
+		for (Location lc : locationList) {
+			sumCapacity += lc.getCapacity();
+		}
+
+		if (solution.getCapacity() < solution.getCurrCapacity() + sumCapacity) {
+			return false;
+		}
+		return true;
 	}
 
 	private List<Location> getTestLocations(List<Location> lastLocations, int takeOutNumber) {
 		List<Location> testLocationList = new ArrayList<Location>();
-		
+
 		int startIndex = locationList.size() - takeOutNumber;
 		while (startIndex < locationList.size()) {
-			testLocationList.add(locationList.get(startIndex));			
+			testLocationList.add(locationList.get(startIndex));
 			startIndex++;
 		}
-		
+
 		return testLocationList;
 	}
 
 	private PartialSolution cloneSolution(PartialSolution solution) {
 		PartialSolution cloneSolution = new PartialSolution(solution.getAvaiableSpaces(), solution.getPlacedBoxes(),
 				solution.getNotPlacedBoxes(), solution.getIdList(), solution.getLocationList());
+		cloneSolution.setCapacity(solution.getCapacity());
+		cloneSolution.setCurrCapacity(solution.getCurrCapacity());
+
 		return cloneSolution;
 	}
-	
+
 	private PartialSolution initRoutingData(Container container, int takeoutNumber) {
 		PartialSolution lastSolution = container.getCurrentSolution();
-		PartialSolution preSolution = container.getSolutionList().get(container.getSolutionList().size() - takeoutNumber);
+		//logger.info(lastSolution.getIdList().toString());
+		int lastIndex = container.getSolutionList().size();
+		// logger.info("Last index: " + lastIndex);
+		PartialSolution preSolution = container.getSolutionList().get(lastIndex - takeoutNumber);
 		PartialSolution cloneSolution = this.cloneSolution(preSolution);
 		List<Location> takeoutLocationList = new ArrayList<Location>();
-		int startIndex = locationList.size() - takeoutNumber;
-		
-		while(startIndex < lastSolution.getLocationList().size()) {
-			takeoutLocationList.add(locationList.get(startIndex));
+		int startIndex = lastSolution.getLocationList().size() - takeoutNumber;
+
+		while (startIndex < (lastSolution.getLocationList().size())) {
+			takeoutLocationList.add(lastSolution.getLocationList().get(startIndex));
 			startIndex++;
 		}
-		
-		cloneSolution.setTakeOutLocation(takeoutLocationList);	
+
+		cloneSolution.setTakeOutLocation(takeoutLocationList);
 		return cloneSolution;
 	}
 
@@ -698,8 +1021,7 @@ public class GreedyHeuristic {
 			}
 		}
 		return null;
-	
-	
+
 	}
 
 	public HashMap<String, List<Location>> notPlacedLocations;
@@ -715,6 +1037,7 @@ public class GreedyHeuristic {
 	private List<String> algorithms;
 	private Node deport;
 	private Location currLocation;
+	private double routingTotalCost;
 	private int roundNumber;
 	private List<Solution> bestSolutionList;
 	private List<PartialSolution> testSolutionList;
