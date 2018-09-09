@@ -754,10 +754,10 @@ public class GreedyHeuristic {
 		}*/
 
 		// Prepared data for exchange customers.
-		logger.info("\n Current Solution: ");
+		/*logger.info("\n Current Solution: ");
 		for (Container container : containerList) {
 			logger.info(container.getCurrentSolution().getIdList().toString());		
-		}
+		}*/
 
 		for (Container container : containerList) {
 			// PartialSolution lastSolution = container.getCurrentSolution();
@@ -1063,7 +1063,7 @@ public class GreedyHeuristic {
 
 	private PartialSolution initRoutingData(Container container, int takeoutNumber) {
 		PartialSolution lastSolution = container.getCurrentSolution();
-		logger.info(lastSolution.getIdList().toString());
+		//logger.info(lastSolution.getIdList().toString());
 		int lastIndex = container.getSolutionList().size();
 		// logger.info("Last index: " + lastIndex);
 		PartialSolution preSolution = container.getSolutionList().get(lastIndex - takeoutNumber);
