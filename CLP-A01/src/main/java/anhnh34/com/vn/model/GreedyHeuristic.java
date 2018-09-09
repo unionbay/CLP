@@ -400,10 +400,10 @@ public class GreedyHeuristic {
 			currentSolution.calculateCost();
 			totalCost += currentSolution.getCost();
 
-		/*	System.out.println(String.format("%d: number of items: %d - %s - cost: %.4f",
+			System.out.println(String.format("%d: number of items: %d - %s - cost: %.4f",
 					new Object[] { solutions.indexOf(currentSolution),
 							currentSolution.getPlacedBoxes().getBoxes().size(), currentSolution.getIdList().toString(),
-							currentSolution.getCost() }));*/
+							currentSolution.getCost() }));
 		}
 		return totalCost;
 	}
@@ -752,17 +752,12 @@ public class GreedyHeuristic {
 		} else {
 			
 		}*/
-
-		// Prepared data for exchange customers.
-		/*logger.info("\n Current Solution: ");
-		for (Container container : containerList) {
-			logger.info(container.getCurrentSolution().getIdList().toString());		
-		}*/
-
+		
 		for (Container container : containerList) {
 			// PartialSolution lastSolution = container.getCurrentSolution();
 
 			// testSolution.setTakeOutLocation(takeOutLocationList);
+			
 			testSolutionList.add(this.initRoutingData(container, lPosition.size()));
 		}
 
@@ -875,7 +870,14 @@ public class GreedyHeuristic {
 //				totalCost = totalCost + nSolution.getCost();
 //				//logger.info(nSolution.getIdList().toString() + nSolution.isTested());
 //			}			
+			
+			// Prepared data for exchange customers.
+			logger.info("\n Current Solution: ");
+			for (Container container : containerList) {
+				logger.info(container.getCurrentSolution().getIdList().toString());		
+			}
 
+			
 			totalCost = this.showResult(testSolutionList);
 			logger.info(String.format("nTotalCost: %f oTotalCost: %f bestTotalCost: %f %f", new Object[] { totalCost,
 					bestSolutionList.get(0).getTotalCost(), bestSolution.getTotalCost(), this.bestRoutingTotalCost }));
@@ -930,11 +932,8 @@ public class GreedyHeuristic {
 		testSolutionList.clear();
 		for (Container container : containerList) {
 			// PartialSolution lastSolution = container.getCurrentSolution();
-
-			// testSolution.setTakeOutLocation(takeOutLocationList);
-			if(container.getCurrentSolution().getLocationList().size() == 1) {
-				continue;
-			}
+			// testSolution.setTakeOutLocation(takeOutLocationList);			
+			
 			testSolutionList.add(this.initRoutingData(container, takeOutNumber));			
 		}
 	}
@@ -1064,19 +1063,30 @@ public class GreedyHeuristic {
 	private PartialSolution initRoutingData(Container container, int takeoutNumber) {
 		PartialSolution lastSolution = container.getCurrentSolution();
 		//logger.info(lastSolution.getIdList().toString());
-		int lastIndex = container.getSolutionList().size();
-		// logger.info("Last index: " + lastIndex);
-		PartialSolution preSolution = container.getSolutionList().get(lastIndex - takeoutNumber);
-		PartialSolution cloneSolution = this.cloneSolution(preSolution);
-		List<Location> takeoutLocationList = new ArrayList<Location>();
-		int startIndex = lastSolution.getLocationList().size() - takeoutNumber;
-
-		while (startIndex < (lastSolution.getLocationList().size())) {
-			takeoutLocationList.add(lastSolution.getLocationList().get(startIndex));
-			startIndex++;
+		int lastIndex = container.getSolutionList().size();		
+		PartialSolution preSolution;
+		if(lastIndex == 0) {
+			preSolution = lastSolution;			
+		}else {
+			preSolution = container.getSolutionList().get(lastIndex - takeoutNumber);
 		}
-
-		cloneSolution.setTakeOutLocation(takeoutLocationList);
+		
+		//PartialSolution preSolution = container.getSolutionList().get(lastIndex - takeoutNumber);
+		PartialSolution cloneSolution = this.cloneSolution(preSolution);
+		
+		if(lastIndex == 0) {
+			cloneSolution.setExChange(true);
+			cloneSolution.setTested(true);
+		}else {
+			List<Location> takeoutLocationList = new ArrayList<Location>();			
+			int startIndex = lastSolution.getLocationList().size() - takeoutNumber;
+			while (startIndex < (lastSolution.getLocationList().size())) {
+				takeoutLocationList.add(lastSolution.getLocationList().get(startIndex));
+				startIndex++;
+			}
+			cloneSolution.setTakeOutLocation(takeoutLocationList);
+		}
+		
 		return cloneSolution;
 	}
 
