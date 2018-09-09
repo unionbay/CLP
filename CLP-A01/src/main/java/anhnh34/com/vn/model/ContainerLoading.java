@@ -92,8 +92,7 @@ public class ContainerLoading {
 
 		prop.load(this.getClass().getClassLoader().getResourceAsStream("config.properties"));
 
-		String dataPath = prop.getProperty("data_path");
-
+		String dataPath = prop.getProperty("data_path");	
 		// load properties file
 		Path filePath = FileSystems.getDefault().getPath(dataPath);
 
@@ -101,6 +100,9 @@ public class ContainerLoading {
 			System.out.println("Couldn't find the specific path");
 			return;
 		}
+		
+		String instanceName = dataPath.substring(dataPath.lastIndexOf("/"), dataPath.lastIndexOf("."));
+		this.setInstanceName(instanceName);
 
 		List<String> fileArray = Files.readAllLines(filePath);
 
@@ -378,6 +380,14 @@ public class ContainerLoading {
 	public void setLocationList(List<Location> locationList) {
 		this.locationList = locationList;
 	}
+	
+	public void setInstanceName(String instanceName) {
+		this.instanceName = instanceName;
+	}
+	
+	public String getInstanceName() {
+		return instanceName;
+	}
 
 	private Batch placedBox;
 	private Batch notPlacedBox;
@@ -385,6 +395,7 @@ public class ContainerLoading {
 	private Solution solution;
 	private Problem problem;
 	private Node deport;
+	private String instanceName;	
 
 	private List<Container> containerList;
 	private List<Location> locationList;

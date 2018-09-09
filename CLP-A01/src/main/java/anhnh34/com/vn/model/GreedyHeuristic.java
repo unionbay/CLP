@@ -281,7 +281,8 @@ public class GreedyHeuristic {
 
 	private void writeToFile() throws IOException {
 		PrintWriter writer = null;
-		String folderPath = Utility.getInstance().getConfigValue(Constant.OUTPUT_PATH);
+		String folderPath = Utility.getInstance().getConfigValue(Constant.OUTPUT_PATH);		
+		
 		try {
 			bestSolutionList.sort(new SolutionComparator());
 			for (Solution solution : bestSolutionList) {
@@ -292,8 +293,8 @@ public class GreedyHeuristic {
 
 				//logger.info(String.format("Best Total cost: %.4f", solution.getTotalCost()));
 
-				String filePath = "";
-				String fileName = String.format("Solution_%d", bestSolutionList.indexOf(solution));
+				String filePath = "";				
+				String fileName = String.format("%s_%d",new Object[] {this.getContainerLoading().getInstanceName(), bestSolutionList.indexOf(solution)});
 				filePath = folderPath + fileName;
 				FileWriter fileWrite = new FileWriter(filePath);
 				writer = new PrintWriter(fileWrite);
@@ -338,7 +339,7 @@ public class GreedyHeuristic {
 
 					int solutionIndex = this.bestSolutionList.indexOf(solution);
 					String jsonFilePath = "";
-					jsonFilePath = folderPath + "" + solutionIndex + "" + index;
+					jsonFilePath = folderPath + containerLoading.getInstanceName() + "_"+solutionIndex + "_" + index;
 					Utility.getInstance().writeJsonFile(currentSolution.getPlacedBoxes().getBoxes(), jsonFilePath);
 
 				}
@@ -412,8 +413,8 @@ public class GreedyHeuristic {
 		PrintWriter writer = null;
 		String folderPath = Utility.getInstance().getConfigValue(Constant.OUTPUT_PATH);
 		try {
-			String filePath = "";
-			String fileName = String.format("Routing_Solution");
+			String filePath = "";			
+			String fileName = String.format("%s_Routing",new Object[] {this.getContainerLoading().getInstanceName()});
 			filePath = folderPath + fileName;
 			FileWriter fileWrite = new FileWriter(filePath);
 			writer = new PrintWriter(fileWrite);
@@ -455,7 +456,7 @@ public class GreedyHeuristic {
 				}
 
 				String jsonFilePath = "";
-				jsonFilePath = folderPath + "Routing" + "" + index;
+				jsonFilePath = folderPath + fileName + index;
 				Utility.getInstance().writeJsonFile(s.getPlacedBoxes().getBoxes(), jsonFilePath);
 			}
 			writer.flush();

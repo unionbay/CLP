@@ -21,4 +21,5 @@ public class Constant {
 	
 	
 	public final static String OUTPUT_PATH = "output_path";
+	public final static String DATA_PATH = "data_path";
 }
