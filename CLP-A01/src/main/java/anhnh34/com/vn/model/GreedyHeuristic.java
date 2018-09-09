@@ -168,7 +168,7 @@ public class GreedyHeuristic {
 	}
 
 	private boolean checkContinue() throws Exception {				
-		if(this.calculateRunningTime() >=900) {
+		if(this.calculateRunningTime() > this.runningTime) {
 			return false;
 		}
 		
@@ -179,8 +179,7 @@ public class GreedyHeuristic {
 			solution.calculateTotalCost();
 
 			if (bestSolution == null) {
-				this.bestSolution = solution;
-				this.writeToFile();
+				this.bestSolution = solution;				
 			}
 
 			if (this.bestSolution.getTotalCost() > this.bestSolutionList.get(0).getTotalCost()) {
@@ -534,6 +533,8 @@ public class GreedyHeuristic {
 		this.locationList = new ArrayList<Location>(this.getContainerLoading().getLocationList());
 		this.solutionList = new ArrayList<Container>();
 		this.testSolutionList = new ArrayList<PartialSolution>();
+		this.runningTime = Long.valueOf(Utility.getInstance().getConfigValue("running_time"));
+		
 
 		// load deport.
 		Node node = this.getContainerLoading().getDeport();
@@ -1098,7 +1099,10 @@ public class GreedyHeuristic {
 			}
 		}
 		return null;
-
+	}
+	
+	public long getRunningTime() {
+		return runningTime;
 	}
 
 	public HashMap<String, List<Location>> notPlacedLocations;
@@ -1116,8 +1120,9 @@ public class GreedyHeuristic {
 	private List<String> lPosition;
 	private Location currLocation;
 	private double routingTotalCost;
-	private double bestRoutingTotalCost = 1000;
+	private double bestRoutingTotalCost = 100000;
 	private int roundNumber;
+	private long runningTime;
 	private List<Solution> bestSolutionList;
 	private List<PartialSolution> testSolutionList;
 	private Solution bestSolution;
