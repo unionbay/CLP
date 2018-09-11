@@ -192,9 +192,9 @@ public class GreedyHeuristic {
 					this.bestRoutingTotalCost = this.routingTotalCost;
 					this.writeToFile(testSolutionList);
 				}
-				if (this.routingTotalCost <= this.bestSolution.getTotalCost()) {
+				/*if (this.routingTotalCost <= this.bestSolution.getTotalCost()) {
 					return false;
-				}				
+				}	*/			
 			}
 
 			this.bestSolutionList.clear();
@@ -361,12 +361,13 @@ public class GreedyHeuristic {
 			int containerBoxSize = currentSolution.getPlacedBoxes().getBoxes().size();
 			numberOfItems = numberOfItems + containerBoxSize;
 			currentSolution.calculateCost();
-
+			//logger.info(currentSolution.getIdList().toString());		
 			// System.out.println(String.format("%d: number of items: %d - %s - cost: %.4f",
 			// new Object[] { i, currentSolution.getPlacedBoxes().getBoxes().size(),
 			// currentSolution.getIdList().toString(), currentSolution.getCost() }));
 			i++;
 		}
+		//logger.info("\n");
 
 		Solution solution = new Solution();
 		solution.setContainerList(solutionList);
@@ -731,6 +732,11 @@ public class GreedyHeuristic {
 	public void setBestSolution(Solution bestSolution) {
 		this.bestSolution = bestSolution;
 	}
+	
+	
+	private void exchangeCustomers() {
+			
+	}
 
 	public boolean exchangeCustomer() throws Exception {
 		Random randomGenerator = new Random();
@@ -853,7 +859,7 @@ public class GreedyHeuristic {
 //					// testSolution.setTakeOutLocation(takeOutLocationList);
 //					testSolutionList.add(this.initRoutingData(container, takeOutNumber));
 //				}
-				// logger.info("Routing round number: " + roundNumber);
+			//	logger.info("Routing round number: " + roundNumber);
 				roundNumber++;
 
 				if (roundNumber == 10) {

@@ -28,6 +28,6 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="C:/Users/anhnh34.HO.FPT.VN/Desktop/KBT/Library/junit-4.10.jar/junit-4.10.jar"/>
+	<classpathentry kind="lib" path="/home/anh-nguyen/Downloads/Container Loading Problems/Algorithm/junit-4.10.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>
