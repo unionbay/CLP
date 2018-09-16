@@ -141,12 +141,16 @@ public class GreedyHeuristic {
 			}
 
 			this.showResult();
-			if(this.containerLoading.getProblem().getNumOfItem() == this.calNumberOfPlacedBox(solutionList)) {
+			if(this.containerLoading.getProblem().getNumOfItem() == this.calNumberOfPlacedBox(solutionList)) {							
 				Solution solution = new Solution();
 				solution.setContainerList(solutionList);
 				solution.calculateTotalCost();
 				this.currentSolution = solution;
+				logger.info("Greedy solution ");
+				this.currentSolution.showResult();
+				logger.info("\n");
 			}
+			
 			roundNumber++;
 		}
 		
@@ -917,7 +921,7 @@ public class GreedyHeuristic {
 						isFindNewSolution = true;
 						roundNumber = 0;	
 					}
-					Thread.holdsLock(3000);
+					Thread.sleep(1000);
 					break;
 				}					
 				
