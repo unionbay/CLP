@@ -19,6 +19,17 @@ public class Location {
 		
 	}
 	
+	public Location(Location lc) {
+		this.initialize();
+		this.setX(lc.getX());
+		this.setY(lc.getY());
+		this.setLocationID(lc.getLocationID());
+		this.setDemand(lc.getDemand());
+		this.setBoxes(lc.getBoxes());
+		this.setIsChecked(lc.isChecked());
+		this.setVisited(lc.isVisited());
+	}
+	
 	private void initialize() {
 		this.boxes = new ArrayList<Box>();
 		this.locationList = new ArrayList<Location>();
@@ -123,6 +134,14 @@ public class Location {
 		
 		//sort location ascending by distance.
 		this.locationList.sort(new LocationComparator());
+	}
+	
+	public void setLocationList(List<Location> locationList) {
+		this.locationList.clear();
+		for(Location lc : locationList) {
+			Location nLocation = new Location(lc);
+			this.locationList.add(nLocation);
+		}
 	}
 	
 

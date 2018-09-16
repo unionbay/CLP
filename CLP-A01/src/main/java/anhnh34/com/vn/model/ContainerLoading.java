@@ -269,7 +269,7 @@ public class ContainerLoading {
 			con.setCapacity(capacity);
 			con.setHeight(height);
 			con.setWidth(width);
-			con.setLength(length);
+			con.setLength(length);			
 			con.initiliaze(this);
 			// con.loadingSpace(); // setup default space;
 			this.containerList.add(con);

@@ -6,23 +6,31 @@ import java.util.List;
 import org.apache.log4j.Logger;
 
 public class Container {
-	private double length;
-	private double width;
-	private double height;
-	private double capacity;
-	private double currentCapacity;
-	private List<PartialSolution> solutionList;
-	private PartialSolution currentSolution;
-	private List<Space> avaiableSpaces;
-	private List<Node> nodeList;
 	
 	private static Logger logger = Logger.getLogger(Container.class);
+	
+	
+	public boolean isFull() {
+		return isFull;
+	}
+	
+	public void setFull(boolean isFull) {
+		this.isFull = isFull;
+	}
+
+	public void setContailerLoading(ContainerLoading contailerLoading) {
+		this.contailerLoading = contailerLoading;
+	}
+	
+	public ContainerLoading getContailerLoading() {
+		return contailerLoading;
+	}
 	
 	public double getCurrentCapacity() {
 		return currentCapacity;
 	}
 	
-	public void setCurrentCapacity(int currentCapacity) {
+	public void setCurrentCapacity(double currentCapacity) {
 		this.currentCapacity = currentCapacity;
 	}
 
@@ -31,7 +39,11 @@ public class Container {
 	}
 
 	public void setSolutionList(List<PartialSolution> solutionList) {
-		this.solutionList = solutionList;
+		this.solutionList.clear();
+		for(PartialSolution s : solutionList) {
+			PartialSolution nPartialSolution = new PartialSolution(s);
+			this.solutionList.add(nPartialSolution);
+		}		
 	}
 
 	public PartialSolution getCurrentSolution() {
@@ -39,7 +51,8 @@ public class Container {
 	}
 
 	public void setCurrentSolution(PartialSolution currentSolution) {
-		this.currentSolution = currentSolution;
+		this.currentSolution = new PartialSolution(currentSolution);
+		//this.currentSolution = currentSolution;
 	}
 
 	public List<Space> getAvaiableSpaces() {
@@ -52,8 +65,7 @@ public class Container {
 		}
 		return true;
 	}
-
-	public void addCapacity(double additionCapacity) {
+ void addCapacity(double additionCapacity) {
 		this.currentCapacity = this.currentCapacity + additionCapacity;
 		this.currentSolution.setCurrCapacity(this.currentCapacity);
 	}
@@ -91,7 +103,11 @@ public class Container {
 	}
 
 	public void setAvaiableSpaces(List<Space> avaiableSpaces) {
-		this.avaiableSpaces = avaiableSpaces;
+		this.avaiableSpaces.clear();
+		for(Space space : avaiableSpaces) {
+			this.avaiableSpaces.add(new Space(space));
+		}
+		//this.avaiableSpaces = avaiableSpaces;
 	}
 
 	public double getHeight() {
@@ -142,11 +158,19 @@ public class Container {
 	}
 
 	public void updateContainer(Greedy greedy, Location lc) {				
-		this.getSolutionList().add(currentSolution);				
+		//this.getSolutionList().add(currentSolution);
+		PartialSolution  nCurrSolution;
+		if(this.currentSolution == null) {
+			nCurrSolution = new PartialSolution(greedy.getAvaiableSpaces(),
+					greedy.getPlacedBoxes(), greedy.getNotPlacedBoxes(),new ArrayList<String>(),new ArrayList<Location>());
+		}else {
+			nCurrSolution = new PartialSolution(greedy.getAvaiableSpaces(),
+					greedy.getPlacedBoxes(), greedy.getNotPlacedBoxes(),currentSolution.getIdList(),currentSolution.getLocationList());
+		}		
 		
-		PartialSolution nCurrSolution = new PartialSolution(greedy.getAvaiableSpaces(),
-				greedy.getPlacedBoxes(), greedy.getNotPlacedBoxes(),currentSolution.getIdList(),currentSolution.getLocationList());
 		nCurrSolution.setCapacity(this.getCapacity());
+		nCurrSolution.setCurrCapacity(this.getCurrentCapacity() + lc.getCapacity());
+		
 		
 //		for(Location l : currentSolution.getLocationList()) {
 //			logger.info("current location id: " + l.getLocationID());
@@ -159,6 +183,7 @@ public class Container {
 //		for(Location l : nCurrSolution.getLocationList()) {
 //			logger.info("new location id: " + l.getLocationID());
 //		}
+		this.getSolutionList().add(nCurrSolution);
 		
 		this.currentSolution = nCurrSolution;
 
@@ -244,7 +269,58 @@ public class Container {
 		if (this.getAvaiableSpaces().isEmpty()) {			
 			this.currentSolution.getAvaiableSpaces().add(containerSpace);							
 		}		
+		
+		this.setContailerLoading(containerLoading);
 		this.currentSolution.getPlacedBoxes().setBoxes(new ArrayList<Box>());
 		this.currentSolution.getNotPlacedBoxes().setBoxes(containerLoading.getNotPlacedBox().getBoxes());
 	}
+	
+	private void initialize() {
+		this.currentSolution = new PartialSolution();
+		this.avaiableSpaces = new ArrayList<Space>();
+		this.nodeList = new ArrayList<Node>();		
+		this.solutionList = new ArrayList<PartialSolution>();
+		this.avaiableSpaces = new ArrayList<Space>();
+		
+		Dimension minDimension = new Dimension(0, 0, 0);		
+		// init maximum dimension with corresponde coordinate X, Y, Z
+		Dimension maxDimension = new Dimension(length, width, height);
+		
+		Space containerSpace = new Space(minDimension, maxDimension);
+		containerSpace.setMaximumSupportX(maxDimension.getX());
+		containerSpace.setMaximumSupportY(maxDimension.getY());
+		if(this.getAvaiableSpaces().isEmpty()) {
+			this.currentSolution.getAvaiableSpaces().add(containerSpace);			
+		}
+		this.currentSolution.getPlacedBoxes().setBoxes(new ArrayList<Box>());
+		this.currentSolution.getNotPlacedBoxes().setBoxes(this.getContailerLoading().getNotPlacedBox().getBoxes());
+	}
+	
+	public Container (Container container) {
+		this.setContailerLoading(container.getContailerLoading());
+		this.initialize();		
+		this.setLength(container.getLength());
+		this.setWidth(container.getWidth());
+		this.setHeight(container.getHeight());		
+		this.setAvaiableSpaces(container.getAvaiableSpaces());		
+		this.setCurrentSolution(new PartialSolution(container.getCurrentSolution()));
+		this.setSolutionList(container.getSolutionList());
+		this.setCurrentCapacity(container.getCurrentCapacity());
+		this.setCapacity(container.getCapacity());	
+		this.setFull(container.isFull());
+					
+	}
+	
+	
+	private double length;
+	private double width;
+	private double height;
+	private double capacity;
+	private double currentCapacity;
+	private List<PartialSolution> solutionList;
+	private PartialSolution currentSolution;
+	private List<Space> avaiableSpaces;
+	private List<Node> nodeList;
+	private ContainerLoading contailerLoading;
+	private boolean isFull = false;
 }

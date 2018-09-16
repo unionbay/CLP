@@ -41,6 +41,7 @@ public class Batch {
 	}
 
 	public void setBoxes(List<Box> boxes) {
+		this.boxes.clear();
 		for(Box box : boxes) {			
 			this.addBox(box);
 		}		

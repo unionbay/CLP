@@ -33,6 +33,17 @@ public class PartialSolution {
 		this.setIdList(locationIdList);
 		this.setLocationList(locationList);
 	}
+	
+	public PartialSolution(PartialSolution pSolution) {
+		this.initiliaze();
+		this.setPlacedBoxes(new Batch(pSolution.getPlacedBoxes()));
+		this.setNotPlacedBoxes(new Batch(pSolution.getNotPlacedBoxes()));
+		this.setAvaiableSpaces(pSolution.getAvaiableSpaces());
+		this.setIdList(pSolution.getIdList());
+		this.setCapacity(pSolution.getCapacity());
+		this.setCurrCapacity(pSolution.getCurrCapacity());
+		this.setLocationList(pSolution.getLocationList());
+	}
 
 	private void initiliaze() {
 		this.idList = new ArrayList<String>();
@@ -272,7 +283,7 @@ public class PartialSolution {
 	
 	public void setTested(boolean tested) {
 		this.tested = tested;
-	}
+	}	
 
 	private Batch placedBoxes;
 	private Batch notPlacedBoxes;
@@ -282,7 +293,7 @@ public class PartialSolution {
 	private String currLocationID;
 	private boolean isFeasible;
 	private List<Space> avaiableSpaces;
-	private List<PartialSolution> subPartialSolutions;
+	private List<PartialSolution> subPartialSolutions;	
 	private double totalCost;
 	private List<String> idList;
 	private List<Location> takeOutLocation;

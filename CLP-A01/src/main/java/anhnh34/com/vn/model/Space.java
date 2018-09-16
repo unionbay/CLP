@@ -74,6 +74,16 @@ public class Space extends Cuboid {
 		this.maximumSupportY = maximumSupportY;
 		this.initialize();
 	}
+	
+	public Space(Space space) {
+		super();
+		this.setRatioSupport(space.getRatioSupport());
+		this.setMinimum(space.getMinimum());
+		this.setMaximum(space.getMaximum());
+		this.setMaximumSupportX(space.getMaximumSupportX());
+		this.setMaximumSupportY(space.getMaximumSupportY());
+		this.initialize();
+	}
 
 	public void initialize() {	
 		// calculate length width heigh.	

@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
-import javax.imageio.spi.IIOServiceProvider;
 
 import org.apache.log4j.Logger;
 
@@ -37,6 +36,8 @@ public class GreedyHeuristic {
 				Container container = this.containerList.get(0);
 				container.getCurrentSolution().getIdList().add(this.currLocation.getLocationID());
 				container.getCurrentSolution().getLocationList().add(currLocation);
+				container.getSolutionList().add(container.getCurrentSolution());
+				//.getSolutionList().add(currentSolution);
 				this.resetCheckLocation();
 
 				List<Location> closestLocationList = new ArrayList<Location>();
@@ -57,7 +58,7 @@ public class GreedyHeuristic {
 						// logger.info(String.format("%s - isVisited: %b - isChecked: %b",
 						// new Object[] { l.getLocationID(), l.isVisited(), l.isChecked() }));
 						// }
-						this.getClosetLocations();
+						//this.getClosetLocations();
 					}
 
 					if (closestLocationList.size() == 0) {
@@ -107,9 +108,9 @@ public class GreedyHeuristic {
 						 * " location capacity: " + randomLocation.getCapacity());
 						 */
 						// update container info.
-						container.updateContainer(greedyInstance, this.currLocation);
 						container.addCapacity(this.currLocation.getCapacity());
-
+						container.updateContainer(greedyInstance, this.currLocation);
+					
 						// check container is full
 						if (this.checkContainerFull(container)) {
 							// logger.info(String.format("Container %d is full: %s %.2f",
@@ -135,9 +136,17 @@ public class GreedyHeuristic {
 
 					}
 				}
+				
+				
 			}
 
 			this.showResult();
+			if(this.containerLoading.getProblem().getNumOfItem() == this.calNumberOfPlacedBox(solutionList)) {
+				Solution solution = new Solution();
+				solution.setContainerList(solutionList);
+				solution.calculateTotalCost();
+				this.currentSolution = solution;
+			}
 			roundNumber++;
 		}
 		
@@ -167,38 +176,44 @@ public class GreedyHeuristic {
 		return endDate;
 	}
 
-	private boolean checkContinue() throws Exception {				
-		if(this.calculateRunningTime() > this.runningTime) {
-			return false;
-		}
+	private boolean checkContinue() throws Exception {							
+//		if(this.calculateRunningTime() > this.runningTime) {
+//			return false;
+//		}
+		if(this.currentSolution != null) {
+			if(this.routingSearch()) {
+				this.currentSolution.showResult();				
+				return false;
+			}			
+		}				
 		
-		if (this.bestSolutionList.size() == 1) {
-			this.showResult();
-			Solution solution = new Solution();
-			solution.setContainerList(this.bestSolutionList.get(0).getContainerList());
-			solution.calculateTotalCost();
-
-			if (bestSolution == null) {
-				this.bestSolution = solution;				
-			}
-
-			if (this.bestSolution.getTotalCost() > this.bestSolutionList.get(0).getTotalCost()) {
-				this.bestSolution = solution;
-				this.writeToFile();
-			}
-
-			if (this.exchangeCustomer()) {
-				if (this.bestRoutingTotalCost > this.routingTotalCost) {
-					this.bestRoutingTotalCost = this.routingTotalCost;
-					this.writeToFile(testSolutionList);
-				}
-				/*if (this.routingTotalCost <= this.bestSolution.getTotalCost()) {
-					return false;
-				}	*/			
-			}
-
-			this.bestSolutionList.clear();
-		}
+//		if (this.bestSolutionList.size() == 1) {
+//			this.showResult();
+//			Solution solution = new Solution();
+//			solution.setContainerList(this.bestSolutionList.get(0).getContainerList());
+//			solution.calculateTotalCost();
+//
+//			if (bestSolution == null) {
+//				this.bestSolution = solution;				
+//			}
+//
+//			if (this.bestSolution.getTotalCost() > this.bestSolutionList.get(0).getTotalCost()) {
+//				this.bestSolution = solution;
+//				this.writeToFile();
+//			}
+//
+//			if (this.exchangeCustomer()) {
+//				if (this.bestRoutingTotalCost > this.routingTotalCost) {
+//					this.bestRoutingTotalCost = this.routingTotalCost;
+//					this.writeToFile(testSolutionList);
+//				}
+//				/*if (this.routingTotalCost <= this.bestSolution.getTotalCost()) {
+//					return false;
+//				}	*/			
+//			}
+//
+//			this.bestSolutionList.clear();
+//		}
 
 //		if (this.roundNumber < 100) {
 //			return true;
@@ -238,6 +253,7 @@ public class GreedyHeuristic {
 			if (l.isVisited() == false) {
 				l.setIsChecked(false);
 			}
+			
 			for (int j = 0; j < this.locationList.size(); j++) {
 				Location lj = this.locationList.get(j);
 				for (Location slj : lj.getLocationList()) {
@@ -390,6 +406,14 @@ public class GreedyHeuristic {
 
 		this.roundNumber++;
 	}
+	
+	private int calNumberOfPlacedBox(List<Container> containers) {
+		int totalNumber = 0;
+		for(Container con :containers) {
+			totalNumber = totalNumber + con.getCurrentSolution().getPlacedBoxes().getNumberOfBox();			
+		}
+		return totalNumber;
+	}
 
 	private double showResult(List<PartialSolution> solutions) {
 		int numberOfItems = 0;
@@ -409,10 +433,16 @@ public class GreedyHeuristic {
 		return totalCost;
 	}
 
-	private void writeToFile(List<PartialSolution> solutions) {
+	private void writeToFile(Solution solution) {
 		PrintWriter writer = null;
 		String folderPath = Utility.getInstance().getConfigValue(Constant.OUTPUT_PATH);
 		try {
+			
+			
+			List<PartialSolution> solutions = new ArrayList<>();
+			for(Container con :solution.getContainerList()) {
+				solutions.add(con.getCurrentSolution());
+			}
 			String filePath = "";			
 			String fileName = String.format("%s_Routing",new Object[] {this.getContainerLoading().getInstanceName()});
 			filePath = folderPath + fileName;
@@ -420,6 +450,7 @@ public class GreedyHeuristic {
 			writer = new PrintWriter(fileWrite);
 			double totalCost = 0;
 			// write header.
+			
 			for (PartialSolution s : solutions) {
 				int index = solutions.indexOf(s);
 				totalCost += s.getCost();
@@ -584,6 +615,7 @@ public class GreedyHeuristic {
 				break;
 			}
 		}
+		
 		nextLocation.setVisited(true);
 		nextLocation.setIsChecked(true);
 
@@ -597,6 +629,9 @@ public class GreedyHeuristic {
 				}
 			}
 		}
+			
+		//lc.setLocationList(this.locationList);
+		
 	}
 
 	private List<Location> getClosetLocations() {
@@ -628,6 +663,31 @@ public class GreedyHeuristic {
 
 		}
 		return closestLocations;
+	}
+	
+	private List<Location> getClosetLocations(Location currLocation){
+		List<Location> closestLocations = new ArrayList<Location>();		
+		int i = 0;
+		while (i < 3) {
+			if (lIndex >= currLocation.getLocationList().size()) {
+				lIndex = 0;
+				break;
+			}
+
+			Location location = currLocation.getLocationList().get(lIndex);
+
+			if (location.isVisited() || location.isChecked()) {
+				lIndex++;
+				continue;
+			}
+
+			closestLocations.add(currLocation.getLocationList().get(lIndex));
+			this.lIndex++;
+			i++;
+
+		}
+		return closestLocations;
+	
 	}
 
 	private boolean checkLocationIsFeasible(PartialSolution solution, Location lc) {
@@ -734,16 +794,284 @@ public class GreedyHeuristic {
 	}
 	
 	
-	private void exchangeCustomers() {
+	private boolean routingSearch() throws InterruptedException {
+		logger.info("\n");
+		logger.info("Initial solution");
+		this.currentSolution.showResult();
+		Solution partialSolution = new Solution(this.currentSolution);
+		int roundNumber = 0;
+		boolean isFindNewSolution = false;
+		
+		while(roundNumber <= 5000) {
+			if(isFindNewSolution == true) {
+				logger.info("Find a better solution");
+				logger.info("Round number: " + roundNumber);
+				 partialSolution = new Solution(this.currentSolution);
+				 isFindNewSolution = false;
+			}
+			//List<Location> notPlacedLocations = new ArrayList<Location>();
+			List<Container> containers = new ArrayList<Container>();
+			List<Location> closestLocations = new ArrayList<Location>();	
+			List<String> randomLocations = new ArrayList<>();
 			
+			
+			while(true) {
+				roundNumber++;
+				//logger.info("Round number: " + roundNumber);
+				containers.clear();
+				this.initLocationContext();
+				//notPlacedLocations = this.getRandomLocations(partialSolution, containers);		
+				randomLocations = this.getRandomLocations(partialSolution, containers);				
+				//logger.info("\n");
+				/*logger.info(randomLocations.toString());*/
+				
+				if(randomLocations.size() == 0 || randomLocations.size() == 1) {
+					continue;
+				}
+				
+				/*for(Location lc : this.locationList) {
+					logger.info(String.format("%s %b %b", new Object[] {lc.getLocationID(), lc.isChecked(), lc.isVisited()}));
+					logger.info("Sub location");
+					for(Location subLocation : lc.getLocationList()) {
+						logger.info(String.format("%s %b %b", new Object[] {subLocation.getLocationID(), subLocation.isChecked(), subLocation.isVisited()}));
+					}					
+				}	*/			
+				
+				while(checkAllLocationIsVisited() == false) {
+					if(this.checkContainersIsFull(containers)) {
+						//logger.info("All container is full");
+						break;
+					}
+					
+					int index = this.getRandomNumber(0, containers.size());
+					Container con = containers.get(index); 
+					if(con.isFull()) {												
+						continue;
+					}
+					
+					while(true) {
+						Location tempLocation = con.getCurrentSolution().getLocationList().get(con.getCurrentSolution().getLocationList().size() -1);	
+						Location currentLocation = this.getLocationById(tempLocation.getLocationID());
+						closestLocations = this.getClosetLocations(currentLocation);									
+						if(closestLocations.isEmpty()) {
+							con.setFull(true);						
+							break;
+						}
+														
+						int lIndex = this.getRandomNumber(0, closestLocations.size());
+						Location location = closestLocations.get(lIndex);
+						
+						if (con.checkCapacity(location.getDemand()) == false) {							
+							for (int i = 0; i < closestLocations.size(); i++) {
+								Location lc = closestLocations.get(i);
+								if (location.getX() == lc.getX() && location.getY() == lc.getY()) {
+									closestLocations.remove(i);
+									break;
+								}
+							}
+							this.setCheckLocation(location.getLocationID());
+							continue;
+						} 
+						
+						/*if(!checkDemand(con, location)){
+							closestLocations.remove(location);
+							this.setCheckLocation(location.getLocationID());
+							continue;
+						}*/
+						
+						if(this.checkLocationIsFeasible(con.getCurrentSolution(),location) == false) {
+							location.setIsChecked(true);
+							this.setCheckLocation(location.getLocationID());
+							closestLocations.remove(lIndex);	
+							continue;
+						}
+						
+						
+						this.updateLocation(location);						
+						con.updateContainer(greedyInstance, location);
+						con.addCapacity(this.currLocation.getCapacity());
+
+					}										
+				}			
+				
+				if(this.checkAllLocationIsVisited() == true) {					
+					logger.info("\n");
+					logger.info("Round number: " + roundNumber);
+					this.currentSolution.showResult();
+					logger.info(randomLocations.toString());
+					Solution newSolution = new Solution();					
+					newSolution.setContainerList(containers);						
+					newSolution.showResult();									
+					if(this.bestSolution == null) {
+						this.bestSolution = newSolution;
+					}else {
+						if(this.bestSolution.getTotalCost() > newSolution.getTotalCost()) {
+							this.bestSolution = newSolution;							
+						}																		
+					}
+					logger.info("Best solution code: " + this.bestSolution.getTotalCost());
+																							
+					if(newSolution.getTotalCost() < currentSolution.getTotalCost()) {								
+						this.currentSolution = newSolution;
+						this.writeToFile(this.currentSolution);
+						isFindNewSolution = true;
+						roundNumber = 0;	
+					}
+					Thread.holdsLock(3000);
+					break;
+				}					
+				
+			/*	if(isFindNewSolution == true) {
+					break;
+				}*/
+				
+				if(roundNumber > 5000) {
+					logger.info("Stop: " + roundNumber);
+					//roundNumber = 0;
+					break;
+				}
+			}
+			
+			if(roundNumber > 5000) {
+				logger.info("Stop: " + roundNumber);
+				break;
+			}
+		}						
+		
+		return isFindNewSolution;
+	}
+	
+	
+	private boolean checkDemand(Container container, Location lc) {
+		if(container.getCapacity() < container.getCurrentCapacity() + lc.getDemand()) {
+			return false;
+		}
+		return true;
+	}
+	private boolean checkContainersIsFull(List<Container> containers) {
+		for(Container con : containers) {
+			if(con.isFull() == false) {
+				return false;
+			}
+		}
+		return true;
+	}
+	/*private Location getLocationById(String id) {
+		for(Location lc : this.locationList) {
+			if(lc.getLocationID().equalsIgnoreCase(id)) {
+				return lc;
+			}
+		}
+		return null;
+	}*/
+	
+	private void initLocationContext() {
+		for(Location lc : this.locationList) {
+			lc.setIsChecked(true);
+			lc.setVisited(true);
+			for(Location subLocation : lc.getLocationList()) {
+				subLocation.setIsChecked(true);
+				subLocation.setVisited(true);
+			}
+		}
+	}
+		
+	
+	private boolean checkAllLocationIsVisited() {
+		for(Location l : this.locationList) {
+			if(l.isVisited() == false) {
+				return false;
+			}
+		}
+		return true;
+	}
+		
+		
+	
+	private List<String> getRandomLocations(Solution partialSolution,List<Container> containers){
+		List<Location> locationList = new ArrayList<Location>();
+		List<String> randomLocations = new ArrayList<>();
+		for(Container con : partialSolution.getContainerList()) {
+			int lastIndex = 0;
+			if(con.getCurrentSolution().getIdList().size() > 0) {
+				lastIndex = con.getCurrentSolution().getIdList().size() - 1;
+			}				
+			
+			Container preCon = new Container(con);
+			int ranIndex = this.getRandomNumber(0,con.getCurrentSolution().getIdList().size());
+			
+			if(ranIndex == lastIndex) {
+				containers.add(preCon);
+				continue;
+			}
+										
+			PartialSolution preSolution = con.getSolutionList().get(ranIndex);
+			preCon.setAvaiableSpaces(preSolution.getAvaiableSpaces());			
+			preCon.setCurrentSolution(preSolution);
+			preCon.setCurrentCapacity(preSolution.getCurrCapacity());				
+			List<PartialSolution> preSolutionList = new ArrayList<PartialSolution>();
+			
+			for(PartialSolution pSolution : preCon.getSolutionList().subList(0, ranIndex)) {
+				preSolutionList.add(pSolution);
+			}					
+			
+			preCon.setSolutionList(preSolutionList);			
+			containers.add(preCon);
+			//logger.info("last index: " + lastIndex);
+			//logger.info("pre solution: "+ preCon.getCurrentSolution().getIdList().toString());
+			
+			for(Location lc : con.getCurrentSolution().getLocationList().subList(ranIndex+1, lastIndex+1)) {
+				randomLocations.add(lc.getLocationID());
+				for (Location location : this.locationList) {					
+					if (lc.getLocationID().equalsIgnoreCase(location.getLocationID())) {
+						location.setVisited(false);
+						location.setIsChecked(false);
+						break;
+					}
+										
+				}										
+
+				for (Location pLocation : this.locationList) {
+					for (Location subLocation : pLocation.getLocationList()) {
+						if (subLocation.getLocationID().equalsIgnoreCase(lc.getLocationID())) {
+							subLocation.setVisited(false);
+							subLocation.setIsChecked(false);
+						}
+					}
+				}
+				
+			/*	takeoutId = takeoutId +" "+lc.getLocationID()+" ";								
+				Location rLocation = new Location(lc);		
+				
+				rLocation.setIsChecked(false);
+				rLocation.setVisited(false);
+				locationList.add(rLocation);			*/			
+			}
+						
+			
+			//logger.info("take out ids: "+ takeoutId);
+			//logger.info("solution: " + con.getCurrentSolution().getLocationIds().toString());
+		}		
+		//logger.info("Random locations: " + randomLocations.toString());
+		
+		return randomLocations;
+	}
+		
+	
+	private int getRandomNumber(int low, int height) {
+		if(height == 0) {
+			return 0;
+		}
+		
+		Random ran = new Random();						
+		return ran.nextInt(height - low) + low;		
 	}
 
 	public boolean exchangeCustomer() throws Exception {
 		Random randomGenerator = new Random();
 		Solution solution = bestSolutionList.get(0);
 		List<Container> containerList = solution.getContainerList();
-		boolean isFeasible = false;
-				
+		boolean isFeasible = false;				
 		lPosition = new ArrayList<>(Arrays.asList("0 1", "1 0"));
 		// try remove number of customers
 		for(Container container : containerList) {
@@ -886,7 +1214,7 @@ public class GreedyHeuristic {
 			}
 
 			
-			totalCost = this.showResult(testSolutionList);
+			//totalCost = this.showResult(testSolutionList);
 			logger.info(String.format("nTotalCost: %f oTotalCost: %f bestTotalCost: %f %f", new Object[] { totalCost,
 					bestSolutionList.get(0).getTotalCost(), bestSolution.getTotalCost(), this.bestRoutingTotalCost }));
 			this.routingTotalCost = totalCost;						
@@ -1046,6 +1374,15 @@ public class GreedyHeuristic {
 		}
 		return true;
 	}
+	
+	private List<Location> getLocations(){
+		List<Location> locationList = new ArrayList<Location>();
+		for(Location lc : this.getContainerLoading().getLocationList()) {
+			Location nLocation = new Location(lc);
+			locationList.add(nLocation);
+		}
+		return locationList;
+	}
 
 	private List<Location> getTestLocations(List<Location> lastLocations, int takeOutNumber) {
 		List<Location> testLocationList = new ArrayList<Location>();
@@ -1129,7 +1466,8 @@ public class GreedyHeuristic {
 	private double bestRoutingTotalCost = 100000;
 	private int roundNumber;
 	private long runningTime;
-	private List<Solution> bestSolutionList;
+	private List<Solution> bestSolutionList;	
+	private Solution currentSolution;
 	private List<PartialSolution> testSolutionList;
 	private Solution bestSolution;
 	private Date startDate;
