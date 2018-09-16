@@ -144,10 +144,10 @@ public class GreedyHeuristic {
 			if(this.containerLoading.getProblem().getNumOfItem() == this.calNumberOfPlacedBox(solutionList)) {							
 				Solution solution = new Solution();
 				solution.setContainerList(solutionList);
-				solution.calculateTotalCost();
-				this.currentSolution = solution;
+				solution.calculateTotalCost();				
+				this.newSolution = solution;				
 				logger.info("Greedy solution ");
-				this.currentSolution.showResult();
+				this.newSolution.showResult();
 				logger.info("\n");
 			}
 			
@@ -184,9 +184,9 @@ public class GreedyHeuristic {
 //		if(this.calculateRunningTime() > this.runningTime) {
 //			return false;
 //		}
-		if(this.currentSolution != null) {
+		if(this.newSolution != null) {
 			if(this.routingSearch()) {
-				this.currentSolution.showResult();				
+				this.newSolution.showResult();								
 				return false;
 			}			
 		}				
@@ -228,6 +228,7 @@ public class GreedyHeuristic {
 		// return false;d
 		// }
 		// }
+		this.newSolution  = null;
 		return true;
 	}
 
@@ -801,8 +802,8 @@ public class GreedyHeuristic {
 	private boolean routingSearch() throws InterruptedException {
 		logger.info("\n");
 		logger.info("Initial solution");
-		this.currentSolution.showResult();
-		Solution partialSolution = new Solution(this.currentSolution);
+		this.newSolution.showResult();
+		Solution partialSolution = new Solution(this.newSolution);
 		int roundNumber = 0;
 		boolean isFindNewSolution = false;
 		
@@ -810,7 +811,7 @@ public class GreedyHeuristic {
 			if(isFindNewSolution == true) {
 				logger.info("Find a better solution");
 				logger.info("Round number: " + roundNumber);
-				 partialSolution = new Solution(this.currentSolution);
+				 partialSolution = new Solution(this.newSolution);
 				 isFindNewSolution = false;
 			}
 			//List<Location> notPlacedLocations = new ArrayList<Location>();
@@ -901,26 +902,30 @@ public class GreedyHeuristic {
 				if(this.checkAllLocationIsVisited() == true) {					
 					logger.info("\n");
 					logger.info("Round number: " + roundNumber);
-					this.currentSolution.showResult();
+					this.newSolution.showResult();
 					logger.info(randomLocations.toString());
+					
 					Solution newSolution = new Solution();					
 					newSolution.setContainerList(containers);						
 					newSolution.showResult();									
+					
 					if(this.bestSolution == null) {
 						this.bestSolution = newSolution;
 					}else {
 						if(this.bestSolution.getTotalCost() > newSolution.getTotalCost()) {
-							this.bestSolution = newSolution;							
+							this.bestSolution = newSolution;
+							this.writeToFile(this.bestSolution);
 						}																		
 					}
-					logger.info("Best solution code: " + this.bestSolution.getTotalCost());
-																							
-					if(newSolution.getTotalCost() < currentSolution.getTotalCost()) {								
-						this.currentSolution = newSolution;
-						this.writeToFile(this.currentSolution);
-						isFindNewSolution = true;
-						roundNumber = 0;	
+					
+					logger.info("Best solution code: " + this.bestSolution.getTotalCost());					
+					
+					if(newSolution.getTotalCost() < this.newSolution.getTotalCost()) {								
+						this.newSolution = newSolution;						
+						isFindNewSolution = true;						
+						roundNumber = 0;
 					}
+					
 					Thread.sleep(1000);
 					break;
 				}					
@@ -930,8 +935,8 @@ public class GreedyHeuristic {
 				}*/
 				
 				if(roundNumber > 5000) {
-					logger.info("Stop: " + roundNumber);
-					//roundNumber = 0;
+					//logger.info("Stop: " + roundNumber);
+//					roundNumber = 0;
 					break;
 				}
 			}
@@ -1472,6 +1477,7 @@ public class GreedyHeuristic {
 	private long runningTime;
 	private List<Solution> bestSolutionList;	
 	private Solution currentSolution;
+	private Solution newSolution;
 	private List<PartialSolution> testSolutionList;
 	private Solution bestSolution;
 	private Date startDate;
