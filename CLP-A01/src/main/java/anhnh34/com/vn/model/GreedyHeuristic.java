@@ -802,15 +802,13 @@ public class GreedyHeuristic {
 	private boolean routingSearch() throws InterruptedException {
 		logger.info("\n");
 		logger.info("Initial solution");
-		this.newSolution.showResult();
+		//this.newSolution.showResult();
 		Solution partialSolution = new Solution(this.newSolution);
 		int roundNumber = 0;
 		boolean isFindNewSolution = false;
 		
 		while(roundNumber <= 5000) {
-			if(isFindNewSolution == true) {
-				logger.info("Find a better solution");
-				logger.info("Round number: " + roundNumber);
+			if(isFindNewSolution == true) {				
 				 partialSolution = new Solution(this.newSolution);
 				 isFindNewSolution = false;
 			}
@@ -900,19 +898,21 @@ public class GreedyHeuristic {
 				}			
 				
 				if(this.checkAllLocationIsVisited() == true) {					
-					logger.info("\n");
-					logger.info("Round number: " + roundNumber);
+					//logger.info("\n");
+					//logger.info("Round number: " + roundNumber);
 					this.newSolution.showResult();
 					logger.info(randomLocations.toString());
 					
 					Solution newSolution = new Solution();					
 					newSolution.setContainerList(containers);						
-					newSolution.showResult();									
+					//newSolution.showResult();									
 					
 					if(this.bestSolution == null) {
 						this.bestSolution = newSolution;
 					}else {
 						if(this.bestSolution.getTotalCost() > newSolution.getTotalCost()) {
+							logger.info("Find a better solution");
+							logger.info("Round number: " + roundNumber);
 							this.bestSolution = newSolution;
 							this.writeToFile(this.bestSolution);
 						}																		
@@ -926,7 +926,7 @@ public class GreedyHeuristic {
 						roundNumber = 0;
 					}
 					
-					Thread.sleep(1000);
+					//Thread.sleep(1000);
 					break;
 				}					
 				
@@ -1007,8 +1007,8 @@ public class GreedyHeuristic {
 			}				
 			
 			Container preCon = new Container(con);
-			int ranIndex = this.getRandomNumber(0,con.getCurrentSolution().getIdList().size());
-			
+			int ranIndex = this.getRandomNumber(0,lastIndex + 1);
+			//logger.info("size: " + con.getCurrentSolution().getIdList().size() + " index: " + lastIndex);
 			if(ranIndex == lastIndex) {
 				containers.add(preCon);
 				continue;
