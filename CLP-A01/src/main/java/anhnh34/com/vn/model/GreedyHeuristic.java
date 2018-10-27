@@ -490,8 +490,8 @@ public class GreedyHeuristic {
 		this.bestSolutionList = new ArrayList<Solution>();
 		this.notPlacedLocations = new HashMap<>();
 		this.containerList = new ArrayList<Container>();
-		this.ran = new Random(this.ranLongId);
-		//this.ran = new Random();
+		//this.ran = new Random(this.ranLongId);
+		this.ran = new Random();
 		this.initiliaze();
 	}
 
@@ -841,13 +841,14 @@ public class GreedyHeuristic {
 				
 				this.initLocationContext();
 				//notPlacedLocations = this.getRandomLocations(partialSolution, containers);		
-				if(roundNumber == 564) {
-					Greedy.getLogger().setLevel(Level.INFO);					
-				}
-//				
-				if(roundNumber == 565) {
-					Greedy.getLogger().setLevel(Level.FATAL);
-				}
+//				if(roundNumber == 849) {				
+//					Greedy.getLogger().setLevel(Level.INFO);
+//					logger.info("Round number: " + 5643);
+//				}
+////				
+//				if(roundNumber == 850) {
+//					Greedy.getLogger().setLevel(Level.FATAL);
+//				}
 				randomLocations = this.getRandomLocations(partialSolution, containers);				
 				//logger.info("\n");
 				/*logger.info(randomLocations.toString());*/

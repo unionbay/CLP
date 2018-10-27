@@ -843,7 +843,7 @@ public class Greedy {
 				for (String rotation : rotations) {
 					Box tempBox = new Box(box);
 					tempBox.setSelectedRotation(rotation);
-					this.updateBoxPosition(tempBox, space);
+					this.updateBoxPosition(tempBox, space);									
 
 					if (isLifo && this.isMultiDropFeasiblePacking(tempBox) == false) {
 						continue;
@@ -878,6 +878,7 @@ public class Greedy {
 
 		for (Space space : this.avaiableSpaces) {
 			for (Box box : this.getNotPlacedBoxes().getBoxes()) {
+				
 				List<String> rotations = this.findRotations(box, space);
 
 				if (rotations.isEmpty()) {
@@ -1050,8 +1051,9 @@ public class Greedy {
 	}
 
 	private List<String> findRotations(Box box, Space space) {
-		// loop all possible rotations.
-		int[] rotations = box.getfRotation();
+		
+		// loop all possible rotations.		
+		int[] rotations = box.getfRotation();		
 		List<String> fesRotations = new ArrayList<String>();
 		// can be rotation by X.
 		if (rotations[0] == 1) {
@@ -1274,7 +1276,7 @@ public class Greedy {
 	}
 
 	public void showBoxInfo(String name, Box box) {
-		String stringFormat = "%s - id: %s, bt: %s,dimen: %f, suface: %f, l: %.2f, w: %.2f, h: %.2f, v: %.2f, sq: %d, fra: %b";
+		String stringFormat = "%s - id: %s, bt: %s,dimen: %f, suface: %f, l: %.2f, w: %.2f, h: %.2f, b: %.2f, m: %.2f, s: %.2f, v: %.2f, sq: %d, fra: %b";
 
 		if (box.getMinimumPoint() != null) {
 			stringFormat = stringFormat.concat(" ,mi(%.2f, %.2f, %.2f)");
@@ -1286,7 +1288,7 @@ public class Greedy {
 
 		logger.info(String.format(stringFormat,
 				new Object[] { name, box.getCustomerId(), box.getBoxType(), box.getBiggestDimension(),
-						box.getLargestSurface(), box.getLength(), box.getWidth(), box.getHeigth(), box.getVolume(),
+						box.getLargestSurface(), box.getLength(), box.getWidth(), box.getHeigth(),box.getBiggestDimension(), box.getMiddleDimension(), box.getSmallestDimension(), box.getVolume(),
 						box.getSequenceNumber(), box.isFragile(),
 						box.getMinimum() == null ? -1 : box.getMinimum().getX(),
 						box.getMinimum() == null ? -1 : box.getMinimum().getY(),
@@ -1372,12 +1374,14 @@ public class Greedy {
 		logger.info("\n");
 	}
 
-	public void updateBoxPosition(Box selectedBox, Space space) {		
+	public void updateBoxPosition(Box selectedBox, Space space) {				
+		
 		Dimension maximumDimension = getMaximumDimension(selectedBox.getSelectedRotation().getRotationCode(),
 				space.getMinimum(), selectedBox);
 		if(space.getMinimum() == null) {
 			this.showSpaceInfo("",space);
 		}
+				
 		selectedBox.setMinimum(space.getMinimum());		
 		selectedBox.setMaximum(maximumDimension);
 	}
@@ -1626,6 +1630,11 @@ public class Greedy {
 
 			double maxX = s.getMaximum().getX() > t.getMaximum().getX() ? s.getMaximum().getX() : t.getMaximum().getX();
 			double maxY = maxSupportY * (1 + this.getNSupportRatio()) - minY * this.getNSupportRatio();
+			
+			if(maxY > container.getWidth()) {
+				maxY = container.getWidth();
+			}
+			
 			double maxZ = s.getMaximum().getZ() < t.getMaximum().getZ() ? s.getMaximum().getZ() : t.getMaximum().getZ();
 
 			Dimension minimum = new Dimension(minX, minY, minZ);
