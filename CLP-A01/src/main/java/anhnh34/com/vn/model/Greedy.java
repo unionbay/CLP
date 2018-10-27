@@ -108,9 +108,13 @@ public class Greedy {
 		this.notPlacedBoxes = con.getNotPlacedBox();
 		this.avaiableSpaces = con.getAllSpaces();
 	};
+	
+	public static Logger getLogger() {
+		return logger;
+	}
 
 	public Greedy() {
-		logger.setLevel(Level.FATAL);
+		logger.setLevel(Level.FATAL);		
 		this.candidates = new ArrayList<BoxCandidate>();
 		this.avaiableSpaces = new ArrayList<Space>();
 		this.placedBoxes = new Batch();
@@ -1199,7 +1203,7 @@ public class Greedy {
 				new Object[] { this.totalBoxVolumes / this.containerVolumes * 100 }));
 
 		logger.info(String.format(String.format("Number of amalgamation: %d", this.amalgamateCount)));
-		Utility.getInstance().writeResultToFile(this.placedBoxes.getBoxes()); // write result to file.
+		//Utility.getInstance().writeResultToFile(this.placedBoxes.getBoxes()); // write result to file.
 
 	}
 
@@ -1216,7 +1220,7 @@ public class Greedy {
 							c.getMaximumPoint().getX(), c.getMaximumPoint().getY(), c.getMaximumPoint().getZ() }));
 			return;
 		}
-
+		
 		if (c.getMaximumPoint() == null) {
 			logger.info(String.format("%s l: %.2f, w: %.2f, h: %.2f, v: %2.f mi(%.2f, %.2f, %.2f) ma: null",
 					new Object[] { name, c.getLength(), c.getWidth(), c.getHeigth(), c.getVolume(),
@@ -1453,7 +1457,7 @@ public class Greedy {
 					&& box.getMaximum().getX() >= space.getMinimum().getX()
 					&& space.getMaximum().getX() >= box.getMinimum().getX()
 					&& box.getMaximum().getY() >= space.getMinimum().getY()
-					&& space.getMaximum().getY() >= box.getMaximum().getY() && box.isFragile() == true) {
+					&& space.getMaximum().getY() >= box.getMinimum().getY() && box.isFragile() == true) {
 
 				checkFragility = true;
 				break;
@@ -1480,6 +1484,11 @@ public class Greedy {
 			Dimension minimum = new Dimension(minSpace.getX(), maxBox.getY(), minSpace.getZ());
 			double yMaximum = (1 + this.getNSupportRatio()) * space.getMaximumSupportY()
 					- maxBox.getY() * this.getNSupportRatio();
+	
+			if(yMaximum > container.getWidth()) {
+				yMaximum = container.getWidth();
+			}
+			
 			Dimension maximum = new Dimension(maxSpace.getX(), yMaximum, maxSpace.getZ());
 			return new Space(minimum, maximum, getNSupportRatio(), space.getMaximumSupportX(),
 					space.getMaximumSupportY());

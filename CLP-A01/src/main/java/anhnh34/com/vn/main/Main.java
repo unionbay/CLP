@@ -1,6 +1,8 @@
 package anhnh34.com.vn.main;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 import org.apache.log4j.BasicConfigurator;
@@ -19,7 +21,7 @@ public class Main {
 				
 		
 		//TreeSearch treeSearch = new TreeSearch();
-		//solutionMethod.setupLog4j();
+		solutionMethod.setupLog4j();
 		//solutionMethod.setGreedyInstance(greedy);		
 		//solutionMethod.setConLoading(container);			
 		
@@ -28,7 +30,13 @@ public class Main {
 			//container.loadingData();
 			GreedyHeuristic greedyHeuristic = new GreedyHeuristic();
 			greedyHeuristic.setStartDate(new Date());
+			LocalDateTime startDate = LocalDateTime.now();
 			greedyHeuristic.run();
+			LocalDateTime finishedDate = LocalDateTime.now();
+			
+			Duration duration = Duration.between(startDate, finishedDate);
+			System.out.println(duration.getSeconds() + " seconds");
+			
 			//treeSearch.setContainer(container);			
 			//greedy.setConLoading(container);
 			//greedy.loadParameters();		

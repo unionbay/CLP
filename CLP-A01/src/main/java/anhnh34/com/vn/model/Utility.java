@@ -326,18 +326,18 @@ public class Utility {
 		ObjectMapper mapper = new ObjectMapper();
 
 		// Object to Json in file
-		try {
-			String outputPath = Utility.getInstance().getConfigValue("output_path");
-			String jsonResultPath = outputPath + "result.json";
-			String sortResultPath = outputPath + "sort_result.json";
-			mapper.writeValue(new File(jsonResultPath), nodes);
-			mapper.writeValue(new File(sortResultPath), sortedNodes);
-		} catch (JsonGenerationException e) {
-			e.printStackTrace();
-		} catch (JsonMappingException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+//		try {
+//			String outputPath = Utility.getInstance().getConfigValue("output_path");
+//			String jsonResultPath = outputPath + "result.json";
+//			String sortResultPath = outputPath + "sort_result.json";
+//			//mapper.writeValue(new File(jsonResultPath), nodes);
+//			//mapper.writeValue(new File(sortResultPath), sortedNodes);
+//		} catch (JsonGenerationException e) {
+//			e.printStackTrace();
+//		} catch (JsonMappingException e) {
+//			e.printStackTrace();
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
 	}
 }
