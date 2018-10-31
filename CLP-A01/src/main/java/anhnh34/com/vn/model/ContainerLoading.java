@@ -101,7 +101,7 @@ public class ContainerLoading {
 			return;
 		}
 		
-		String instanceName = dataPath.substring(dataPath.lastIndexOf("\\"), dataPath.lastIndexOf("."));
+		String instanceName = dataPath.substring(dataPath.lastIndexOf("/"), dataPath.lastIndexOf("."));
 		this.setInstanceName(instanceName);
 
 		List<String> fileArray = Files.readAllLines(filePath);

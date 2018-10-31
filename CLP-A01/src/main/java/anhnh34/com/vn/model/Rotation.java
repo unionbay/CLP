@@ -72,7 +72,9 @@ public class Rotation {
 	}
 	
 	public Rotation() {		
-	} 
+	}
+
+
 	
 //	private void loadingRotation(){
 //		

@@ -3,8 +3,6 @@ package anhnh34.com.vn.model;
 import java.util.Comparator;
 import org.apache.log4j.Logger;
 
-import com.fasterxml.jackson.databind.ser.std.StdKeySerializers.Default;
-
 public class BoxComparator implements Comparator<Box>{
 	 final static Logger logger = Logger.getLogger(BoxComparator.class);
 	private static String orderStr;
@@ -36,9 +34,9 @@ public class BoxComparator implements Comparator<Box>{
 			return checkConstraint;
 		}
 		
-//		if((checkConstraint = supportConstraint(firstBox, secondBox)) != 0) {
-//			return checkConstraint;
-//		}
+		if((checkConstraint = supportConstraint(firstBox, secondBox)) != 0) {
+			return checkConstraint;
+		}
 		
 		if((checkConstraint = volumeConstraint(firstBox, secondBox)) != 0) {
 			return checkConstraint;
@@ -131,8 +129,8 @@ public class BoxComparator implements Comparator<Box>{
 	}
 	
 	private int supportConstraint(Box first, Box second) {
-		double firstBaseArea = first.getBiggestDimension() * first.getMiddleDimension();
-		double secondBaseArea = second.getBiggestDimension() * second.getMiddleDimension();
+		double firstBaseArea = first.getWidth() * first.getHeight();
+		double secondBaseArea = second.getWidth() * second.getHeight();
 		
 		if(firstBaseArea > secondBaseArea) {
 			return -1;

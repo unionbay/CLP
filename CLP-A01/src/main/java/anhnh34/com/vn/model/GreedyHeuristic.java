@@ -141,13 +141,14 @@ public class GreedyHeuristic {
 			}
 
 			this.showResult();
-			if(this.containerLoading.getProblem().getNumOfItem() == this.calNumberOfPlacedBox(solutionList)) {							
+			if(this.containerLoading.getProblem().getNumOfItem() == this.calNumberOfPlacedBox(solutionList)) {	
+				
 				Solution solution = new Solution();
 				solution.setContainerList(solutionList);
 				solution.calculateTotalCost();				
 				this.newSolution = solution;	
 				this.writeToFile(this.newSolution, "InitSolution");
-				logger.info("Greedy solution ");
+				logger.info("Greedy solution: " + roundNumber);				
 				this.newSolution.showResult();
 				logger.info("\n");
 				
@@ -375,9 +376,20 @@ public class GreedyHeuristic {
 
 		Solution solution = new Solution();
 		solution.setContainerList(solutionList);
-		solution.calculateTotalCost();
-		// logger.info("Round number: " + roundNumber);
-
+		solution.calculateTotalCost();		
+		
+		//UP-RO				
+		//solution.showResult();
+//		if(roundNumber == 0) {
+//			writeToFile(solution, "RoundNumber-"+ roundNumber);
+//		}
+//		//writeToFile(solution, "RoundNumber-"+ roundNumber);
+		//logger.info("Num of placed box: " + numberOfItems);
+		//logger.info("\n");
+		//Thread.sleep(200);
+				
+		
+		//End UP-RO
 		this.currentItemNumber = numberOfItems;
 
 		if (numberOfItems == this.getContainerLoading().getProblem().getNumOfItem()) {
@@ -392,7 +404,7 @@ public class GreedyHeuristic {
 			// Thread.sleep(1000);
 		}
 
-		this.roundNumber++;
+		//this.roundNumber++;
 	}
 	
 	private int calNumberOfPlacedBox(List<Container> containers) {
@@ -552,8 +564,9 @@ public class GreedyHeuristic {
 		this.loadAlgorithms();
 		this.setContainerLoading(new ContainerLoading());
 		this.containerLoading.loadingData();
-		this.setGreedyInstance(new Greedy());
+		this.setGreedyInstance(new Greedy());		
 		this.greedyInstance.loadParameters();
+		this.greedyInstance.setRan(this.ran);
 		this.greedyInstance.setConLoading(this.getContainerLoading());
 		this.setContainerList(this.getContainerLoading().getContainerList());
 		this.solutions = new ArrayList<PartialSolution>();
@@ -716,6 +729,7 @@ public class GreedyHeuristic {
 			if (feasibleItem == null) {
 				break;
 			}
+						
 
 			greedyInstance.update(feasibleItem);
 			greedyInstance.updateSpaces(feasibleItem);
@@ -767,10 +781,17 @@ public class GreedyHeuristic {
 //		this.algorithms.add(Greedy.ST_ALGORITHM);
 //		this.algorithms.add(Greedy.VL_ALGORITHM);
 		
+		//UPRO
 		this.algorithms.add(Constant.GREEDY_SB);
 		this.algorithms.add(Constant.GREEDY_BS);
 		this.algorithms.add(Constant.GREEDY_ST);
 		this.algorithms.add(Constant.GREEDY_VL);
+		//END-UPRO
+		
+//		this.algorithms.add(Constant.GREEDY_SB);
+//		this.algorithms.add(Constant.GREEDY_BS);
+//		this.algorithms.add(Constant.GREEDY_ST);
+//		this.algorithms.add(Constant.GREEDY_VL);
 	}
 
 	private Location getLocation(double x, double y) {

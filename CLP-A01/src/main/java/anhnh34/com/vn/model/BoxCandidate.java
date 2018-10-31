@@ -82,49 +82,101 @@ public class BoxCandidate {
 
 	private void stType() {
 		//logger.info("setup candidate");
-		// find minK
-		int numOfAvaiableBox = (int) Math.round(space.getHeight() / box.getHeight());
-		this.k = this.k < numOfAvaiableBox ? k : numOfAvaiableBox;
+		
+		//UPRO
+		// find minK		
+			
+			int numOfAvaiableBox = (int) Math.round(space.getHeight() / box.getSelectedRotation().getHeight());
+			this.k = this.k < numOfAvaiableBox ? k : numOfAvaiableBox;
+	
+//			logger.info(String.format("id: %s l:%f w: %f h: %f min(%f %f %f) max(%f %f %f) %s",
+//					new Object[] { box.getCustomerId(), box.getLength(), box.getWidth(), box.getHeight(),
+//							box.getMinimum().getX(), box.getMinimum().getY(), box.getMinimum().getZ(),
+//							box.getMaximum().getX(), box.getMaximum().getY(), box.getMaximum().getZ(),
+//							box.getSelectedRotation().getRotationCode() }));
+			//logger.info(String.format("avaiable number: %d, k: %d", new Object[] { numOfAvaiableBox, this.k }));
+	
+			// caculate pontetial Space Utilization
+			this.potenSpaceUtilization = this.k * (this.box.getSelectedRotation().getLength() * this.box.getSelectedRotation().getWidth() * this.box.getSelectedRotation().getHeight()
+					/ (this.space.getLength() * this.space.getWidth() * this.space.getHeight()));
+	
+			// caculate lengthwise protrution.
+			this.lengthwiseProtrustion = this.space.getMinimum().getX() + this.box.getSelectedRotation().getLength();
+	
+			// caculate volume of box.
+			this.boxVolume = this.box.getSelectedRotation().getLength() * this.box.getSelectedRotation().getWidth() * this.box.getSelectedRotation().getHeight();
+	
+			//logger.info(String.format("%f %f %f", this.potenSpaceUtilization, this.lengthwiseProtrustion, this.boxVolume));
+			//logger.info("Finish setup candidate");
+		
+		//End-UPRO
+		
+		
+		// find minK		
+//		int numOfAvaiableBox = (int) Math.round(space.getHeight() / box.getHeight());
+//		this.k = this.k < numOfAvaiableBox ? k : numOfAvaiableBox;
 //
-		logger.info(String.format("id: %s l:%f w: %f h: %f min(%f %f %f) max(%f %f %f) %s",
-				new Object[] { box.getCustomerId(), box.getLength(), box.getWidth(), box.getHeight(),
-						box.getMinimum().getX(), box.getMinimum().getY(), box.getMinimum().getZ(),
-						box.getMaximum().getX(), box.getMaximum().getY(), box.getMaximum().getZ(),
-						box.getSelectedRotation().getRotationCode() }));
-		logger.info(String.format("avaiable number: %d, k: %d", new Object[] { numOfAvaiableBox, this.k }));
-
-		// caculate pontetial Space Utilization
-		this.potenSpaceUtilization = this.k * (this.box.getLength() * this.box.getWidth() * this.box.getHeight()
-				/ (this.space.getLength() * this.space.getWidth() * this.space.getHeight()));
-
-		// caculate lengthwise protrution.
-		this.lengthwiseProtrustion = this.space.getMinimum().getX() + this.box.getLength();
-
-		// caculate volume of box.
-		this.boxVolume = this.box.getLength() * this.box.getWidth() * this.box.getHeight();
-
-		logger.info(String.format("%f %f %f", this.potenSpaceUtilization, this.lengthwiseProtrustion, this.boxVolume));
-		logger.info("Finish setup candidate");
+//		logger.info(String.format("id: %s l:%f w: %f h: %f min(%f %f %f) max(%f %f %f) %s",
+//				new Object[] { box.getCustomerId(), box.getLength(), box.getWidth(), box.getHeight(),
+//						box.getMinimum().getX(), box.getMinimum().getY(), box.getMinimum().getZ(),
+//						box.getMaximum().getX(), box.getMaximum().getY(), box.getMaximum().getZ(),
+//						box.getSelectedRotation().getRotationCode() }));
+//		logger.info(String.format("avaiable number: %d, k: %d", new Object[] { numOfAvaiableBox, this.k }));
+//
+//		// caculate pontetial Space Utilization
+//		this.potenSpaceUtilization = this.k * (this.box.getLength() * this.box.getWidth() * this.box.getHeight()
+//				/ (this.space.getLength() * this.space.getWidth() * this.space.getHeight()));
+//
+//		// caculate lengthwise protrution.
+//		this.lengthwiseProtrustion = this.space.getMinimum().getX() + this.box.getLength();
+//
+//		// caculate volume of box.
+//		this.boxVolume = this.box.getLength() * this.box.getWidth() * this.box.getHeight();
+//
+//		logger.info(String.format("%f %f %f", this.potenSpaceUtilization, this.lengthwiseProtrustion, this.boxVolume));
+//		logger.info("Finish setup candidate");
 	}
 
 	private void vlType() {
-		int feasibleBoxX = (int) Math.round(space.getLength() / box.getLength());
-		int feasibleBoxY = (int) Math.round(space.getWidth() / box.getWidth());
-		int feasibleBoxZ = (int) Math.round(space.getHeight() / box.getHeight());
+		//UPRO		
+		int feasibleBoxX = (int) Math.round(space.getLength() / this.box.getSelectedRotation().getLength());
+		int feasibleBoxY = (int) Math.round(space.getWidth() / this.box.getSelectedRotation().getWidth());
+		int feasibleBoxZ = (int) Math.round(space.getHeight() / this.box.getSelectedRotation().getHeight());
 
 		int numVolumeUsageNum = feasibleBoxX * feasibleBoxY * feasibleBoxZ;
 
 		this.k = this.k < numVolumeUsageNum ? this.k : numVolumeUsageNum;
 
 		// caculate pontetial Space Utilization
-		this.potenSpaceUtilization = this.k * (this.box.getLength() * this.box.getWidth() * this.box.getHeight()
+		this.potenSpaceUtilization = this.k * (this.box.getSelectedRotation().getLength() * this.box.getSelectedRotation().getWidth() * this.box.getSelectedRotation().getHeight()
 				/ (this.space.getLength() * this.space.getWidth() * this.space.getHeight()));
 
 		// caculate lengthwise protrution.
-		this.lengthwiseProtrustion = this.space.getMinimum().getX() + this.box.getLength();
+		this.lengthwiseProtrustion = this.space.getMinimum().getX() + this.box.getSelectedRotation().getLength();
 
 		// caculate volume of box.
-		this.boxVolume = this.box.getLength() * this.box.getWidth() * this.box.getHeight();
+		this.boxVolume = this.box.getLength() * this.box.getWidth() * this.box.getSelectedRotation().getHeight();
+		//END-UPRO
+		
+		
+		
+//		int feasibleBoxX = (int) Math.round(space.getLength() / box.getLength());
+//		int feasibleBoxY = (int) Math.round(space.getWidth() / box.getWidth());
+//		int feasibleBoxZ = (int) Math.round(space.getHeight() / box.getHeight());
+//
+//		int numVolumeUsageNum = feasibleBoxX * feasibleBoxY * feasibleBoxZ;
+//
+//		this.k = this.k < numVolumeUsageNum ? this.k : numVolumeUsageNum;
+//
+//		// caculate pontetial Space Utilization
+//		this.potenSpaceUtilization = this.k * (this.box.getLength() * this.box.getWidth() * this.box.getHeight()
+//				/ (this.space.getLength() * this.space.getWidth() * this.space.getHeight()));
+//
+//		// caculate lengthwise protrution.
+//		this.lengthwiseProtrustion = this.space.getMinimum().getX() + this.box.getLength();
+//
+//		// caculate volume of box.
+//		this.boxVolume = this.box.getLength() * this.box.getWidth() * this.box.getHeight();
 	}
 
 	private void elType() {

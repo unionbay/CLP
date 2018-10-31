@@ -128,39 +128,65 @@ public class Box extends Cuboid{
 		switch (selectedRotation) {
 		case Rotation.XYZ:
 			rotation.setRotationCode(Rotation.XYZ);
-			rotation.setLength(this.getBiggestDimension());
-			rotation.setWidth(this.getMiddleDimension());
-			rotation.setHeight(this.getSmallestDimension());
+//			rotation.setLength(this.getBiggestDimension());
+//			rotation.setWidth(this.getMiddleDimension());
+//			rotation.setHeight(this.getSmallestDimension());
+			rotation.setHeight(this.getLength());
+			rotation.setLength(this.getWidth());
+			rotation.setWidth(this.getHeight());
+
 			break;
 		case Rotation.XZY:
 			rotation.setRotationCode(Rotation.XZY);
-			rotation.setLength(this.getBiggestDimension());
-			rotation.setWidth(this.getSmallestDimension());
-			rotation.setHeight(this.getMiddleDimension());
+			rotation.setHeight(this.getLength());
+			rotation.setLength(this.getHeight());
+			rotation.setWidth(this.getWidth());
+//			rotation.setLength(this.getBiggestDimension());
+//			rotation.setWidth(this.getSmallestDimension());
+//			rotation.setHeight(this.getMiddleDimension());
 			break;
 		case Rotation.YXZ:
 			rotation.setRotationCode(Rotation.YXZ);
-			rotation.setWidth(this.getBiggestDimension());
-			rotation.setLength(this.getMiddleDimension());
-			rotation.setHeight(this.getSmallestDimension());
+			rotation.setHeight(this.getWidth());
+			rotation.setLength(this.getLength());
+			rotation.setWidth(this.getHeight());
+//			rotation.setWidth(this.getBiggestDimension());
+//			rotation.setLength(this.getMiddleDimension());
+//			rotation.setHeight(this.getSmallestDimension());
 			break;
 		case Rotation.YZX:
 			rotation.setRotationCode(Rotation.YZX);
-			rotation.setWidth(this.getBiggestDimension());
-			rotation.setHeight(this.getMiddleDimension());
-			rotation.setLength(this.getSmallestDimension());
+			rotation.setHeight(this.getWidth());
+			rotation.setLength(this.getHeight());
+			rotation.setWidth(this.getLength());
+//			rotation.setWidth(this.getBiggestDimension());
+//			rotation.setHeight(this.getMiddleDimension());
+//			rotation.setLength(this.getSmallestDimension());
 			break;
 		case Rotation.ZXY:
 			rotation.setRotationCode(Rotation.ZXY);
-			rotation.setHeight(this.getBiggestDimension());
-			rotation.setLength(this.getMiddleDimension());
-			rotation.setWidth(this.getSmallestDimension());
+			//Start-UPRO
+			rotation.setHeight(this.getHeight());
+			rotation.setLength(this.getLength());
+			rotation.setWidth(this.getWidth());
+			//End-UPRO
+			
+			//rotation.setHeight(this.getBiggestDimension());
+			//rotation.setLength(this.getMiddleDimension());
+			//rotation.setWidth(this.getSmallestDimension());
 			break;
 		case Rotation.ZYX:
 			rotation.setRotationCode(Rotation.ZYX);
-			rotation.setHeight(this.getBiggestDimension());
-			rotation.setWidth(this.getMiddleDimension());
-			rotation.setLength(this.getSmallestDimension());
+			
+			//Start-UPRO
+			rotation.setHeight(this.getHeight());
+			rotation.setLength(this.getWidth());
+			rotation.setWidth(this.getLength());
+			//End-UPRO
+			
+			//rotation.setHeight(this.getBiggestDimension());
+			//rotation.setWidth(this.getMiddleDimension());
+			//rotation.setLength(this.getSmallestDimension());
 			break;
 		default:
 			return null;
@@ -188,13 +214,17 @@ public class Box extends Cuboid{
 	
 
 	public void setSelectedRotation(Rotation rotation) {
-		this.selectedRotation = rotation;
-		this.selectedRotation.setLength(rotation.getLength());
-		this.selectedRotation.setWidth(rotation.getWidth());
-		this.selectedRotation.setHeight(rotation.getHeight());
-		this.setLength(rotation.getLength());
-		this.setWidth(rotation.getWidth());
-		this.setHeight(rotation.getHeight());
+		//UpRo
+		this.selectedRotation = new Rotation(rotation);
+		//End UpRo
+		
+//		this.selectedRotation = rotation;
+//		this.selectedRotation.setLength(rotation.getLength());
+//		this.selectedRotation.setWidth(rotation.getWidth());
+//		this.selectedRotation.setHeight(rotation.getHeight());
+		//this.setLength(rotation.getLength());
+		//this.setWidth(rotation.getWidth());
+		//this.setHeight(rotation.getHeight());
 	}
 
 	public void setSelectedRotation(String rCode) {
@@ -202,7 +232,7 @@ public class Box extends Cuboid{
 			this.setSelectedRotation(new Rotation());
 		}
 		Rotation rotation = findRotation(rCode);
-		this.selectedRotation = rotation;
+		this.selectedRotation = new Rotation(rotation);
 	}
 
 	private Rotation findRotation(String rCode) {
@@ -363,7 +393,11 @@ public class Box extends Cuboid{
 	}
 
 	private void initializationModel() {
-		this.fRotation = new int[] { 1, 1, 1 };
+		//Start Rotation
+		this.fRotation = new int[] { 0, 0, 1 };
+		//End Rotation
+		
+		//this.fRotation = new int[] { 1, 1, 1 };
 		this.pRotations = new ArrayList<Rotation>();
 		this.caculateVolume();
 		this.loadingDimension();

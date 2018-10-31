@@ -1,7 +1,9 @@
 package anhnh34.com.vn.model;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -780,16 +782,14 @@ public class Greedy {
 			for (Space space : this.getAvaiableSpaces()) {
 				List<String> rotations = this.findRotations(box, space);
 
-				if (this.roundNumber == 5) {
-					System.out.println("Debug");
-				}
+			
 				if (rotations.isEmpty()) {
 					continue;
 				}
 
 				box.setPossibleRotations(rotations);
 				String possibleRotation = "";
-				this.showSpaceInfo("space info", space);
+				//this.showSpaceInfo("space info", space);
 				for (String rotation : rotations) {
 					possibleRotation = possibleRotation.concat(" ," + rotation);
 					Box tempBox = new Box(box);
@@ -884,23 +884,28 @@ public class Greedy {
 				if (rotations.isEmpty()) {
 					continue;
 				}
-				box.setPossibleRotations(rotations);
-				box.setSelectedRotation(rotations.get(0));
+				
+			
 				Box tempBox = new Box(box);
+				tempBox.setPossibleRotations(rotations);				
+				//Rotation selectedRotation = null;
+				tempBox.getPossibleRotations().sort(new RotationComparator());
+//				for (Rotation r : tempBox.getPossibleRotations()) {
+//					if (this.getSelectedRotation().compareToIgnoreCase(r.getRotationCode()) == 0) {
+//						selectedRotation = r;
+//						tempBox.setSelectedRotation(r);
+//						break;
+//					}
+//				}
+				//int index = this.getRandomNumber(0, tempBox.getPossibleRotations().size() -1);
+				tempBox.setSelectedRotation(tempBox.getPossibleRotations().get(0));
+				//tempBox.setSelectedRotation(tempBox.getPossibleRotations().get(0));
+
+//				if (selectedRotation == null) {
+//					tempBox.setSelectedRotation(tempBox.getPossibleRotations().get(0));
+//				}
+				
 				this.updateBoxPosition(tempBox, space);
-
-				Rotation selectedRotation = null;
-				for (Rotation r : tempBox.getPossibleRotations()) {
-					if (this.getSelectedRotation().compareToIgnoreCase(r.getRotationCode()) == 0) {
-						selectedRotation = r;
-						tempBox.setSelectedRotation(r);
-						break;
-					}
-				}
-
-				if (selectedRotation == null) {
-					tempBox.setSelectedRotation(tempBox.getPossibleRotations().get(0));
-				}
 
 				if (isLifo && isMultiDropFeasiblePacking(tempBox) == false) {
 					continue;
@@ -934,21 +939,17 @@ public class Greedy {
 
 		// List<BoxCandidate> feasibleCandidates = new ArrayList<BoxCandidate>();
 		for (Box box : this.getNotPlacedBoxes().getBoxes()) {
-			for (Space space : this.getAvaiableSpaces()) {
-				if (roundNumber == 5) {
-					System.out.println("Round number: " + roundNumber);
-				}
-
+			for (Space space : this.getAvaiableSpaces()) {		
 				List<String> rotations = this.findRotations(box, space);
 				String rotationString = "";
 				for (String rotation : rotations) {
 					rotationString = rotationString.concat(", " + rotation);
 				}
 
-				logger.info(String.format("Box %f %f %f %s", new Object[] { box.getBiggestDimension(),
-						box.getMiddleDimension(), box.getSmallestDimension(), rotationString }));
-				logger.info(String.format("Space: %f %f %f",
-						new Object[] { space.getLength(), space.getWidth(), space.getHeight() }));
+//				logger.info(String.format("Box %f %f %f %s", new Object[] { box.getBiggestDimension(),
+//						box.getMiddleDimension(), box.getSmallestDimension(), rotationString }));
+//				logger.info(String.format("Space: %f %f %f",
+//						new Object[] { space.getLength(), space.getWidth(), space.getHeight() }));
 
 				if (rotations.isEmpty()) {
 					continue;
@@ -957,18 +958,24 @@ public class Greedy {
 				Box tBox = new Box(box);
 
 				tBox.setPossibleRotations(rotations);
-				Rotation selectedRotation = null;
-				for (Rotation r : tBox.getPossibleRotations()) {
-					if (this.getSelectedRotation().compareToIgnoreCase(r.getRotationCode()) == 0) {
-						selectedRotation = r;
-						tBox.setSelectedRotation(r);
-						break;
-					}
-				}
+				
+				//Rotation selectedRotation = null;
+				tBox.getPossibleRotations().sort(new RotationComparator());				
+				//int index = this.getRandomNumber(0, tBox.getPossibleRotations().size() -1);
+				tBox.setSelectedRotation(tBox.getPossibleRotations().get(0));
+//				for (Rotation r : tBox.getPossibleRotations()) {				
+//					if (this.getSelectedRotation().compareToIgnoreCase(r.getRotationCode()) == 0) {
+//						selectedRotation = r;
+//						tBox.setSelectedRotation(r);
+//						break;
+//					}
+//				}
+				
+				
 
-				if (selectedRotation == null) {
-					tBox.setSelectedRotation(tBox.getPossibleRotations().get(0));
-				}
+//				if (selectedRotation == null) {
+//					tBox.setSelectedRotation(tBox.getPossibleRotations().get(0));
+//				}
 
 				// logger.info("selected rotation: " +
 				// tBox.getSelectedRotation().getRotationCode());
@@ -1055,47 +1062,85 @@ public class Greedy {
 		// loop all possible rotations.		
 		int[] rotations = box.getfRotation();		
 		List<String> fesRotations = new ArrayList<String>();
-		// can be rotation by X.
+		// length can be upside X.
 		if (rotations[0] == 1) {
-
-			// XYZ
-			if (space.getLength() >= box.getBiggestDimension() && space.getWidth() >= box.getMiddleDimension()
-					&& space.getHeight() >= box.getSmallestDimension()) {
-				fesRotations.add(Rotation.XYZ);
-			}
-
-			// XZY
-			if (space.getLength() >= box.getBiggestDimension() && space.getWidth() >= box.getSmallestDimension()
-					&& space.getHeight() >= box.getMiddleDimension()) {
+			//UPRO			
+			
+			//XZY
+			if(space.getHeight() >= box.getLength() && space.getLength() >= box.getHeight() && space.getWidth() >= box.getWidth()) {
 				fesRotations.add(Rotation.XZY);
 			}
+			
+			
+			if(space.getHeight() >= box.getLength() && space.getLength() >= box.getWidth() && space.getWidth() >= box.getHeight()) {
+				fesRotations.add(Rotation.XYZ);
+			}						
+			
+			
+			//END-UPRO
+			
+//			// XYZ
+//			if (space.getLength() >= box.getBiggestDimension() && space.getWidth() >= box.getMiddleDimension()
+//					&& space.getHeight() >= box.getSmallestDimension()) {
+//				fesRotations.add(Rotation.XYZ);
+//			}
+//
+//			// XZY
+//			if (space.getLength() >= box.getBiggestDimension() && space.getWidth() >= box.getSmallestDimension()
+//					&& space.getHeight() >= box.getMiddleDimension()) {
+//				fesRotations.add(Rotation.XZY);
+//			}
 		}
-		// can be rotation by Y.
+		// can not be rotation by Y.
 		if (rotations[1] == 1) {
+			
 			// YXZ
-			if (space.getWidth() >= box.getBiggestDimension() && space.getLength() >= box.getMiddleDimension()
-					&& space.getHeight() >= box.getSmallestDimension()) {
+			if(space.getHeight() >= box.getWidth() && space.getLength() >= box.getLength() && space.getWidth() >= box.getHeight()) {
 				fesRotations.add(Rotation.YXZ);
 			}
 
 			// YZX
-			if (space.getWidth() >= box.getBiggestDimension() && space.getLength() >= box.getSmallestDimension()
-					&& space.getHeight() >= box.getMiddleDimension()) {
+			if(space.getHeight() >= box.getWidth() && space.getLength() >= box.getHeight() && space.getWidth() >= box.getLength()) {
 				fesRotations.add(Rotation.YZX);
 			}
+
+			
+//			// YXZ
+//			if (space.getWidth() >= box.getBiggestDimension() && space.getLength() >= box.getMiddleDimension()
+//					&& space.getHeight() >= box.getSmallestDimension()) {
+//				fesRotations.add(Rotation.YXZ);
+//			}
+//
+//			// YZX
+//			if (space.getWidth() >= box.getBiggestDimension() && space.getLength() >= box.getSmallestDimension()
+//					&& space.getHeight() >= box.getMiddleDimension()) {
+//				fesRotations.add(Rotation.YZX);
+//			}
 		}
-		// can be rotation by Z.
+		// can not be rotation by Z.
 		if (rotations[2] == 1) {
-			// ZXY
-			if (space.getHeight() >= box.getBiggestDimension() && space.getLength() >= box.getMiddleDimension()
-					&& space.getWidth() >= box.getSmallestDimension()) {
+			//UpdateRotation
+			
+			if (space.getHeight() >= box.getHeight()  && space.getLength() >= box.getLength() && space.getWidth() >= box.getWidth()) {				
 				fesRotations.add(Rotation.ZXY);
 			}
-			// ZYX
-			if (space.getHeight() >= box.getBiggestDimension() && space.getWidth() >= box.getMiddleDimension()
-					&& space.getLength() >= box.getSmallestDimension()) {
+			
+			if (space.getHeight() >= box.getHeight() && space.getLength() >= box.getWidth() && space.getWidth() >= box.getLength()) {
 				fesRotations.add(Rotation.ZYX);
 			}
+			
+			//End-UpdateRotation
+			
+			// ZXY
+//			if (space.getHeight() >= box.getBiggestDimension() && space.getLength() >= box.getMiddleDimension()
+//					&& space.getWidth() >= box.getSmallestDimension()) {
+//				fesRotations.add(Rotation.ZXY);
+//			}
+//			// ZYX
+//			if (space.getHeight() >= box.getBiggestDimension() && space.getWidth() >= box.getMiddleDimension()
+//					&& space.getLength() >= box.getSmallestDimension()) {
+//				fesRotations.add(Rotation.ZYX);
+//			}
 		}
 		return fesRotations;
 	}
@@ -1120,58 +1165,68 @@ public class Greedy {
 
 	private Dimension getMaximumDimension(String selectedRotation, Dimension minimum, Box selectedBox) {
 		Dimension maximumDimension = null;
-		switch (selectedRotation) {
-		case Rotation.XYZ:
-			maximumDimension = minimum.addDimension(new Dimension(selectedBox.getBiggestDimension(),
-					selectedBox.getMiddleDimension(), selectedBox.getSmallestDimension()));
-
-			selectedBox.setLength(selectedBox.getBiggestDimension());
-			selectedBox.setWidth(selectedBox.getMiddleDimension());
-			selectedBox.setHeight(selectedBox.getSmallestDimension());
-			break;
-		case Rotation.XZY:
-			maximumDimension = minimum.addDimension(new Dimension(selectedBox.getBiggestDimension(),
-					selectedBox.getSmallestDimension(), selectedBox.getMiddleDimension()));
-
-			selectedBox.setLength(selectedBox.getBiggestDimension());
-			selectedBox.setWidth(selectedBox.getSmallestDimension());
-			selectedBox.setHeight(selectedBox.getMiddleDimension());
-			break;
-		case Rotation.YXZ:
-			maximumDimension = minimum.addDimension(new Dimension(selectedBox.getMiddleDimension(),
-					selectedBox.getBiggestDimension(), selectedBox.getSmallestDimension()));
-
-			selectedBox.setWidth(selectedBox.getBiggestDimension());
-			selectedBox.setLength(selectedBox.getMiddleDimension());
-			selectedBox.setHeight(selectedBox.getSmallestDimension());
-
-			break;
-		case Rotation.YZX:
-			maximumDimension = minimum.addDimension(new Dimension(selectedBox.getSmallestDimension(),
-					selectedBox.getBiggestDimension(), selectedBox.getMiddleDimension()));
-
-			selectedBox.setWidth(selectedBox.getBiggestDimension());
-			selectedBox.setLength(selectedBox.getSmallestDimension());
-			selectedBox.setHeight(selectedBox.getMiddleDimension());
-			break;
-		case Rotation.ZXY:
-			maximumDimension = minimum.addDimension(new Dimension(selectedBox.getMiddleDimension(),
-					selectedBox.getSmallestDimension(), selectedBox.getBiggestDimension()));
-
-			selectedBox.setLength(selectedBox.getMiddleDimension());
-			selectedBox.setWidth(selectedBox.getSmallestDimension());
-			selectedBox.setHeight(selectedBox.getBiggestDimension());
-			break;
-		case Rotation.ZYX:
-			maximumDimension = minimum.addDimension(new Dimension(selectedBox.getSmallestDimension(),
-					selectedBox.getMiddleDimension(), selectedBox.getBiggestDimension()));
-
-			selectedBox.setLength(selectedBox.getSmallestDimension());
-			selectedBox.setWidth(selectedBox.getMiddleDimension());
-			selectedBox.setHeight(selectedBox.getBiggestDimension());
-			break;
-
+		//UpRo
+		maximumDimension = minimum.addDimension(new Dimension(selectedBox.getSelectedRotation().getLength(),
+				selectedBox.getSelectedRotation().getWidth(), selectedBox.getSelectedRotation().getHeight()));
+	
+		if(maximumDimension.getX() > 60 || maximumDimension.getY() > 25 || maximumDimension.getZ() > 30) {
+			System.out.println("Debug here");
 		}
+		//End UpRo
+//				selectedBox.getMiddleDimension(), selectedBox.getSmallestDimension()));
+		
+//		switch (selectedRotation) {
+//		case Rotation.XYZ:
+//			maximumDimension = minimum.addDimension(new Dimension(selectedBox.getBiggestDimension(),
+//					selectedBox.getMiddleDimension(), selectedBox.getSmallestDimension()));
+//
+//			selectedBox.setLength(selectedBox.getBiggestDimension());
+//			selectedBox.setWidth(selectedBox.getMiddleDimension());
+//			selectedBox.setHeight(selectedBox.getSmallestDimension());
+//			break;
+//		case Rotation.XZY:
+//			maximumDimension = minimum.addDimension(new Dimension(selectedBox.getBiggestDimension(),
+//					selectedBox.getSmallestDimension(), selectedBox.getMiddleDimension()));
+//
+//			selectedBox.setLength(selectedBox.getBiggestDimension());
+//			selectedBox.setWidth(selectedBox.getSmallestDimension());
+//			selectedBox.setHeight(selectedBox.getMiddleDimension());
+//			break;
+//		case Rotation.YXZ:
+//			maximumDimension = minimum.addDimension(new Dimension(selectedBox.getMiddleDimension(),
+//					selectedBox.getBiggestDimension(), selectedBox.getSmallestDimension()));
+//
+//			selectedBox.setWidth(selectedBox.getBiggestDimension());
+//			selectedBox.setLength(selectedBox.getMiddleDimension());
+//			selectedBox.setHeight(selectedBox.getSmallestDimension());
+//
+//			break;
+//		case Rotation.YZX:
+//			maximumDimension = minimum.addDimension(new Dimension(selectedBox.getSmallestDimension(),
+//					selectedBox.getBiggestDimension(), selectedBox.getMiddleDimension()));
+//
+//			selectedBox.setWidth(selectedBox.getBiggestDimension());
+//			selectedBox.setLength(selectedBox.getSmallestDimension());
+//			selectedBox.setHeight(selectedBox.getMiddleDimension());
+//			break;
+//		case Rotation.ZXY:
+//			maximumDimension = minimum.addDimension(new Dimension(selectedBox.getMiddleDimension(),
+//					selectedBox.getSmallestDimension(), selectedBox.getBiggestDimension()));
+//
+//			selectedBox.setLength(selectedBox.getMiddleDimension());
+//			selectedBox.setWidth(selectedBox.getSmallestDimension());
+//			selectedBox.setHeight(selectedBox.getBiggestDimension());
+//			break;
+//		case Rotation.ZYX:
+//			maximumDimension = minimum.addDimension(new Dimension(selectedBox.getSmallestDimension(),
+//					selectedBox.getMiddleDimension(), selectedBox.getBiggestDimension()));
+//
+//			selectedBox.setLength(selectedBox.getSmallestDimension());
+//			selectedBox.setWidth(selectedBox.getMiddleDimension());
+//			selectedBox.setHeight(selectedBox.getBiggestDimension());
+//			break;
+//
+//		}
 		return maximumDimension;
 	}
 
@@ -1397,10 +1452,7 @@ public class Greedy {
 		Dimension minSpace = space.getMinimum();
 		Dimension maxSpace = space.getMaximum();
 
-		double xMaxTemp = minSpace.getX() + box.getLength() * (1 + this.getNSupportRatio());
-		if (roundNumber == 4) {
-			logger.info(String.format("X max temp: %f, space max: %f", new Object[] { xMaxTemp, maxSpace.getX() }));
-		}
+		double xMaxTemp = minSpace.getX() + box.getLength() * (1 + this.getNSupportRatio());		
 		double xMax = maxSpace.getX() < xMaxTemp ? maxSpace.getX() : xMaxTemp;
 		double yMaxTemp = minSpace.getY() + box.getWidth() * (1 + this.getNSupportRatio());
 		double yAboveMaximum = maxSpace.getY() < yMaxTemp ? maxSpace.getY() : yMaxTemp;
@@ -1437,6 +1489,11 @@ public class Greedy {
 
 		double xFrontMaximum = (1 + getNSupportRatio()) * space.getMaximumSupportX()
 				- maxBox.getX() * getNSupportRatio();
+		//UpRo
+		if(xFrontMaximum > container.getLength()) {
+			xFrontMaximum = container.getLength();
+		}
+		//End UpRo
 		Dimension minimum = new Dimension(maxBox.getX(), minSpace.getY(), minSpace.getZ());
 		Dimension maximum = new Dimension(xFrontMaximum, maxSpace.getY(), maxSpace.getZ());
 		return new Space(minimum, maximum, this.getNSupportRatio(), space.getMaximumSupportX(),
@@ -1664,6 +1721,13 @@ public class Greedy {
 			double minZ = s.getMinimum().getZ();
 
 			double maxX = maxSupportX * (1 + s.getRatioSupport()) - minX * s.getRatioSupport();
+			
+			//UpRo
+			if(maxX > container.getLength()) {
+				maxX = container.getLength();
+			}
+			//End UpRo
+			
 			double maxY = s.getMaximum().getY() > t.getMaximum().getY() ? s.getMaximum().getY() : t.getMaximum().getY();
 			double maxZ = s.getMaximum().getZ() < t.getMaximum().getZ() ? s.getMaximum().getZ() : t.getMaximum().getZ();
 
@@ -1857,6 +1921,15 @@ public class Greedy {
 			}
 		}
 	}
+	
+	public void setRan(Random ran) {
+		this.ran = ran;
+	}
+	
+	private int getRandomNumber(int low, int height) {			
+		//Random ran = new Random(ranLongId);						
+		return this.ran.nextInt((height - low) + 1) + low;		
+	}
 
 	private double totalBoxVolumes = 0;
 	private double containerVolumes;
@@ -1875,6 +1948,7 @@ public class Greedy {
 	private boolean isOverhang;
 	private String selectedRotation;
 	private int roundNumber = 0;
+	private Random ran;
 
 	public static final String SB_ALGORITHM = "SB";
 	public static final String BS_ALGORITHM = "BS";

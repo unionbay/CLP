@@ -266,9 +266,14 @@ public class Utility {
 		
 		for(int i = 0; i < placedBoxes.size(); i++) {
 			Box selectedBox = placedBoxes.get(i);
-			Boxes objBox = new Boxes(selectedBox.getMinimum(), selectedBox.getMaximum(), selectedBox.getLength(),
-					selectedBox.getWidth(), selectedBox.getHeight(), selectedBox.getVolume(),
-					selectedBox.getSequenceNumber(), selectedBox.getCustomerId());
+			//Update UpRo
+			Boxes objBox = new Boxes(selectedBox.getMinimum(), selectedBox.getMaximum(), selectedBox.getSelectedRotation().getLength(),
+			selectedBox.getSelectedRotation().getWidth(), selectedBox.getSelectedRotation().getHeight(), selectedBox.getVolume(),
+			selectedBox.getSequenceNumber(), selectedBox.getCustomerId());
+			//End UpRo
+//			Boxes objBox = new Boxes(selectedBox.getMinimum(), selectedBox.getMaximum(), selectedBox.getLength(),
+//					selectedBox.getWidth(), selectedBox.getHeight(), selectedBox.getVolume(),
+//					selectedBox.getSequenceNumber(), selectedBox.getCustomerId());
 			outBoxList[i] = objBox;
 		}
 		
