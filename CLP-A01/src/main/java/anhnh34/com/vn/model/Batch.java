@@ -8,6 +8,7 @@ public class Batch {
 	private List<BoxType> boxTypes;
 	private int boxNumber;
 	
+	
 	public int getBoxNumber() {
 		return boxNumber;
 	}
