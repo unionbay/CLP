@@ -24,7 +24,7 @@ public class GreedyHeuristic {
 			int cIndex = 0;
 			while (this.containerList.size() > 0) {
 				if (isStop) {
-					isStop = false;
+					isStop = false;				
 					this.currLocation = this.getDeport();
 					if (this.currLocation == null) {
 						throw new Exception("Deport not found exception");
@@ -33,6 +33,7 @@ public class GreedyHeuristic {
 				}
 
 				// logger.info("Containers size: " + this.containerList.size());
+				
 				Container container = this.containerList.get(0);
 				container.getCurrentSolution().getIdList().add(this.currLocation.getLocationID());
 				container.getCurrentSolution().getLocationList().add(currLocation);
@@ -67,14 +68,14 @@ public class GreedyHeuristic {
 						// logger.info(String.format("Container %d is full: %s %.2f",
 						// new Object[] { cIndex, container.getCurrentSolution().getIdList().toString(),
 						// container.getCurrentCapacity() }));
+						this.boxComp.reloadOrderString();
+						this.spaceComp.reloadOrderString();
 						this.containerList.remove(container);
 						// Thread.sleep(2000);
 						break;
 					}
-
-					Random ranNum = new Random();
-					//int aRandomPos = ranNum.nextInt(closestLocationList.size());
-					int aRandomPos = this.ran.nextInt(closestLocationList.size());
+				
+					int aRandomPos  = this.getRandomNumber(0, closestLocationList.size() - 1);			
 					Location randomLocation = closestLocationList.get(aRandomPos);
 					if (container.checkCapacity(randomLocation.getDemand()) == false) {
 						isFound = false;
@@ -88,7 +89,10 @@ public class GreedyHeuristic {
 						this.setCheckLocation(randomLocation.getLocationID());
 						continue;
 					}
-
+					
+					
+					//this.boxComp.reloadOrderString();
+					//this.spaceComp.reloadOrderString();
 					isFound = checkLocationIsFeasible(container.getCurrentSolution(), randomLocation);
 
 					if (isFound) {
@@ -120,6 +124,8 @@ public class GreedyHeuristic {
 							cIndex++;
 							this.solutionList.add(container);
 							this.containerList.remove(container);
+							this.boxComp.reloadOrderString();
+							this.spaceComp.reloadOrderString();
 							break;
 						}
 					} else {
@@ -379,17 +385,18 @@ public class GreedyHeuristic {
 		solution.calculateTotalCost();		
 		
 		//UP-RO				
-		//solution.showResult();
-//		if(roundNumber == 0) {
-//			writeToFile(solution, "RoundNumber-"+ roundNumber);
-//		}
+		//solution.showResult();		
+			//solution.showResult();
+			//writeToFile(solution, "Testing_"+ roundNumber);
+			//logger.info("Num of placed boxs: " + numberOfItems);
+			//logger.info("Number of boxs: " + this.containerLoading.getProblem().getNumOfItem());
+			//Thread.sleep(1000);		
 //		//writeToFile(solution, "RoundNumber-"+ roundNumber);
-		//logger.info("Num of placed box: " + numberOfItems);
+	//logger.info("Num of placed box: " + numberOfItems);
 		//logger.info("\n");
-		//Thread.sleep(200);
-				
-		
+		//Thread.sleep(1000);						
 		//End UP-RO
+		
 		this.currentItemNumber = numberOfItems;
 
 		if (numberOfItems == this.getContainerLoading().getProblem().getNumOfItem()) {
@@ -528,6 +535,7 @@ public class GreedyHeuristic {
 			}
 
 		}
+		
 		return true;
 	}
 
@@ -575,6 +583,8 @@ public class GreedyHeuristic {
 		this.testSolutionList = new ArrayList<PartialSolution>();
 		this.runningTime = Long.valueOf(Utility.getInstance().getConfigValue("running_time"));		
 		this.constRoundNumber = Integer.valueOf(Utility.getInstance().getConfigValue("round_number"));
+		this.boxComp = new BoxComparator();
+		this.spaceComp = new SpaceComparator();
 
 		// load deport.
 		Node node = this.getContainerLoading().getDeport();
@@ -652,7 +662,7 @@ public class GreedyHeuristic {
 		//
 		// }
 		int i = 0;
-		while (i < 3) {
+		while (i < 3) {			
 			if (lIndex >= this.currLocation.getLocationList().size()) {
 				lIndex = 0;
 				break;
@@ -700,71 +710,136 @@ public class GreedyHeuristic {
 	}
 
 	private boolean checkLocationIsFeasible(PartialSolution solution, Location lc) {
-		greedyInstance.setAlgorithm(getRandomGreedyAlgorithm());
-		greedyInstance.setAvaiableSpaces(solution.getAvaiableSpaces());
-		greedyInstance.setPlacedBoxes(solution.getPlacedBoxes());
-		greedyInstance.setNotPlacedBoxes(lc.getBoxes());
+		boolean foundSolution = false;
+		int subRound = 0;
+		while(subRound <= 5) {			
+			greedyInstance.setAlgorithm(getRandomGreedyAlgorithm());
+			greedyInstance.setAvaiableSpaces(solution.getAvaiableSpaces());
+			greedyInstance.setPlacedBoxes(solution.getPlacedBoxes());
+			greedyInstance.setNotPlacedBoxes(lc.getBoxes());
+			
+			this.boxComp.reloadOrderString();
+			this.spaceComp.reloadOrderString();
+			
+			while(greedyInstance.getNotPlacedBoxes().getBoxes().size() > 0) {
+				FeasibleObject feasibleItem;
 
-		while (greedyInstance.getNotPlacedBoxes().getBoxes().size() > 0) {
-
-			FeasibleObject feasibleItem;
-
-			switch (greedyInstance.getAlgorithm()) {
-			case Constant.GREEDY_SB:
-				feasibleItem = greedyInstance.greedySbAlgorithm();
-				break;
-			case Constant.GREEDY_BS:
-				feasibleItem = greedyInstance.greedyBsAlgorithm();
-				break;
-			case Constant.GREEDY_ST:
-				feasibleItem = greedyInstance.greedyStAlgorithm();
-				break;
-			case Constant.GREEDY_VL:
-				feasibleItem = greedyInstance.greedyVlAlgorithm();
-				break;
-			default:
-				feasibleItem = greedyInstance.greedyBsAlgorithm();
-			}
-
-			if (feasibleItem == null) {
-				break;
-			}
-						
-
-			greedyInstance.update(feasibleItem);
-			greedyInstance.updateSpaces(feasibleItem);
-			Object[] objects = greedyInstance.getNotPlacedBoxes().getBoxes().toArray();
-			Box[] boxList = Arrays.copyOf(objects, objects.length, Box[].class);
-			Utility.getInstance().reOrderBox(boxList);
-			greedyInstance.getNotPlacedBoxes().getBoxes().clear();
-			greedyInstance.getNotPlacedBoxes().getBoxes().addAll(Arrays.asList(boxList));
-		}
-
-		if (greedyInstance.getNotPlacedBoxes().getBoxes().size() == 0) {
-			// Reload real not placed box.
-			List<Box> notPlacedBoxes = new ArrayList<Box>();
-
-			for (Box box : solution.getNotPlacedBoxes().getBoxes()) {
-				if (box.getCustomerId().equalsIgnoreCase(lc.getLocationID())) {
-					continue;
+				switch (greedyInstance.getAlgorithm()) {
+				case Constant.GREEDY_SB:
+					feasibleItem = greedyInstance.greedySbAlgorithm(this.boxComp, this.spaceComp);
+					break;
+				case Constant.GREEDY_BS:
+					feasibleItem = greedyInstance.greedyBsAlgorithm(this.boxComp, this.spaceComp);
+					break;
+				case Constant.GREEDY_ST:
+					feasibleItem = greedyInstance.greedyStAlgorithm();
+					break;
+				case Constant.GREEDY_VL:
+					feasibleItem = greedyInstance.greedyVlAlgorithm();
+					break;
+				default:
+					feasibleItem = greedyInstance.greedyBsAlgorithm(this.boxComp, this.spaceComp);
 				}
-				Box nBox = new Box(box);
-				notPlacedBoxes.add(nBox);
+
+				if (feasibleItem != null) {
+					greedyInstance.update(feasibleItem);
+					greedyInstance.updateSpaces(feasibleItem);
+					Object[] objects = greedyInstance.getNotPlacedBoxes().getBoxes().toArray();
+					Box[] boxList = Arrays.copyOf(objects, objects.length, Box[].class);
+					Utility.getInstance().reOrderBox(boxList);
+					greedyInstance.getNotPlacedBoxes().getBoxes().clear();
+					greedyInstance.getNotPlacedBoxes().getBoxes().addAll(Arrays.asList(boxList));
+				}else {
+					subRound++;
+					break;
+				}							
 			}
+			
+			if (greedyInstance.getNotPlacedBoxes().getBoxes().size() == 0) {
+				// Reload real not placed box.
+				List<Box> notPlacedBoxes = new ArrayList<Box>();
 
-			greedyInstance.getNotPlacedBoxes().setBoxes(notPlacedBoxes);
+				for (Box box : solution.getNotPlacedBoxes().getBoxes()) {
+					if (box.getCustomerId().equalsIgnoreCase(lc.getLocationID())) {
+						continue;
+					}
+					Box nBox = new Box(box);
+					notPlacedBoxes.add(nBox);
+				}
 
-			// logger.info(String.format("id: %s, space: %d, placed boxes: %d, not placed
-			// boxes: %d",
-			// new Object[] { lc.getLocationID(), greedyInstance.getAvaiableSpaces().size(),
-			// greedyInstance.getPlacedBoxes().getBoxes().size(),
-			// greedyInstance.getNotPlacedBoxes().getBoxes().size() }));
-
-			greedyInstance.showResult();
-			return true;
+				greedyInstance.getNotPlacedBoxes().setBoxes(notPlacedBoxes);
+				greedyInstance.showResult();
+				foundSolution = true;
+				break;
+			}			
+			
 		}
-
-		return false;
+		return foundSolution;
+//		greedyInstance.setAlgorithm(getRandomGreedyAlgorithm());
+//		greedyInstance.setAvaiableSpaces(solution.getAvaiableSpaces());
+//		greedyInstance.setPlacedBoxes(solution.getPlacedBoxes());
+//		greedyInstance.setNotPlacedBoxes(lc.getBoxes());
+//
+//		while (greedyInstance.getNotPlacedBoxes().getBoxes().size() > 0) {
+//
+//			FeasibleObject feasibleItem;
+//
+//			switch (greedyInstance.getAlgorithm()) {
+//			case Constant.GREEDY_SB:
+//				feasibleItem = greedyInstance.greedySbAlgorithm(this.boxComp, this.spaceComp);
+//				break;
+//			case Constant.GREEDY_BS:
+//				feasibleItem = greedyInstance.greedyBsAlgorithm(this.boxComp, this.spaceComp);
+//				break;
+//			case Constant.GREEDY_ST:
+//				feasibleItem = greedyInstance.greedyStAlgorithm();
+//				break;
+//			case Constant.GREEDY_VL:
+//				feasibleItem = greedyInstance.greedyVlAlgorithm();
+//				break;
+//			default:
+//				feasibleItem = greedyInstance.greedyBsAlgorithm(this.boxComp, this.spaceComp);
+//			}
+//
+//			if (feasibleItem == null) {
+//				break;
+//			}
+//						
+//
+//			greedyInstance.update(feasibleItem);
+//			greedyInstance.updateSpaces(feasibleItem);
+//			Object[] objects = greedyInstance.getNotPlacedBoxes().getBoxes().toArray();
+//			Box[] boxList = Arrays.copyOf(objects, objects.length, Box[].class);
+//			Utility.getInstance().reOrderBox(boxList);
+//			greedyInstance.getNotPlacedBoxes().getBoxes().clear();
+//			greedyInstance.getNotPlacedBoxes().getBoxes().addAll(Arrays.asList(boxList));
+//		}
+//
+//		if (greedyInstance.getNotPlacedBoxes().getBoxes().size() == 0) {
+//			// Reload real not placed box.
+//			List<Box> notPlacedBoxes = new ArrayList<Box>();
+//
+//			for (Box box : solution.getNotPlacedBoxes().getBoxes()) {
+//				if (box.getCustomerId().equalsIgnoreCase(lc.getLocationID())) {
+//					continue;
+//				}
+//				Box nBox = new Box(box);
+//				notPlacedBoxes.add(nBox);
+//			}
+//
+//			greedyInstance.getNotPlacedBoxes().setBoxes(notPlacedBoxes);
+//
+//			// logger.info(String.format("id: %s, space: %d, placed boxes: %d, not placed
+//			// boxes: %d",
+//			// new Object[] { lc.getLocationID(), greedyInstance.getAvaiableSpaces().size(),
+//			// greedyInstance.getPlacedBoxes().getBoxes().size(),
+//			// greedyInstance.getNotPlacedBoxes().getBoxes().size() }));
+//
+//			greedyInstance.showResult();
+//			return true;
+//		}
+//
+//		return false;
 	}
 
 	private String getRandomGreedyAlgorithm() {
@@ -872,7 +947,8 @@ public class GreedyHeuristic {
 //				}
 				randomLocations = this.getRandomLocations(partialSolution, containers);				
 				//logger.info("\n");
-				/*logger.info(randomLocations.toString());*/
+				//logger.info(randomLocations.toString());
+				
 				
 				
 //				
@@ -891,6 +967,11 @@ public class GreedyHeuristic {
 				while(checkAllLocationIsVisited() == false) {
 					if(this.checkContainersIsFull(containers)) {
 						//logger.info("All container is full");
+						//Solution tempSolution = new Solution();
+						//tempSolution.setContainerList(containers);
+						//tempSolution.showResult();
+						//logger.info("\n");
+						//Thread.sleep(1000);
 						break;
 					}
 					
@@ -904,7 +985,7 @@ public class GreedyHeuristic {
 //						}
 //					}
 				 
-					if(con.isFull()) {								
+					if(con.isFull()) {						
 						continue;
 					}
 					
@@ -925,7 +1006,7 @@ public class GreedyHeuristic {
 						}
 															
 						if(closestLocations.isEmpty()) {
-							//logger.info("container's location list: " + con.getCurrentSolution().getLocationIds());
+							//logger.info("container's location list: " + con.getCurrentSolution().getLocationIds());						
 							con.setFull(true);									
 							break;
 						}
@@ -950,6 +1031,9 @@ public class GreedyHeuristic {
 							this.setCheckLocation(location.getLocationID());
 							continue;
 						}*/
+						
+						//this.boxComp.reloadOrderString();
+						//this.spaceComp.reloadOrderString();
 						
 						if(this.checkLocationIsFeasible(con.getCurrentSolution(),location) == false) {
 							isLocationInserted = false;
@@ -1589,6 +1673,8 @@ public class GreedyHeuristic {
 	private List<Solution> bestSolutionList;	
 	private Solution currentSolution;
 	private Solution newSolution;
+	private BoxComparator boxComp;
+	private SpaceComparator spaceComp;
 	private List<PartialSolution> testSolutionList;
 	private Solution bestSolution;
 	private Date startDate;

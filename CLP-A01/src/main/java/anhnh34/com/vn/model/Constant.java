@@ -10,11 +10,12 @@ public class Constant {
 	public final static String GREEDY_VL = "VL";
 	public final static String GREEDY_ST = "ST";
 	
-	public final static String SEQ_FRA_SUP_LENGTH = "SFSL";
-	public final static String SEQ_FRA_SUP_SURFACE = "SFSS";
+	public final static String SEQ_FRA_SUP_LENGTH = "SFLV";
+	//public final static String SEQ_FRA_SUP_SURFACE = "SFSS";
 	public final static String SEQ_FRA_SUP_VOLUME = "SFSV";	
 	
 	public final static String SPACE_SORT_ZXY = "ZXY";
+	public final static String SPACE_SORT_ZYX = "ZYX";
 	public final static String SPACE_SORT_YXZ = "YXZ";
 	public final static String SPACE_SORT_XYZ = "XYZ";
 	public final static String SPACE_SORT_YZX = "YZX";

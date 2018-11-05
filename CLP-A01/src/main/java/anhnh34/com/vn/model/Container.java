@@ -65,7 +65,7 @@ public class Container {
 		}
 		return true;
 	}
- void addCapacity(double additionCapacity) {
+  public void addCapacity(double additionCapacity) {
 		this.currentCapacity = this.currentCapacity + additionCapacity;
 		this.currentSolution.setCurrCapacity(this.currentCapacity);
 	}
@@ -126,6 +126,7 @@ public class Container {
 		this.length = d;
 		this.width = w;
 		this.height = h;
+		this.volume = this.length * this.width * this.height;		
 	}
 
 	public void removeSubset() {
@@ -213,6 +214,10 @@ public class Container {
 		}
 
 		// return returnSpace;
+	}
+	
+	public double getVolumeUsage() {
+		return this.getCurrentSolution().getVolumeUtitlisation()/this.getVolume() * 100;
 	}
 
 	private Space[] merge(Space[] spaceList, int start, int end, int mid) {
@@ -307,10 +312,19 @@ public class Container {
 		this.setSolutionList(container.getSolutionList());
 		this.setCurrentCapacity(container.getCurrentCapacity());
 		this.setCapacity(container.getCapacity());	
+		this.volume = container.getVolume();
 		this.setFull(container.isFull());
 					
 	}
 	
+	
+	
+	public double getVolume() {
+		if(this.volume == 0) {
+			this.volume = this.length * this.width * this.height;
+		}
+		return this.volume;
+	}
 	
 	private double length;
 	private double width;
@@ -323,4 +337,5 @@ public class Container {
 	private List<Node> nodeList;
 	private ContainerLoading contailerLoading;
 	private boolean isFull = false;
+	private double volume;
 }

@@ -394,7 +394,7 @@ public class Box extends Cuboid{
 
 	private void initializationModel() {
 		//Start Rotation
-		this.fRotation = new int[] { 1, 1, 1 };
+		this.fRotation = new int[] { 0, 0, 1 };
 		//End Rotation
 		
 		//this.fRotation = new int[] { 1, 1, 1 };

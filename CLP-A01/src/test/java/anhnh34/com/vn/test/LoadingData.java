@@ -37,7 +37,7 @@ public class LoadingData {
 	public static void main(String arg[]) {
 		BasicConfigurator.configure();		
 		LoadingData loadingData = new LoadingData();
-		loadingData.loadingData(17, 22);
+		loadingData.loadingData(31, 36);
 		System.out.println("Testing finish");
 	}
 
@@ -53,7 +53,8 @@ public class LoadingData {
 				lineIndex++;
 				if ((lineIndex >= startIndex) && (lineIndex <= endIndex)) {
 					Integer[] intArray = extractInformation(line);
-					Box box = new Box(1,intArray[3], intArray[1], intArray[2]);
+					Box box = new Box(1,intArray[3], intArray[1], intArray[2]);		
+					box.setCustomerId(intArray[0].toString());
 					Dimension minimumDimension = new Dimension(intArray[6], intArray[4], intArray[5]);
 					Dimension maximumDimension = new Dimension(intArray[9], intArray[7], intArray[8]);
 					box.setMinimum(minimumDimension);
@@ -86,7 +87,7 @@ public class LoadingData {
 
 	private void WriteToFile() {
 		Boxes[] boxArr = new Boxes[boxes.size()];
-		for (int i = 0; i < boxes.size(); i++) {
+		for (int i = boxes.size() -1; i >= 0; i--) {
 			Box b = boxes.get(i);
 			Boxes box = new Boxes(b.getMinimum(),b.getMaximum(), b.getLength(), b.getWidth(), b.getHeight(),b.getVolume(), b.getSequenceNumber(),b.getCustomerId());
 			

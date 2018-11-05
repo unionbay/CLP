@@ -1,5 +1,6 @@
 package anhnh34.com.vn.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Problem {
@@ -9,6 +10,11 @@ public class Problem {
 	private int numOfVehicle;
 	private int numOfItem;
 	private String containerInfo;
+	private List<Container> containerList;
+	private List<Location> locationList;
+	private Batch placedBox;
+	private Batch notPlacedBox;
+	
 	List<String> itemsList;
 
 	public String getName() {
@@ -66,6 +72,39 @@ public class Problem {
 	public void setItemsList(List<String> itemsList) {
 		this.itemsList = itemsList;
 	}
+	
+	public void addContainer(Container con) {
+		Container cloneContainer = new Container(con);
+		this.containerList.add(cloneContainer);
+	}
+	
+	public Batch getNotPlacedBox() {
+		return notPlacedBox;
+	}
+	
+	
+	public List<Location> getLocationList() {
+		return locationList;
+	}
+	
+	public List<Container> getContainerList() {
+		return containerList;
+	}
+	
+	
+	
+	
+	public void setContainerList(List<Container> containerList) {
+		this.containerList.clear();
+		for(Container con :containerList) {
+			this.addContainer(con);
+		}
+	}
+	
+	public void addLocation(Location location) {
+		Location cloneLocation = new  Location(location);
+		this.locationList.add(cloneLocation);
+	}
 
 	/**
 	 * @param name
@@ -93,6 +132,11 @@ public class Problem {
 	 */
 	public Problem() {
 		super();
+		this.containerList = new ArrayList<>();
+		this.placedBox = new Batch();
+		this.notPlacedBox = new Batch();
+		this.locationList = new ArrayList<>();	
+		this.containerList = new ArrayList<>();								
 	}
 
 }

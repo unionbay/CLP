@@ -129,6 +129,7 @@ public class PartialSolution {
 	public void setPlacedBoxes(Batch placedBoxes) {
 		Batch batch = new Batch(placedBoxes);
 		this.placedBoxes = batch;
+		this.caculateUsageVolume();
 	}
 
 	public void setNotPlacedBoxes(Batch notPlacedBoxes) {
@@ -224,6 +225,15 @@ public class PartialSolution {
 		this.locationList.add(newLocation);
 	}
 	
+	private void caculateUsageVolume() {
+		double totalVolume = 0;
+		for(Box box : this.getPlacedBoxes().getBoxes()) {
+			totalVolume+= box.getLength() * box.getWidth() * box.getHeight();
+		}
+		
+		this.setVolumeUtitlisation(totalVolume);
+	}
+	
 	
 	private double round(double value, int places) {
 	    if (places < 0) throw new IllegalArgumentException();
@@ -288,7 +298,7 @@ public class PartialSolution {
 	private Batch placedBoxes;
 	private Batch notPlacedBoxes;
 	private double solutionTime;
-	private double volumeUtitlisation;
+	private double volumeUtitlisation;	
 	private List<Location> locationList;
 	private String currLocationID;
 	private boolean isFeasible;

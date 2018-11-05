@@ -8,7 +8,6 @@ public class Batch {
 	private List<BoxType> boxTypes;
 	private int boxNumber;
 	
-	
 	public int getBoxNumber() {
 		return boxNumber;
 	}
@@ -41,18 +40,20 @@ public class Batch {
 		return boxes;
 	}
 
+	
 	public void setBoxes(List<Box> boxes) {
 		this.boxes.clear();
 		for(Box box : boxes) {			
 			this.addBox(box);
 		}		
+		
 	}
 
 	public Batch(List<Box> boxes) {
 		this.initialize();
 		this.setBoxes(boxes);		
 	}
-
+	
 	public void placeBox() throws Exception {
 		throw new Exception("Not implemented yet");
 	}

@@ -1,18 +1,32 @@
 package anhnh34.com.vn.model;
 
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
+import java.util.Random;
+
 import org.apache.log4j.Logger;
 
 public class BoxComparator implements Comparator<Box>{
-	 final static Logger logger = Logger.getLogger(BoxComparator.class);
+	final static Logger logger = Logger.getLogger(BoxComparator.class);
+	private List<String> boxOrderList = new ArrayList<String>();
 	private static String orderStr;
+	private int roundNumber;
+	
 	@Override
 	public int compare(Box firstBox, Box secondBox) {		
-		if(orderStr == null || orderStr.isEmpty()) {
-			orderStr = Utility.getInstance().getConfigValue("item_sort_rule");
-		}		 	
+//		if(orderStr == null || orderStr.isEmpty()) {
+//			orderStr = Utility.getInstance().getConfigValue("item_sort_rule");
+//		}		 
+		//System.out.println("Box comparator round number: " + roundNumber);
 		
-		switch (orderStr) {
+//		if ((roundNumber % 2) == 0) {
+//			orderStr = boxOrderList.get(0);
+//		} else {
+//			orderStr = boxOrderList.get(1);
+//		}
+		
+		switch (this.orderStr) {
 			case Constant.SEQ_FRA_SUP_VOLUME:
 				return firstSortRule(firstBox, secondBox);		
 			case Constant.SEQ_FRA_SUP_LENGTH:
@@ -22,13 +36,26 @@ public class BoxComparator implements Comparator<Box>{
 		}		
 	}
 	
+	public void setRoundNumber(int roundNumber) {
+		this.roundNumber = roundNumber;
+	}
+	
+	
+	public BoxComparator() {
+		boxOrderList = new ArrayList<String>();
+		boxOrderList.add("SFLV");
+		boxOrderList.add("SFSV");				
+		this.orderStr = boxOrderList.get(0);
+	}
+	
+	
 	
 	private int firstSortRule(Box firstBox, Box secondBox) {
 		int checkConstraint = 0;
 		
-		if((checkConstraint = sequenceConstraint(firstBox, secondBox)) != 0) {
-			return checkConstraint;
-		}
+//		if((checkConstraint = sequenceConstraint(firstBox, secondBox)) != 0) {
+//			return checkConstraint;
+//		}
 		
 		if((checkConstraint = fragilityConstraint(firstBox, secondBox)) != 0) {
 			return checkConstraint;
@@ -48,9 +75,9 @@ public class BoxComparator implements Comparator<Box>{
 	private int secondSortRule(Box firstBox, Box secondBox) {
 		int checkConstraint = 0;
 		
-		if((checkConstraint = sequenceConstraint(firstBox, secondBox)) != 0) {
-			return checkConstraint;
-		}
+//		if((checkConstraint = sequenceConstraint(firstBox, secondBox)) != 0) {
+//			return checkConstraint;
+//		}
 		
 		if((checkConstraint = fragilityConstraint(firstBox, secondBox)) != 0) {
 			return checkConstraint;
@@ -104,13 +131,15 @@ public class BoxComparator implements Comparator<Box>{
 		return 0;
 	}		
 	
-	private int lengthConstraint(Box b1, Box b2) {
+	private int lengthConstraint(Box b1, Box b2) {			
+		double b1Lenght = b1.getLength() > b1.getWidth() ? b1.getLength() : b1.getWidth();
+		double b2Length = b2.getLength() > b2.getWidth() ? b2.getLength() : b2.getWidth();
 		
-		if(b1.getBiggestDimension() < b2.getBiggestDimension()) {
+		if(b1Lenght < b2Length) {
 			return 1;
 		}
 		
-		if(b1.getBiggestDimension() > b2.getBiggestDimension()) {
+		if(b1Lenght > b2Length) {
 			return -1;
 		}	
 		
@@ -154,5 +183,16 @@ public class BoxComparator implements Comparator<Box>{
 		}
 		
 		return 0 ;
+	}
+	
+	public void reloadOrderString() {
+		BoxComparator.orderStr = this.getBoxOrderString(0, boxOrderList.size()-1);
+		//System.out.println("Order String: " + BoxComparator.orderStr);
+	}
+	
+	private String getBoxOrderString(int low, int height) {
+		Random random = new Random();
+		int index = random.nextInt((height - low) + 1) + low;
+		return boxOrderList.get(index);
 	}
 }

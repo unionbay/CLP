@@ -31,7 +31,7 @@ public class ContainerLoading {
 	}
 
 	private void init() {
-		this.locationList = new ArrayList<>();
+		this.locationList = new ArrayList<>();	
 		this.containerList = new ArrayList<>();
 		this.notPlacedBox = new Batch();
 		this.placedBox = new Batch();
@@ -76,10 +76,15 @@ public class ContainerLoading {
 	public void insertBoxInFoundSpace() {
 
 	}
+	
+	public void addContainer(Container con) {
+		this.containerList.add(con);
+	}
 
 	public Problem getProblem() {
 		return problem;
 	}
+		
 
 	// Find available space.
 	public Space getAvaiableSpace() {
@@ -150,7 +155,7 @@ public class ContainerLoading {
 		}
 
 		// Sort boxes
-		this.getNotPlacedBox().getBoxes().sort(new BoxComparator());
+		//this.getNotPlacedBox().getBoxes().sort(new BoxComparator());
 
 		// setup box type.
 		this.loadBoxType();
@@ -177,7 +182,7 @@ public class ContainerLoading {
 
 	private void calculateNumberOfItem() {
 
-		List<Box> boxList = new ArrayList<Box>();
+		List<Box> boxList = new ArrayList<Box>(); 
 		for (int i = 0; i < this.getNotPlacedBox().getBoxes().size() - 1; i++) {
 			int numOfItem = 1;
 			Box box = this.getNotPlacedBox().getBoxes().get(i);
@@ -242,6 +247,7 @@ public class ContainerLoading {
 			box.setFragile(isFragility);
 			box.setCustomerId(customerId);
 			notPlacedBox.getBoxes().add(box);
+			problem.getNotPlacedBox().getBoxes().add(box);		
 		}
 	}
 
@@ -273,6 +279,7 @@ public class ContainerLoading {
 			con.initiliaze(this);
 			// con.loadingSpace(); // setup default space;
 			this.containerList.add(con);
+			this.getProblem().addContainer(con);
 		}
 	}
 
@@ -313,8 +320,8 @@ public class ContainerLoading {
 			if ("0".equalsIgnoreCase(lineItems[0])) {
 				this.setDeport(node);
 			}
-			this.getContainer().addNode(node);
 
+			this.getContainer().addNode(node);
 			startIndex++;
 		}
 	}
@@ -342,10 +349,15 @@ public class ContainerLoading {
 			location.setDemand(node.getDemand());						
 			this.loadBoxByLocation(location);
 			this.getLocationList().add(location);
+			this.getProblem().addLocation(location);
 		}
 		
 		for(Location location : this.getLocationList()) {
 			location.loadLocations(this.getLocationList());
+		}
+		
+		for(Location location : this.getProblem().getLocationList()) {
+			location.loadLocations(this.getProblem().getLocationList());
 		}
 	}
 

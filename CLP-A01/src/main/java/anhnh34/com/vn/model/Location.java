@@ -120,7 +120,7 @@ public class Location {
 	
 	public void loadLocations(List<Location> nodeList) {		
 		for(Location location : nodeList) {
-			if(location.getLocationID().equalsIgnoreCase(locationID) || "0".equalsIgnoreCase(location.getLocationID())) {
+			if(location.getLocationID().equalsIgnoreCase(this.getLocationID()) || "0".equalsIgnoreCase(location.getLocationID())) {
 				continue;
 			}
 						

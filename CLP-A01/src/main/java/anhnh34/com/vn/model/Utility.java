@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.Random;
 
 import org.apache.log4j.Logger;
 
@@ -24,7 +25,14 @@ public class Utility {
 		return instance;
 	}
 
+	
+
 	private Utility() {
+		algorithms = new ArrayList<>();	
+		this.algorithms.add(Constant.GREEDY_SB);
+		this.algorithms.add(Constant.GREEDY_BS);
+		this.algorithms.add(Constant.GREEDY_ST);
+		this.algorithms.add(Constant.GREEDY_VL);
 	};
 
 	public void reOrderBox(Box[] boxes) {
@@ -345,4 +353,22 @@ public class Utility {
 //			e.printStackTrace();
 //		}
 	}
+	
+	public String getRandomGreedyAlgorithm() {
+		Random ranNum = new Random();
+//		int aRandomPos = ranNum.nextInt(this.algorithms.size());
+		int aRandomPos = this.ran.nextInt(this.algorithms.size());
+		return this.algorithms.get(aRandomPos);
+	}
+	
+	public void setRan(Random ran) {
+		if(ran== null) {
+			this.ran = new Random();	
+		}
+		
+		this.ran = ran;
+	}
+	
+	private Random ran;
+	private List<String> algorithms;
 }
