@@ -873,9 +873,7 @@ public class Greedy {
 	}
 
 	public FeasibleObject greedySbAlgorithm(BoxComparator boxCom, SpaceComparator spaceCom) {
-		this.avaiableSpaces.sort(spaceCom);
-		BoxComparator comparator = new BoxComparator();
-		comparator.setRoundNumber(roundNumber);
+		this.avaiableSpaces.sort(spaceCom);			
 		this.getNotPlacedBoxes().getBoxes().sort(boxCom);
 
 		this.showSpaceList();

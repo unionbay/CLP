@@ -10,6 +10,8 @@ public class Solution {
 	private double wastedSpace;
 	private int numOfAmalgamate;
 	private double totalCost;
+	private int totalBoxes;
+	private int totalLocations;
 	
 	final static Logger logger = Logger.getLogger(Solution.class);
 
@@ -50,17 +52,32 @@ public class Solution {
 		return totalCost;
 	}
 	
+	public int getTotalBoxes() {
+		return totalBoxes;
+	}
+	
+	public int getTotalLocations() {
+		return totalLocations;
+	}
+	
 	public void setContainer(Container con) {
 		this.containerList.add(new Container(con));
 	}
 
 	public void calculateTotalCost() {
 		this.totalCost = 0;
+		this.totalBoxes = 0;
+		this.totalLocations = 0;
 		for (Container container : containerList) {
 			PartialSolution partialSolution = container.getCurrentSolution();
 			this.totalCost += partialSolution.getCost();
+			this.totalBoxes += partialSolution.getPlacedBoxes().getBoxes().size();
+			this.totalLocations += partialSolution.getIdList().size();
 		}
+		
+		this.totalLocations = this.totalLocations - containerList.size();
 	}
+		
 
 	public Solution(Solution s) {
 		this.containerList = new ArrayList<Container>();
@@ -80,8 +97,8 @@ public class Solution {
 	public void showResult() {
 		for(Container con : this.containerList) {
 			PartialSolution lastSolution = con.getCurrentSolution();
-			logger.info(String.format("%s %.4f", new Object[] {lastSolution.getIdList().toString(), lastSolution.getCost()}));
+			logger.info(String.format("%s %.4f %.2f", new Object[] {lastSolution.getIdList().toString(), lastSolution.getCost(), lastSolution.getCurrCapacity()}));
 		}
-		logger.info(String.format("Total cost: %.4f", new Object[] {this.getTotalCost()}));
+		logger.info(String.format("boxes: %d, locations: %d, cost: %.4f", new Object[] {this.getTotalBoxes(), this.getTotalLocations(), this.getTotalCost()}));
 	}
 }

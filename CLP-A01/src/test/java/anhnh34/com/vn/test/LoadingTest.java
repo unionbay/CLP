@@ -62,8 +62,8 @@ public class LoadingTest {
 			Utility.getInstance().setRan(this.ran);
 			this.roundNumber = 1;			
 			String result_solution = "";
-			String pattern_solution = "1 3 8 7 6";
-			String[] testLocation = new String[] {"1", "3", "8", "7", "6"};			
+			String pattern_solution = "3 15";
+			String[] testLocation = new String[] {"3", "15"};			
 			ContainerLoading containerLoading = new ContainerLoading();
 			containerLoading.loadingData();
 			Greedy greedyAlgorithm = new Greedy();
@@ -98,8 +98,8 @@ public class LoadingTest {
 					}
 				}
 				
-				this.boxComp = new BoxComparator();
-				this.spaceComp = new SpaceComparator();
+				this.boxComp = new BoxComparator(this.ran);
+				this.spaceComp = new SpaceComparator(this.ran);
 				
 				while(true) {
 					if(checkAllLocationIsChecked(locationList)) {
@@ -137,9 +137,15 @@ public class LoadingTest {
 					
 				}
 				
-				//logger.info("Result_solution: " + result_solution + " round number: " + roundNumber +"		" +  container.getVolumeUsage() + "%");
+				logger.info("Result_solution: " + result_solution + " round number: " + roundNumber +"		" +  container.getVolumeUsage() + "%");
 				
-				
+				if(roundNumber < 10) {
+					Solution solution = new Solution(); 
+					List<Container> containerList = new ArrayList<>();
+					containerList.add(container);
+					solution.setContainerList(containerList);	
+					this.writeToFile(solution, "Partial_Solution_"+roundNumber);	
+				}
 				
 //				if(result_solution.trim().split(" ").length >= 3) {
 //					boolean isFounded = false;
@@ -210,7 +216,7 @@ public class LoadingTest {
 //					
 //				}
 				
-				if(result_solution.trim().split(" ").length >= 5) {
+				if(result_solution.trim().split(" ").length >= 2) {
 //					Solution solution = new Solution(); 
 //					List<Container> containerList = new ArrayList<>();
 //					containerList.add(container);
@@ -223,8 +229,8 @@ public class LoadingTest {
 						}
 						
 						
-						//System.out.println("partial id list: " + parSolution.getIdList());
-						//System.out.println("        id list: " + container.getCurrentSolution().getIdList());
+						System.out.println("partial id list: " + parSolution.getIdList());
+						System.out.println("        id list: " + container.getCurrentSolution().getIdList());
 						
 						boolean isDifferent = false;
 						

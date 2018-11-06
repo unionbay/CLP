@@ -171,6 +171,7 @@ public class Container {
 		
 		nCurrSolution.setCapacity(this.getCapacity());
 		nCurrSolution.setCurrCapacity(this.getCurrentCapacity() + lc.getCapacity());
+		this.setCurrentCapacity(nCurrSolution.getCurrCapacity());
 		
 		
 //		for(Location l : currentSolution.getLocationList()) {

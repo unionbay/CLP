@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Random;
 
 import org.apache.log4j.Logger;
 
@@ -198,10 +199,10 @@ public class TreeSearch {
 
 			switch (algorithm) {
 			case Constant.GREEDY_SB:
-				feasibleItem = greedyInstance.greedySbAlgorithm();
+				feasibleItem = greedyInstance.greedySbAlgorithm(new BoxComparator(new Random()), new SpaceComparator(new Random()));
 				break;
 			case Constant.GREEDY_BS:
-				feasibleItem = greedyInstance.greedyBsAlgorithm();
+				feasibleItem = greedyInstance.greedyBsAlgorithm(new BoxComparator(new Random()), new SpaceComparator(new Random()));
 				break;
 			case Constant.GREEDY_ST:
 				feasibleItem = greedyInstance.greedyStAlgorithm();
@@ -210,7 +211,7 @@ public class TreeSearch {
 				feasibleItem = greedyInstance.greedyVlAlgorithm();
 				break;
 			default:
-				feasibleItem = greedyInstance.greedyBsAlgorithm();
+				feasibleItem = greedyInstance.greedyBsAlgorithm(new BoxComparator(new Random()), new SpaceComparator(new Random()));
 
 			}
 

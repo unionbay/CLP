@@ -6,11 +6,12 @@ import java.util.List;
 import java.util.Random;
 
 public class SpaceComparator implements Comparator<Space> {
-	private static String orderStr;
+	private String orderStr;
 	private List<String> orderStringList;
-	private int roundNumber;
+	private Random random;	
 
-	public SpaceComparator() {		
+	public SpaceComparator(Random r) {
+		this.random = r;
 		orderStringList = new ArrayList<String>();
 		orderStringList.add("XYZ");
 		orderStringList.add("YXZ");
@@ -19,18 +20,7 @@ public class SpaceComparator implements Comparator<Space> {
 	}
 
 	@Override
-	public int compare(Space firstSpace, Space secondSpace) {
-		// orderStr = Utility.getInstance().getConfigValue("space_sort_rule");
-		// orderStr = getSpaceOrderString(0, orderStringList.size()-1);
-		//System.out.println("Space comparator round number: " + roundNumber);
-//		if ((roundNumber % 2) == 0) {
-//			orderStr = orderStringList.get(0);
-//		} else {
-//			orderStr = orderStringList.get(1);
-//		}
-		
-		//orderStr = getSpaceOrderString(0, orderStringList.size()-1);
-
+	public int compare(Space firstSpace, Space secondSpace) {		
 		switch (orderStr) {
 		case Constant.SPACE_SORT_ZXY:
 			return zxySortRule(firstSpace, secondSpace);
@@ -216,9 +206,8 @@ public class SpaceComparator implements Comparator<Space> {
 		//System.out.println("Order String: " + this.orderStr);
 	}
 
-	private String getSpaceOrderString(int low, int height) {
-		Random random = new Random();
-		int index = random.nextInt((height - low) + 1) + low;
+	private String getSpaceOrderString(int low, int height) {		
+		int index = this.random.nextInt((height - low) + 1) + low;
 		return orderStringList.get(index);
 	}
 }

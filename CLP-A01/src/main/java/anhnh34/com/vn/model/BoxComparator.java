@@ -10,8 +10,8 @@ import org.apache.log4j.Logger;
 public class BoxComparator implements Comparator<Box>{
 	final static Logger logger = Logger.getLogger(BoxComparator.class);
 	private List<String> boxOrderList = new ArrayList<String>();
-	private static String orderStr;
-	private int roundNumber;
+	private static String orderStr;	
+	private Random random;
 	
 	@Override
 	public int compare(Box firstBox, Box secondBox) {		
@@ -36,12 +36,10 @@ public class BoxComparator implements Comparator<Box>{
 		}		
 	}
 	
-	public void setRoundNumber(int roundNumber) {
-		this.roundNumber = roundNumber;
-	}
 	
 	
-	public BoxComparator() {
+	public BoxComparator(Random r) {
+		this.random = r;
 		boxOrderList = new ArrayList<String>();
 		boxOrderList.add("SFLV");
 		boxOrderList.add("SFSV");				
@@ -163,7 +161,7 @@ public class BoxComparator implements Comparator<Box>{
 		
 		if(firstBaseArea > secondBaseArea) {
 			return -1;
-		}
+		}Random random = new Random();
 		
 		if(firstBaseArea < secondBaseArea) {
 			return 1;
@@ -190,8 +188,7 @@ public class BoxComparator implements Comparator<Box>{
 		//System.out.println("Order String: " + BoxComparator.orderStr);
 	}
 	
-	private String getBoxOrderString(int low, int height) {
-		Random random = new Random();
+	private String getBoxOrderString(int low, int height) {	
 		int index = random.nextInt((height - low) + 1) + low;
 		return boxOrderList.get(index);
 	}

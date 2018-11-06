@@ -1,6 +1,7 @@
 package anhnh34.com.vn.model;
 
 import java.util.Arrays;
+import java.util.Random;
 import java.io.InputStream;
 
 import org.apache.log4j.Logger;
@@ -50,10 +51,10 @@ public class SolutionMethod {
 		
 			switch(algorithm) {
 				case Constant.GREEDY_SB:
-					feasibleItem = greedyInstance.greedySbAlgorithm();
+					feasibleItem = greedyInstance.greedySbAlgorithm(new BoxComparator(new Random()), new SpaceComparator(new Random()));
 					break;
 				case Constant.GREEDY_BS:
-					feasibleItem = greedyInstance.greedyBsAlgorithm();
+					feasibleItem = greedyInstance.greedyBsAlgorithm(new BoxComparator(new Random()), new SpaceComparator(new Random()));
 					break;
 				case Constant.GREEDY_ST:
 					feasibleItem = greedyInstance.greedyStAlgorithm();
@@ -62,7 +63,7 @@ public class SolutionMethod {
 					feasibleItem = greedyInstance.greedyVlAlgorithm();
 					break;
 				default:
-					feasibleItem = greedyInstance.greedyBsAlgorithm();
+					feasibleItem = greedyInstance.greedyBsAlgorithm(new BoxComparator(new Random()), new SpaceComparator(new Random()));
 					
 			}										
 			
