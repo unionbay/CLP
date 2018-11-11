@@ -406,8 +406,7 @@ public class GreedyHeuristic {
 		solution.calculateTotalCost();
 
 		// UP-RO
-		 solution.showResult();
-		//solution.showResult();
+		 solution.showResult();		
 		// writeToFile(solution, "Testing_"+ roundNumber);
 		// logger.info("Num of placed boxs: " + numberOfItems);
 		// logger.info("Number of boxs: " +
@@ -689,7 +688,7 @@ public class GreedyHeuristic {
 		//
 		// }
 		int i = 0;
-		while (i < 3) {
+		while (i < 4) {
 			if (lIndex >= this.currLocation.getLocationList().size()) {
 				lIndex = 0;
 				break;
@@ -714,7 +713,7 @@ public class GreedyHeuristic {
 		List<Location> closestLocations = new ArrayList<Location>();
 		int i = 0;
 		lIndex = 0;
-		while (i < 3) {
+		while (i < 4) {
 			if (lIndex >= currLocation.getLocationList().size()) {
 				lIndex = 0;
 				break;
@@ -773,9 +772,9 @@ public class GreedyHeuristic {
 					greedyInstance.updateSpaces(feasibleItem);
 					Object[] objects = greedyInstance.getNotPlacedBoxes().getBoxes().toArray();
 					Box[] boxList = Arrays.copyOf(objects, objects.length, Box[].class);
-					//Utility.getInstance().reOrderBox(boxList);
-					//greedyInstance.getNotPlacedBoxes().getBoxes().clear();
-					//greedyInstance.getNotPlacedBoxes().getBoxes().addAll(Arrays.asList(boxList));
+					Utility.getInstance().reOrderBox(boxList);
+					greedyInstance.getNotPlacedBoxes().getBoxes().clear();
+					greedyInstance.getNotPlacedBoxes().getBoxes().addAll(Arrays.asList(boxList));
 				} else {
 					subRound++;
 					break;
@@ -795,7 +794,7 @@ public class GreedyHeuristic {
 				}
 
 				greedyInstance.getNotPlacedBoxes().setBoxes(notPlacedBoxes);
-				greedyInstance.showResult();
+				//greedyInstance.showResult();
 				foundSolution = true;
 				break;
 			}
@@ -809,11 +808,26 @@ public class GreedyHeuristic {
 		boolean foundedPattern = false;
 		Container con = null;
 		int numberOfCheck = 0;
-		
+		int limit_round_number = 0;
 		List<String> newLcIdList = new ArrayList<>();
 		List<Location> locationList = new ArrayList<>();
 		List<String> lcIdList = currSolution.getIdList();	
 		List<String> testLocationIdList = new ArrayList<>();
+		
+		switch (currSolution.getLocationIds().length()) {
+		case 2:
+			limit_round_number = 5;
+			break;
+		case 3:
+			limit_round_number = 15;
+			break;
+		case 4:
+			limit_round_number = 30;
+			break;
+		default:
+			limit_round_number = 50;		
+			break;
+		}
 		for(String id : lcIdList) {
 			String nId = id;
 			testLocationIdList.add(nId);			
@@ -840,7 +854,7 @@ public class GreedyHeuristic {
 		while (true) {			
 			//logger.info("Number of check: " + numberOfCheck);
 			//logger.info("Number of check: " + numberOfCheck);
-			if(numberOfCheck >= 50) {
+			if(numberOfCheck >= limit_round_number) {
 				
 				break;
 			}			
@@ -857,9 +871,7 @@ public class GreedyHeuristic {
 			
 			newLcIdList.clear();
 			String idList = "";
-			
-			
-			
+									
 			for (Location l : testLocationList) {
 				if (checkLocationIsFeasible(con.getCurrentSolution(), l)) {
 					newLcIdList.add(l.getLocationID());
@@ -878,7 +890,7 @@ public class GreedyHeuristic {
 			foundedPattern = checkLocationIsVisited(testLocationIdList, newLcIdList);
 			
 			if(foundedPattern == true) {
-				//logger.info(String.format("old: %s new: %s, capacity: %f", new Object[] {lcIdList.toString(), con.getCurrentSolution().getLocationIds().toString(), con.getCurrentCapacity()}));				
+				logger.info(String.format("old: %s new: %s, capacity: %f", new Object[] {lcIdList.toString(), con.getCurrentSolution().getLocationIds().toString(), con.getCurrentCapacity()}));				
 				break;
 			}
 			
@@ -998,13 +1010,13 @@ public class GreedyHeuristic {
 
 				while (checkAllLocationIsVisited() == false) {
 					if (this.checkContainersIsFull(containers)) {
-						// logger.info("\n"); 
+						 logger.info("\n"); 
 						 //logger.info("All container is full");
 						 Solution tempSolution = new Solution();
 						 tempSolution.setContainerList(containers);
 						 tempSolution.showResult();						 
-						 //logger.info("\n");
-						 //Thread.sleep(500);
+						 logger.info("\n");
+						 Thread.sleep(500);
 						break;
 					}
 
@@ -1088,7 +1100,7 @@ public class GreedyHeuristic {
 						isLocationInserted = true;
 						this.updateLocation(location);
 						con.updateContainer(greedyInstance, location);
-						con.addCapacity(this.currLocation.getCapacity());
+						//con.addCapacity(this.currLocation.getCapacity());
 						closestLocations.remove(lIndex);
 
 					}
@@ -1096,8 +1108,8 @@ public class GreedyHeuristic {
 
 				if (this.checkAllLocationIsVisited() == true) {
 					// logger.info("\n");
-					// logger.info("Round number: " + roundNumber);
-					// this.newSolution.showResult();
+					logger.info("Round number: " + roundNumber);
+					this.newSolution.showResult();
 
 					// logger.info(randomLocations.toString());
 
@@ -1219,8 +1231,8 @@ public class GreedyHeuristic {
 
 			Container preCon = new Container(con);
 			preCon.setFull(false);
-			// int ranIndex = this.getRandomNumber(1, (lastIndex+1)/2);
-			int ranIndex = this.getRandomNumber(0, lastIndex);
+			int ranIndex = this.getRandomNumber(1, lastIndex);
+			//int ranIndex = this.getRandomNumber(0, lastIndex);
 			// logger.info("size: " + con.getCurrentSolution().getIdList().size() + " index:
 			// " + lastIndex);
 			if (ranIndex == lastIndex) {
@@ -1298,7 +1310,7 @@ public class GreedyHeuristic {
 			}
 		}
 
-		// logger.info("Random locations: " + randomLocations.toString());
+		 logger.info("Random locations: " + randomLocations.toString());
 
 		return randomLocations;
 	}

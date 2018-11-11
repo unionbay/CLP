@@ -26,7 +26,7 @@ public class BoxComparator implements Comparator<Box>{
 //			orderStr = boxOrderList.get(1);
 //		}
 		
-		switch (this.orderStr) {
+		switch (BoxComparator.orderStr) {
 			case Constant.SEQ_FRA_SUP_VOLUME:
 				return firstSortRule(firstBox, secondBox);		
 			case Constant.SEQ_FRA_SUP_LENGTH:
@@ -41,9 +41,9 @@ public class BoxComparator implements Comparator<Box>{
 	public BoxComparator(Random r) {
 		this.random = r;
 		boxOrderList = new ArrayList<String>();
-		boxOrderList.add("SFLV");
-		boxOrderList.add("SFSV");				
-		this.orderStr = boxOrderList.get(0);
+		boxOrderList.add(Constant.SEQ_FRA_SUP_LENGTH);
+		boxOrderList.add(Constant.SEQ_FRA_SUP_VOLUME);						
+		BoxComparator.orderStr = getBoxOrderString(0, boxOrderList.size() - 1);
 	}
 	
 	
@@ -161,7 +161,7 @@ public class BoxComparator implements Comparator<Box>{
 		
 		if(firstBaseArea > secondBaseArea) {
 			return -1;
-		}Random random = new Random();
+		}
 		
 		if(firstBaseArea < secondBaseArea) {
 			return 1;
