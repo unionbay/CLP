@@ -1046,9 +1046,11 @@ public class GreedyHeuristic {
 			List<Location> closestLocations = new ArrayList<Location>();
 			List<String> randomLocations = new ArrayList<>();
 
-			while (true) {						
-				roundNumber++;	
-				logger.info("round number:" + roundNumber);
+			while (true) {									
+				roundNumber++;
+				if(roundNumber % 400 == 0 ) {
+					logger.info("round number:" + roundNumber);
+				}				
 				containers.clear();			
 				this.initLocationContext();				
 				randomLocations = this.getRandomLocations(partialSolution, containers);
