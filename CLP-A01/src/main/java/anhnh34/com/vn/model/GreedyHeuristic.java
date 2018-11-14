@@ -1292,7 +1292,11 @@ public class GreedyHeuristic {
 
 			Container preCon = new Container(con);
 			preCon.setFull(false);
-			int ranIndex = this.getRandomNumber(1, lastIndex);
+			int ranIndex = 0;
+			if(lastIndex > 0) {
+				ranIndex = this.getRandomNumber(1, lastIndex);
+			}
+			
 			//int ranIndex = this.getRandomNumber(0, lastIndex);
 			// logger.info("size: " + con.getCurrentSolution().getIdList().size() + " index:
 			// " + lastIndex);
